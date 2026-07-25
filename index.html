@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      // Self-Healing SPA: Automatically recover from Vite Chunk/CSS Preload Failures
+      (function() {
+        function triggerReload() {
+          var now = Date.now();
+          var lastReload = sessionStorage.getItem('apex-last-reload');
+          if (!lastReload || (now - parseInt(lastReload, 10)) > 8000) {
+            sessionStorage.setItem('apex-last-reload', now);
+            console.warn('Chunk load/preload failure detected. Self-healing reload triggered!');
+            window.location.reload();
+          }
+        }
+        window.addEventListener('error', function(e) {
+          var msg = e.message || '';
+          if (msg.indexOf('Unable to preload CSS') !== -1 || msg.indexOf('Failed to fetch dynamically imported module') !== -1) {
+            triggerReload();
+          }
+        }, true);
+        window.addEventListener('unhandledrejection', function(e) {
+          var reason = e.reason ? (e.reason.message || String(e.reason)) : '';
+          if (reason.indexOf('Unable to preload CSS') !== -1 || reason.indexOf('Failed to fetch dynamically imported module') !== -1) {
+            triggerReload();
+          }
+        });
+      })();
+    </script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2832011907708910" crossorigin="anonymous"></script>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#000000" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <meta name="description" content="Apex Values & WIKI — the complete companion for Ball Tower Defense by Cash Grab Studios $$$$. Unit database, live trade values, and trade calculator." />
+    <title>Apex Values & WIKI — Ball Tower Defense</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

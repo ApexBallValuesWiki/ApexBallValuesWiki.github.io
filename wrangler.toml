@@ -1,0 +1,29 @@
+# ============================================================================
+# CLOUDFLARE WORKERS CONFIGURATION (apex-supabase-proxy)
+# ============================================================================
+# Used by Cloudflare Wrangler when deploying directly from GitHub or via CLI:
+#   npx wrangler deploy
+#
+# Points directly to our single-file Edge Cache Proxy script.
+# ============================================================================
+
+name = "apex-supabase-proxy"
+main = "scripts/cloudflare-proxy-worker.js"
+compatibility_date = "2026-07-19"
+
+# ============================================================================
+# KV NAMESPACE BINDING (REQUIRED for persistence!)
+# The worker expects the binding name "APEX_OVERRIDES". Without it the worker
+# silently degrades to per-isolate IN-MEMORY storage and all overrides +
+# admin passwords are lost on every cold start.
+#
+# 1. Create the namespace:      npx wrangler kv namespace create APEX_OVERRIDES
+# 2. Paste the printed id below and uncomment the block.
+# ============================================================================
+# [[kv_namespaces]]
+# binding = "APEX_OVERRIDES"
+# id = "<your-kv-namespace-id>"
+
+# [vars]
+# SUPABASE_URL = "https://your-supabase.supabase.co"
+# SUPABASE_ANON_KEY = "your-anon-key"

@@ -1,0 +1,50 @@
+.wiki-intro {
+  color: var(--text-dim);
+  max-width: 720px;
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+.wiki-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 520px) {
+  .wiki-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+.wiki-stat {
+  padding: 18px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.wiki-stat:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.wiki-stat:active {
+  transform: translateY(-1px) scale(0.995);
+}
+
+.wiki-stat-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.wiki-stat-label {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.wiki-stat-note {
+  color: var(--text-faint);
+  font-size: 0.7rem;
+  margin-top: 2px;
+}

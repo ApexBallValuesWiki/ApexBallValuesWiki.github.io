@@ -1,0 +1,129 @@
+.leaderboard-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.leaderboard-tabs button {
+  min-height: 40px;
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--bg-card);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.leaderboard-tabs button.active,
+.leaderboard-tabs button:hover {
+  border-color: var(--border-strong);
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg-card));
+  color: var(--text);
+  box-shadow: var(--glow-soft);
+}
+
+.leaderboard-head {
+  padding: 18px;
+  margin-bottom: 16px;
+  background: rgba(0, 0, 0, 0.88);
+}
+
+.leaderboard-head h2 {
+  margin: 0 0 6px;
+}
+
+.leaderboard-head p {
+  margin: 0;
+  color: var(--text-dim);
+}
+
+.leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 58px auto minmax(0, 1fr) minmax(150px, auto);
+  gap: 14px;
+  align-items: center;
+  padding: 13px 16px;
+  background: rgba(0, 0, 0, 0.86);
+}
+
+.leaderboard-rank {
+  color: var(--text-faint);
+  font-size: 1.05rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.leaderboard-main {
+  min-width: 0;
+}
+
+.leaderboard-main strong,
+.leaderboard-main span {
+  display: block;
+}
+
+.leaderboard-main strong {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 900;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.leaderboard-main span {
+  margin: 2px 0 8px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.leaderboard-metric {
+  text-align: right;
+  min-width: 0;
+}
+
+.leaderboard-metric b,
+.leaderboard-metric small {
+  display: block;
+}
+
+.leaderboard-metric b {
+  color: var(--text);
+  font-size: 1.35rem;
+  font-weight: 900;
+  text-shadow: var(--glow-soft);
+}
+
+.leaderboard-metric small {
+  color: var(--text-faint);
+  max-width: 260px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .leaderboard-row {
+    grid-template-columns: 42px auto minmax(0, 1fr);
+  }
+
+  .leaderboard-metric {
+    grid-column: 1 / -1;
+    text-align: left;
+    padding-left: 56px;
+  }
+}
