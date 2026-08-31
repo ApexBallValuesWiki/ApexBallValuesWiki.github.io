@@ -1,0 +1,188 @@
+
+.dd-root {
+  position: relative;
+  width: 100%;
+  --dd-accent: var(--accent, #ffffff);
+}
+
+.dd-button {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-family: inherit;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dd-button:hover,
+.dd-root.open .dd-button {
+  border-color: var(--border-strong);
+}
+
+.dd-button:focus-visible {
+  outline: none;
+  border-color: var(--dd-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dd-accent) 32%, transparent);
+}
+
+.dd-root.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.dd-button-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dd-placeholder {
+  color: var(--text-faint);
+  font-weight: 700;
+}
+
+.dd-caret {
+  flex-shrink: 0;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  transition: transform 0.18s ease;
+}
+
+.dd-caret.flipped {
+  transform: rotate(180deg);
+}
+
+/* Menu */
+.dd-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  max-height: min(56vh, 440px);
+  padding: 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: #000000;
+  box-shadow: var(--panel-shadow, 0 18px 48px rgba(0, 0, 0, 0.65));
+  animation: dd-pop 0.14s ease;
+}
+
+@keyframes dd-pop {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dd-search {
+  width: 100%;
+  min-height: 38px;
+  margin-bottom: 6px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-family: inherit;
+  font-weight: 700;
+}
+
+.dd-search:focus {
+  outline: none;
+  border-color: var(--border-strong);
+  box-shadow: var(--glow-soft);
+}
+
+.dd-list {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 2px;
+}
+
+.dd-group + .dd-group {
+  margin-top: 4px;
+  border-top: 1px solid var(--border);
+  padding-top: 4px;
+}
+
+.dd-group-label {
+  padding: 7px 10px 4px;
+  color: var(--text-faint);
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.dd-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.dd-option-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dd-option:hover {
+  background: color-mix(in srgb, var(--dd-accent) 12%, transparent);
+  color: var(--text);
+}
+
+.dd-option.selected {
+  border-color: color-mix(in srgb, var(--dd-accent) 60%, transparent);
+  background: color-mix(in srgb, var(--dd-accent) 18%, transparent);
+  color: var(--text);
+}
+
+.dd-check {
+  flex-shrink: 0;
+  color: var(--dd-accent);
+  font-weight: 900;
+}
+
+.dd-empty {
+  padding: 16px 12px;
+  color: var(--text-faint);
+  font-weight: 700;
+  text-align: center;
+}
+
+/* Open upward when there isn't room below. */
+.dd-root.open.up .dd-menu {
+  top: auto;
+  bottom: calc(100% + 6px);
+}

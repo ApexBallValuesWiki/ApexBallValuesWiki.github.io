@@ -1,0 +1,36 @@
+# ============================================================================
+# CLOUDFLARE WORKERS CONFIGURATION (apex-db)
+# ============================================================================
+# This is the LIVE database worker that powers the whole site:
+#   https://apex-db.apexballtd-admin.workers.dev
+#
+# Deploy from the CLI:
+#   npx wrangler deploy
+#
+# (The worker was originally deployed by pasting the file into the Cloudflare
+# dashboard — Workers & Pages -> apex-db -> Quick edit. CLI deploys with the
+# config below target the SAME worker, so both workflows stay in sync.)
+# ============================================================================
+
+name = "apex-db"
+main = "scripts/cloudflare-proxy-worker.js"
+compatibility_date = "2026-07-19"
+
+# ============================================================================
+# KV NAMESPACE BINDING (REQUIRED for persistence!)
+# The worker expects the binding name "APEX_OVERRIDES". Without it the worker
+# silently degrades to per-isolate IN-MEMORY storage and all overrides +
+# admin passwords are lost on every cold start.
+#
+# Create the namespace and let wrangler paste the id back here automatically:
+#   npx wrangler kv namespace create APEX_OVERRIDES
+#
+# Then make sure this block is uncommented with the real id:
+# [[kv_namespaces]]
+# binding = "APEX_OVERRIDES"
+# id = "<your-kv-namespace-id>"
+#
+# If you manage bindings in the dashboard instead (the original deployment
+# method), verify: Workers & Pages -> apex-db -> Settings -> Bindings ->
+# "APEX_OVERRIDES" -> your KV namespace.
+# ============================================================================

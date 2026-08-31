@@ -1,0 +1,62 @@
+.card-zoom-trigger {
+  position: relative;
+  display: inline-block;
+}
+
+.card-zoom-overlay {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  margin-bottom: 8px;
+  pointer-events: none;
+}
+
+.card-zoom-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+  background: var(--bg-card);
+  border: 2px solid;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  min-width: 200px;
+  overflow: hidden;
+}
+
+.card-zoom-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-30deg);
+  font-size: 4rem;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+  white-space: nowrap;
+  letter-spacing: 0.2em;
+}
+
+.card-zoom-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.card-zoom-rarity {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.card-zoom-value {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--text-dim);
+  font-family: ui-monospace, monospace;
+}

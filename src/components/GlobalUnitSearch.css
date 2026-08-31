@@ -1,0 +1,158 @@
+.gus-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 120px;
+}
+
+.gus-panel {
+  width: min(560px, 95vw);
+  max-height: 70vh;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.gus-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gus-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.gus-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  outline: none;
+}
+
+.gus-input::placeholder {
+  color: var(--text-faint);
+}
+
+.gus-clear {
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.gus-clear:hover {
+  color: var(--text);
+  background: var(--bg-elevated);
+}
+
+.gus-section-label {
+  padding: 8px 18px 4px;
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.gus-results {
+  overflow-y: auto;
+  max-height: 50vh;
+  padding: 6px;
+}
+
+.gus-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 0.88rem;
+}
+
+.gus-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.gus-option:hover, .gus-option.selected {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.gus-option-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gus-option-name {
+  font-size: 0.88rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gus-option-meta {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.gus-option-value {
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: var(--text-dim);
+  font-family: ui-monospace, monospace;
+  flex-shrink: 0;
+}
+
+.gus-recent {
+  opacity: 0.7;
+}
+
+.gus-recent-icon {
+  font-size: 0.9rem;
+  width: 36px;
+  text-align: center;
+}
+
+.gus-footer {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 8px;
+  border-top: 1px solid var(--border);
+  font-size: 0.65rem;
+  color: var(--text-faint);
+  font-weight: 700;
+}

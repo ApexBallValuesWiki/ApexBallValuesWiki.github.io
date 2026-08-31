@@ -1,0 +1,66 @@
+.bug-report-page {
+  width: min(920px, 100%);
+  margin: 0 auto;
+  padding: 56px 24px 110px;
+}
+
+.bug-report-page .page-intro {
+  max-width: 760px;
+  margin-bottom: 0;
+}
+
+.bug-report-form {
+  width: min(720px, 100%);
+  margin-top: 28px;
+  /* The inline padding is intentional too: it guarantees that theme/card
+     rules can never collapse the form content against its border. */
+  padding: clamp(18px, 3vw, 28px) !important;
+}
+
+.bug-report-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.bug-report-success {
+  width: min(720px, 100%);
+  margin-top: 28px;
+  padding: 28px;
+  text-align: center;
+}
+
+.bug-report-success p {
+  margin: 0 0 20px;
+  color: var(--text-dim);
+}
+
+.bug-report-success-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.bug-report-footnote {
+  max-width: 720px;
+  margin: 20px 0 0;
+  color: var(--text-faint);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 600px) {
+  .bug-report-page {
+    padding: 34px 14px 100px;
+  }
+
+  .bug-report-form {
+    padding: 18px !important;
+  }
+
+  .bug-report-success {
+    padding: 20px;
+  }
+}

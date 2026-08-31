@@ -1,0 +1,130 @@
+.site-header {
+  position: sticky;
+  top: var(--announcement-height, 0px);
+  transition: top 0.25s ease;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 16px 32px;
+  background: color-mix(in srgb, var(--bg-elevated) 82%, transparent);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-mark {
+  font-size: 1.2rem;
+  line-height: 1;
+  opacity: 0.9;
+  display: inline-flex;
+  align-items: center;
+}
+
+.brand-logo {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  display: block;
+  border-radius: 8px;
+}
+
+.brand-text {
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+}
+
+.brand-text-dim {
+  color: var(--text-faint);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.main-nav {
+  display: flex;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 4px;
+}
+
+.nav-item {
+  padding: 7px 18px;
+  min-height: 36px;
+  border-radius: var(--radius-pill);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  border: 1px solid transparent;
+  transition: color 0.25s ease, background 0.3s ease, transform 0.15s ease, border-color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+}
+
+.nav-item:hover {
+  color: var(--text);
+  border-color: var(--border);
+  transform: translateY(-1px);
+}
+
+.nav-item:active {
+  transform: scale(0.96);
+}
+
+.nav-item.active {
+  color: var(--accent-inverse);
+  background: var(--text);
+  border-color: var(--border-strong);
+  box-shadow: var(--glow-soft);
+}
+
+@media (max-width: 700px) {
+  .site-header {
+    flex-wrap: wrap;
+    padding: 12px 14px;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .brand-text-dim {
+    display: none;
+  }
+
+  .main-nav {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .nav-item {
+    flex: 1;
+    text-align: center;
+    padding: 8px 6px;
+  }
+}
+
+@media (max-width: 420px) {
+  .nav-item {
+    font-size: 0.66rem;
+    padding: 8px 4px;
+    letter-spacing: 0.02em;
+  }
+}
+.nav-theme-btn {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+}
+
+.nav-theme-btn:hover {
+  color: var(--text);
+}

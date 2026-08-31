@@ -1,0 +1,93 @@
+/* UnitValueDetail.css — Styles for values stat grid and demand/scarcity bars */
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+}
+
+.stat-box {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 10px) !important;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.stat-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+}
+
+.vud-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.vud-bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vud-bar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.vud-bar-label {
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.vud-bar-tier {
+  font-size: clamp(0.65rem, 3.5vw, 0.85rem);
+  font-weight: 800;
+  white-space: nowrap;
+  flex-shrink: 1;
+  text-align: right;
+}
+
+.vud-bar-track {
+  height: 10px;
+  border-radius: var(--radius-pill, 999px) !important;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.vud-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-pill, 999px) !important;
+}
+
+.vud-updated {
+  margin: 10px 0 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--text-faint);
+}

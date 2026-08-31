@@ -1,0 +1,254 @@
+/* ============================================================
+   BACKGROUND PATTERNS — grid, dots, lines
+   Applied directly on <body> (a fixed ::before at z-index -1 used to hide
+   behind the body background, which is why patterns "didn't change").
+   Line color is customizable via the Pattern Color picker.
+   ============================================================ */
+[data-bg-pattern="grid"] body {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--bg-pattern-color, #fff) 22%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--bg-pattern-color, #fff) 22%, transparent) 1px, transparent 1px);
+  background-size: 60px 60px;
+  background-attachment: fixed;
+}
+
+[data-bg-pattern="dots"] body {
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--bg-pattern-color, #fff) 30%, transparent) 1.5px, transparent 1.5px);
+  background-size: 32px 32px;
+  background-attachment: fixed;
+}
+
+[data-bg-pattern="lines"] body {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 40px,
+    color-mix(in srgb, var(--bg-pattern-color, #fff) 10%, transparent) 40px,
+    color-mix(in srgb, var(--bg-pattern-color, #fff) 10%, transparent) 41px
+  );
+  background-attachment: fixed;
+}
+
+/* ============================================================
+   ANIMATION SPEED CONTROL
+   ============================================================ */
+[data-anim-speed="fast"] { --anim-speed: 0.5; }
+[data-anim-speed="normal"] { --anim-speed: 1; }
+[data-anim-speed="slow"] { --anim-speed: 1.8; }
+[data-anim-speed="none"] { --anim-speed: 0; }
+
+[data-anim-speed="none"] *,
+[data-anim-speed="none"] *::before,
+[data-anim-speed="none"] *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
+/* ============================================================
+   COLORBLIND MODE — remaps EVERY status color sitewide
+   (the --c-* vars drive success/danger/info/warning/purple across
+   the whole UI, so these modes finally apply everywhere)
+   ============================================================ */
+[data-colorblind="protanopia"] {
+  --c-success: #0077bb !important;
+  --c-danger: #ee7733 !important;
+  --c-info: #0077bb !important;
+  --c-warning: #ffc94d !important;
+  --c-purple: #ee7733 !important;
+  --success: #0077bb !important;
+  --danger: #ee7733 !important;
+  --accent: #0077bb !important;
+}
+
+[data-colorblind="deuteranopia"] {
+  --c-success: #009988 !important;
+  --c-danger: #ee7733 !important;
+  --c-info: #0077bb !important;
+  --c-warning: #f0e442 !important;
+  --c-purple: #ee7733 !important;
+  --success: #009988 !important;
+  --danger: #ee7733 !important;
+  --accent: #009988 !important;
+}
+
+[data-colorblind="tritanopia"] {
+  --c-success: #009988 !important;
+  --c-danger: #ee3377 !important;
+  --c-info: #ee7733 !important;
+  --c-warning: #ffffff !important;
+  --c-purple: #ee3377 !important;
+  --success: #009988 !important;
+  --danger: #ee3377 !important;
+  --accent: #009988 !important;
+}
+
+/* ============================================================
+   HIGH CONTRAST — a complete, coherent theme (solid blacks,
+   pure white text, strong borders, vivid status colors)
+   ============================================================ */
+[data-high-contrast="true"] {
+  --bg: #000000 !important;
+  --bg-elevated: #0a0a0a !important;
+  --bg-card: #000000 !important;
+  --bg-card-hover: #101010 !important;
+  --border: #ffffff !important;
+  --border-strong: #ffffff !important;
+  --text: #ffffff !important;
+  --text-dim: #f0f0f0 !important;
+  --text-faint: #d4d4d4 !important;
+  --accent: #ffd740 !important;
+  --accent-inverse: #000000 !important;
+  --success: #00e676 !important;
+  --danger: #ff5252 !important;
+  --c-success: #00e676 !important;
+  --c-danger: #ff5252 !important;
+  --c-info: #40c4ff !important;
+  --c-warning: #ffd740 !important;
+  --c-purple: #e040fb !important;
+  --glass: none !important;
+  --glow-soft: none !important;
+  --glow-strong: none !important;
+  --panel-shadow: none !important;
+}
+
+[data-high-contrast="true"] .card,
+[data-high-contrast="true"] .site-header,
+[data-high-contrast="true"] .admin-topbar,
+[data-high-contrast="true"] .admin-sidebar,
+[data-high-contrast="true"] .dropdown-menu {
+  background: #000000 !important;
+  border: 1px solid #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+[data-high-contrast="true"] button {
+  border: 1px solid #ffffff !important;
+}
+
+/* ============================================================
+   FONT SIZE CONTROLS
+   ============================================================ */
+[data-font-size="small"] { font-size: 14px; }
+[data-font-size="normal"] { font-size: 16px; }
+[data-font-size="large"] { font-size: 18px; }
+[data-font-size="xlarge"] { font-size: 20px; }
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   FOCUS INDICATORS (Accessibility)
+   ============================================================ */
+:focus-visible {
+  outline: 2px solid var(--accent, var(--c-info));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent, var(--c-info));
+  outline-offset: 2px;
+}
+
+
+/* ============================================================
+   SMOOTH SCROLLING — every scrollable element glides
+   ============================================================ */
+html {
+  scroll-behavior: smooth;
+}
+
+.admin-unit-list,
+.admin-log-list,
+.dropdown-menu,
+.modal-content,
+textarea,
+[data-lenis-prevent] {
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+/* ============================================================
+   MOTION — gentle sitewide animations (transform/opacity only).
+   Automatically disabled when Animation Speed = None.
+   ============================================================ */
+@keyframes apex-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes apex-pop {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes apex-slide-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes apex-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes apex-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.admin-stat-card,
+.log-stat {
+  animation: apex-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.admin-stat-card:nth-child(2), .log-stat:nth-child(2) { animation-delay: 0.05s; }
+.admin-stat-card:nth-child(3), .log-stat:nth-child(3) { animation-delay: 0.1s; }
+.admin-stat-card:nth-child(4), .log-stat:nth-child(4) { animation-delay: 0.15s; }
+.admin-stat-card:nth-child(5), .log-stat:nth-child(5) { animation-delay: 0.2s; }
+.admin-stat-card:nth-child(6), .log-stat:nth-child(6) { animation-delay: 0.25s; }
+.admin-stat-card:nth-child(7), .log-stat:nth-child(7) { animation-delay: 0.3s; }
+.admin-stat-card:nth-child(8), .log-stat:nth-child(8) { animation-delay: 0.35s; }
+
+.admin-log-entry {
+  animation: apex-fade-up 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.announcement-banner,
+.ann-preview {
+  animation: apex-slide-down 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.admin-quick-btn,
+.admin-chip,
+.ann-chip,
+.log-tab {
+  transition: transform 0.14s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.admin-quick-btn:hover,
+.ann-chip:hover,
+.log-tab:hover {
+  transform: translateY(-1px);
+}
+.admin-quick-btn:active,
+.ann-chip:active,
+.log-tab:active,
+.admin-topbar-btn:active,
+.admin-sidebar-item:active {
+  transform: scale(0.97);
+}

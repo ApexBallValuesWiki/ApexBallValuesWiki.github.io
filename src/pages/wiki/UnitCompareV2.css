@@ -1,0 +1,133 @@
+.compare-v2 { max-width: 900px; margin: 0 auto; }
+
+.compare-selectors {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 30px;
+}
+
+.compare-selector {
+  flex: 1;
+}
+
+.compare-search {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+}
+
+.compare-results {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.compare-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.compare-option.active, .compare-option:hover {
+  border-color: var(--accent);
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-card));
+}
+
+.compare-vs {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--text-faint);
+  align-self: center;
+  padding-top: 30px;
+}
+
+.compare-table {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg-card);
+  overflow: hidden;
+}
+
+.compare-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 24px;
+  background: var(--bg-elevated);
+  text-align: center;
+}
+
+.compare-unit-a, .compare-unit-b {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.compare-unit-a h3, .compare-unit-b h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.compare-rows {
+  padding: 0 24px 24px;
+}
+
+.compare-row {
+  display: grid;
+  grid-template-columns: 1fr 140px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.compare-row:last-child { border-bottom: none; }
+
+.compare-row-a {
+  text-align: right;
+  font-weight: 800;
+  color: var(--text);
+  font-family: ui-monospace, monospace;
+}
+
+.compare-row-label {
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: var(--text-faint);
+  text-transform: uppercase;
+}
+
+.compare-row-b {
+  text-align: left;
+  font-weight: 800;
+  color: var(--text);
+  font-family: ui-monospace, monospace;
+}
+
+@media (max-width: 640px) {
+  .compare-selectors { flex-direction: column; }
+  .compare-vs { padding-top: 0; }
+}

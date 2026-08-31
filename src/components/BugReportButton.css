@@ -1,0 +1,59 @@
+.global-bug-report {
+  position: fixed;
+  left: 16px;
+  bottom: calc(env(safe-area-inset-bottom) + 16px);
+  z-index: 94;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 13px;
+  border: 1px solid color-mix(in srgb, var(--danger) 58%, var(--border));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--danger) 13%, rgba(0, 0, 0, 0.94));
+  color: color-mix(in srgb, var(--danger) 74%, var(--text));
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.global-bug-report-icon {
+  width: 19px;
+  height: 19px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #000;
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.global-bug-report:hover,
+.global-bug-report.active {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 22%, rgba(0, 0, 0, 0.94));
+  color: var(--text);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.68), 0 0 16px color-mix(in srgb, var(--danger) 25%, transparent);
+  transform: translateY(-2px);
+}
+
+.global-bug-report:active {
+  transform: scale(0.97);
+}
+
+@media (max-width: 760px) {
+  .global-bug-report {
+    left: 12px;
+    bottom: calc(env(safe-area-inset-bottom) + 86px);
+    min-height: 38px;
+    padding: 8px 10px;
+    font-size: 0.62rem;
+  }
+}

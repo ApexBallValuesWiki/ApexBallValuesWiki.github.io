@@ -1,0 +1,9 @@
+
+.ann-current { position: relative; padding-right: 34px; }
+.ann-trash {
+  position: absolute; top: 0; right: 0;
+  border: 1px solid var(--border); background: transparent; color: var(--text-dim);
+  border-radius: 8px; width: 26px; height: 26px; font-size: 0.8rem; cursor: pointer;
+  display: grid; place-items: center; transition: all 0.15s;
+}
+.ann-trash:hover { border-color: var(--c-danger); color: var(--c-danger); transform: scale(1.1); }

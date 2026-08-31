@@ -1,0 +1,522 @@
+:root {
+  --bg: #000000;
+  --bg-elevated: #000000;
+  --bg-card: #000000;
+  --bg-card-hover: #050505;
+  --border: #1a1a1a;
+  --border-strong: #ffffff;
+  --text: #ffffff;
+  --text-dim: #bfbfbf;
+  --text-faint: #7a7a7a;
+  --accent: #ffffff;
+  --accent-inverse: #000000;
+  --danger: var(--c-danger);
+  --success: #4dff88;
+  /* Status colors used across the whole UI — remapped by the colorblind and
+     high-contrast accessibility modes. Keep in sync with ux-enhancements.css. */
+  --c-success: #00ff91;
+  --c-danger: #ff4d4d;
+  --c-info: #4d9dff;
+  --c-warning: #ffc94d;
+  --c-purple: #c04dff;
+  --bg-pattern-color: #ffffff;
+  --glow-soft: 0 0 12px rgba(255, 255, 255, 0.35);
+  --glow-strong: 0 0 22px rgba(255, 255, 255, 0.55);
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+  --font: 'Montserrat', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-weight: 600;
+  cursor: url('./assets/cursors/cursor-default.svg') 4 2, auto;
+}
+
+a, button, [role="button"], select, input[type="checkbox"], input[type="radio"], .cursor-pointer {
+  cursor: url('./assets/cursors/cursor-pointer.svg') 4 2, pointer;
+}
+
+#root {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  min-height: var(--tap-target, 44px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--bg-elevated);
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+button:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+  transform: translateY(-1px) scale(1.01);
+}
+button:active {
+  transform: scale(0.985);
+  transition-duration: 0.08s;
+}
+button:disabled { opacity: 0.55; cursor: not-allowed; }
+button.filled {
+  border-color: var(--border-strong);
+  background: var(--text);
+  color: var(--accent-inverse);
+  box-shadow: var(--glow-soft);
+}
+button.filled:hover {
+  color: var(--accent-inverse);
+  border-color: var(--border-strong);
+  box-shadow: var(--glow-strong);
+  transform: translateY(-1px) scale(1.01);
+}
+button.filled:active {
+  transform: scale(0.97);
+  box-shadow: var(--glow-soft);
+}
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  min-height: var(--tap-target, 44px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--bg-elevated);
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+.button-link:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+  transform: translateY(-1px) scale(1.01);
+}
+.button-link:active {
+  transform: scale(0.985);
+  transition-duration: 0.08s;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-faint);
+}
+
+h1, h2, h3, h4 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Cybernetic glitch flicker — applied to key page headings. Purely
+   decorative, runs once briefly on mount then settles (see animation
+   iteration count) so it never becomes distracting while reading. */
+h1 {
+  position: relative;
+  animation: glitch-flicker 2.4s ease-out 1;
+}
+
+@keyframes glitch-flicker {
+  0% { text-shadow: 2px 0 var(--accent), -2px 0 var(--danger); opacity: 0.7; }
+  2% { text-shadow: -2px 0 var(--accent), 2px 0 var(--danger); opacity: 1; }
+  4% { text-shadow: 2px 0 var(--accent), -2px 0 var(--danger); opacity: 0.85; }
+  6%, 100% { text-shadow: none; opacity: 1; }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: transparent;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.badge.filled {
+  background: var(--text);
+  color: var(--accent-inverse);
+  box-shadow: var(--glow-soft);
+}
+
+.badge.dim {
+  border-color: var(--border);
+  color: var(--text-faint);
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  border-color: var(--border-strong);
+  background: color-mix(in srgb, var(--bg-card-hover) 86%, var(--accent) 14%);
+  box-shadow: 0 0 calc(14px * var(--theme-vfx, 1)) color-mix(in srgb, var(--accent) 10%, transparent);
+  transform: translateY(-2px);
+}
+
+.card:active {
+  transform: translateY(0) scale(0.995);
+  transition-duration: 0.08s;
+}
+
+.pending-flag {
+  color: var(--text-faint);
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+/* ============================================================
+   Global polish pass — shared accessibility, theme, TV/console support
+   ============================================================ */
+:root {
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--accent) 34%, transparent);
+  --panel-shadow: 0 18px 48px rgba(0, 0, 0, 0.55), 0 0 18px color-mix(in srgb, var(--accent) 7%, transparent);
+  --tap-target: 44px;
+  --glass: rgba(8, 8, 10, 0.92);
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-weight: 700;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--border-strong);
+}
+
+/* Pressed/active visual for all interactive */
+button:active,
+.button-link:active,
+[role="button"]:active {
+  transform: scale(0.985);
+  transition-duration: 0.06s;
+}
+
+@media (hover: none) {
+  .card:hover {
+    transform: none;
+  }
+}
+
+@media (min-width: 1600px) {
+  :root {
+    --tap-target: 48px;
+  }
+
+  body {
+    font-size: 17px;
+  }
+}
+
+@media (min-width: 2100px) {
+  body {
+    font-size: 19px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ============================================================
+   Global glassmorphism-lite (used on cards, popovers, etc.)
+   + Loading skeletons + accessibility polish
+   ============================================================ */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.09) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius, 16px);
+  animation: skeleton-shimmer 1.35s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+
+.unit-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  background: var(--bg-card, #0a0a0e);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.16));
+  border-radius: var(--radius-lg, 20px);
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  font-family: var(--font, 'Montserrat', system-ui, sans-serif);
+}
+
+.unit-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--rarity-glow, #ffffff) 65%, var(--border-strong, #ffffff));
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
+}
+
+.unit-card:active {
+  transform: translateY(-2px) scale(0.995);
+  transition-duration: 0.1s;
+}
+
+.unit-card-highlight {
+  animation: unit-highlight-pulse 1.2s ease-out 2;
+}
+
+@keyframes unit-highlight-pulse {
+  0% { border-color: rgba(255, 255, 255, 0.15); box-shadow: 0 0 0 rgba(77, 157, 255, 0); }
+  35% { border-color: var(--c-info); box-shadow: 0 0 24px rgba(77, 157, 255, 0.6); }
+  100% { border-color: rgba(255, 255, 255, 0.15); box-shadow: 0 0 0 rgba(77, 157, 255, 0); }
+}
+
+.unit-card-stripe {
+  height: 4px;
+  width: 100%;
+  background: var(--rarity-border);
+  opacity: 0.95;
+}
+
+.unit-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 16px 14px;
+  background: var(--bg-elevated, #12121c);
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+}
+
+.unit-card-icon-wrap {
+  flex-shrink: 0;
+  border-radius: var(--radius-sm, 10px);
+  background: var(--bg-card, #0a0a0e);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.16));
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  transition: transform 0.25s ease;
+}
+
+.unit-card:hover .unit-card-icon-wrap {
+  transform: scale(1.03);
+}
+
+.unit-card-header-text {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  overflow: hidden;
+}
+
+.unit-card-name {
+  font-family: var(--font, 'Montserrat', system-ui, sans-serif);
+  font-weight: 800;
+  font-size: clamp(0.92rem, 4.5vw, 1.12rem);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--text, #ffffff);
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.unit-card-rarity {
+  font-family: var(--font, 'Montserrat', system-ui, sans-serif);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill, 999px) !important;
+  background: color-mix(in srgb, currentColor 14%, var(--bg-elevated, #12121c));
+  border: 1px solid color-mix(in srgb, currentColor 45%, transparent);
+  color: var(--rarity-glow, #ffffff);
+}
+
+.unit-card-body {
+  padding: 12px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+/* Improve touch targets for interactive list items */
+.gus-option,
+.usp-option,
+.entity-card,
+.unit-card,
+.sidebar-link {
+  min-height: 44px;
+}
+
+.gus-option,
+.usp-option {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+/* Smooth transitions on everything */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+  transition-duration: 0.15s;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Better focus states */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent, var(--c-info));
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+
+/* Global keyboard-focus visibility (#28): mouse users never see this,
+   keyboard users always do. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ================= Mobile calm mode: less clutter, softer visuals ================= */
+@media (max-width: 760px) {
+  /* Floating-button diet: back-to-top is redundant with swipe scrolling. */
+  .back-to-top { display: none !important; }
+
+  /* Bug report stays available but quiets down until hovered/focused. */
+  .global-bug-report { opacity: 0.5; transition: opacity 0.2s; }
+  .global-bug-report:hover, .global-bug-report:focus-within, .global-bug-report:focus-visible { opacity: 1; }
+
+  /* Softer, calmer visuals across the board. */
+  .holo-bg { opacity: 0.5; }
+  .card { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18); }
+  .site-header { padding-block: 8px; }
+  .page-shell { padding-inline: 12px; }
+}
+
+/* Subtle press feedback (admin buttons + mobile nav). */
+.admin-page button:not(:disabled):active,
+.mobile-bottom-nav .mbn-item:active { transform: scale(0.96); }
+.admin-page button:not(:disabled) { transition: transform 0.08s ease; }

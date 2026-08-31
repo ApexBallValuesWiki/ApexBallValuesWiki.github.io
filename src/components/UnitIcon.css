@@ -1,0 +1,76 @@
+/* Crisp, professional UnitIcon styling — locks unit avatar images to size props without overflow or neon brainrot */
+.unit-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm, 12px);
+  overflow: visible;
+  box-sizing: border-box;
+}
+
+.unit-icon-glow {
+  position: absolute;
+  inset: -3px;
+  border-radius: var(--radius-sm, 12px);
+  background: var(--icon-glow, rgba(255, 255, 255, 0.25));
+  filter: blur(8px);
+  opacity: 0.22;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.unit-icon:hover .unit-icon-glow {
+  opacity: 0.45;
+}
+
+.unit-icon-squircle {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-sm, 12px);
+  background: #14151f;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.unit-icon:hover .unit-icon-squircle {
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.6);
+}
+
+.unit-icon-img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  display: block !important;
+  border-radius: calc(var(--radius-sm, 12px) - 2px);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.unit-icon:hover .unit-icon-img {
+  transform: scale(1.04);
+}
+
+.unit-icon-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font, 'Montserrat', system-ui, sans-serif);
+  font-weight: 900;
+  color: var(--text, #ffffff);
+  font-size: 1.1rem;
+  background: #181924;
+}
+

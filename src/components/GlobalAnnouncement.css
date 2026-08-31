@@ -1,0 +1,56 @@
+.global-announcement {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border: 1px solid;
+  border-radius: 0;
+  font-family: var(--font, 'Montserrat', system-ui, sans-serif);
+  font-size: 0.88rem;
+  font-weight: 700;
+  z-index: 9990;
+  text-align: center;
+  justify-content: center;
+}
+
+.ga-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.ga-message {
+  flex: 1;
+  min-width: 0;
+}
+
+.ga-dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0.6;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: opacity 0.2s;
+}
+
+.ga-dismiss:hover {
+  opacity: 1;
+}
+
+.ga-trash {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  opacity: 0.55;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: opacity 0.2s, transform 0.15s;
+  flex-shrink: 0;
+}
+.ga-trash:hover { opacity: 1; transform: scale(1.12); }
+.ga-trash:disabled { opacity: 0.3; cursor: wait; }

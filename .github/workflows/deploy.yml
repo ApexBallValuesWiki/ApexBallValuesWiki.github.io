@@ -1,0 +1,47 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      # Social cards stay gitignored (regenerable artifacts) — build them in
+      # CI so every deploy ships og:image previews without committing ~30 MB
+      # of PNGs to the repo.
+      - run: npm run cards
+      - run: npm run build
+        env:
+          # Root site (apexballvalueswiki.github.io), so assets must be absolute from '/'.
+          VITE_BASE_PATH: '/'
+          VITE_SITE_URL: https://apexballvalueswiki.github.io
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

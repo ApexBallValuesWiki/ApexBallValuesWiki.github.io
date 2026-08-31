@@ -1,0 +1,136 @@
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 20px 12px 60px;
+  height: calc(100vh - 61px - var(--announcement-height, 0px));
+  position: sticky;
+  top: calc(61px + var(--announcement-height, 0px));
+  transition: top 0.25s ease, height 0.25s ease;
+  overflow-y: auto;
+  background: rgba(10, 10, 12, 0.5);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+.sidebar-title {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  font-weight: 700;
+  padding: 0 10px 14px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar-link {
+  display: block;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.sidebar-link:hover {
+  background: var(--bg-elevated);
+  color: var(--text);
+}
+
+.sidebar-link.active {
+  background: var(--text);
+  color: var(--accent-inverse);
+}
+
+.sidebar-link.top {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.sidebar-section-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sidebar-section-label {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.sidebar-section-label:hover {
+  background: var(--bg-elevated);
+  color: var(--text);
+}
+
+.sidebar-section-label.active {
+  color: var(--you-color, var(--c-info));
+}
+
+.sidebar-section-chev-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-faint);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  min-height: 32px;
+  min-width: 32px;
+  transition: all 0.15s ease;
+}
+
+.sidebar-section-chev-btn:hover {
+  background: var(--bg-elevated);
+  color: var(--text);
+  border-color: var(--border);
+  transform: scale(1.03);
+}
+
+.sidebar-section-chev-btn:active {
+  transform: scale(0.96);
+}
+
+.chev {
+  color: var(--text-faint);
+  font-size: 0.7rem;
+  display: inline-block;
+}
+
+.sidebar-children {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-left: 8px;
+  border-left: 1px solid var(--border);
+  padding-left: 8px;
+  margin-bottom: 6px;
+}
+
+.sidebar-link.child {
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 6px 10px;
+}
+
+@media (max-width: 900px) {
+  .sidebar-desktop .sidebar {
+    display: none;
+  }
+}

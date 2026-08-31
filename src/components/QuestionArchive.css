@@ -1,0 +1,76 @@
+.qa-archive {
+  padding: 18px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  margin-top: 18px;
+}
+
+.qa-archive h3 {
+  margin: 0 0 14px;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.qa-empty {
+  color: var(--text-faint);
+  font-size: 0.82rem;
+}
+
+.qa-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.qa-entry {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card);
+}
+
+.qa-entry.correct {
+  border-left: 3px solid var(--success);
+}
+
+.qa-entry.wrong {
+  border-left: 3px solid var(--danger);
+}
+
+.qa-entry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.qa-entry-date {
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  font-weight: 700;
+}
+
+.qa-entry-status {
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.qa-entry-status.correct { color: var(--success); }
+.qa-entry-status.wrong { color: var(--danger); }
+
+.qa-entry-answer {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.qa-entry-guesses {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin-top: 2px;
+}

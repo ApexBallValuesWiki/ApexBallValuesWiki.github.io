@@ -1,0 +1,271 @@
+.credits-page {
+  position: relative;
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 72px 24px 110px;
+  overflow: hidden;
+}
+
+
+.credits-hero {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  margin-bottom: 54px;
+}
+
+.credits-kicker {
+  margin: 0 0 8px;
+  color: var(--text-faint);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.credits-hero h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(2.4rem, 7vw, 5rem);
+  line-height: 1;
+  text-shadow: 0 0 calc(14px * var(--theme-vfx, 1)) color-mix(in srgb, var(--text) 22%, transparent);
+}
+
+.credits-hero p:last-child {
+  max-width: 720px;
+  margin: 16px auto 0;
+  color: var(--text-dim);
+  line-height: 1.65;
+  font-size: 1rem;
+}
+
+.credits-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 26px;
+}
+
+.credit-card {
+  --credit-accent: var(--accent);
+  position: relative;
+  overflow: visible;
+  padding: 32px 18px 24px;
+  text-align: center;
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--credit-accent) 18%, transparent), transparent 54%),
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-card) 92%, var(--credit-accent) 8%), var(--bg-card));
+  border-color: color-mix(in srgb, var(--credit-accent) 38%, var(--border));
+  box-shadow: inset 0 0 14px color-mix(in srgb, var(--credit-accent) 3%, transparent);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+.credit-card.owner {
+  --credit-accent: var(--c-warning);
+}
+
+.credit-card.lead {
+  --credit-accent: var(--border-strong);
+}
+
+.credit-card.tester {
+  --credit-accent: #60f7ff;
+}
+
+.credit-card::before,
+.credit-card::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.credit-card::before {
+  inset: -1px;
+  border-radius: inherit;
+  background:
+    linear-gradient(115deg, transparent 0%, color-mix(in srgb, var(--credit-accent) 28%, transparent) 40%, transparent 70%);
+  mix-blend-mode: screen;
+}
+
+.credit-card::after {
+  inset: 10px;
+  border-radius: calc(var(--radius-lg) - 6px);
+  border: 1px solid color-mix(in srgb, var(--credit-accent) 24%, transparent);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--credit-accent) 10%, transparent));
+}
+
+.credit-card:hover {
+  transform: translateY(-8px);
+  border-color: color-mix(in srgb, var(--credit-accent) 75%, var(--border-strong));
+  box-shadow:
+    0 10px 24px color-mix(in srgb, var(--credit-accent) 9%, transparent),
+    inset 0 0 18px color-mix(in srgb, var(--credit-accent) 4%, transparent);
+}
+
+.credit-card:hover::before,
+.credit-card:hover::after {
+  opacity: 1;
+}
+
+.credit-avatar-wrap {
+  position: relative;
+  width: 150px;
+  margin: 0 auto 18px;
+  padding-top: 22px;
+}
+
+.credit-avatar {
+  position: relative;
+  z-index: 1;
+  width: 132px;
+  height: 132px;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto;
+  border-radius: 24px;
+  border: 2px solid color-mix(in srgb, var(--credit-accent) 44%, var(--border));
+  background: var(--bg-elevated);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--credit-accent) 22%, transparent),
+    0 0 calc(7px * var(--theme-vfx, 1)) color-mix(in srgb, var(--credit-accent) 9%, transparent);
+}
+
+/* Hollow SVG symbols — no emoji fill and no outside icon box. */
+.credit-icon {
+  position: absolute;
+  left: 50%;
+  top: -12px;
+  z-index: 3;
+  transform: translateX(-50%);
+  display: block;
+  width: 62px;
+  height: 62px;
+  overflow: visible;
+  fill: none;
+  stroke: var(--credit-accent);
+  stroke-width: 3.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter:
+    drop-shadow(0 0 3px color-mix(in srgb, var(--credit-accent) 42%, transparent))
+    drop-shadow(0 3px 5px rgba(0, 0, 0, 0.82));
+  animation: credit-icon-float calc(2.4s / var(--theme-speed, 1)) ease-in-out infinite alternate;
+}
+
+.credit-icon path,
+.credit-icon circle {
+  vector-effect: non-scaling-stroke;
+}
+
+.crown-icon {
+  top: -18px;
+  width: 86px;
+  height: 58px;
+  stroke-width: 3.1;
+}
+
+.hammer-icon,
+.tube-icon {
+  width: 58px;
+  height: 58px;
+  stroke-width: 3.4;
+}
+
+.tube-icon circle {
+  fill: var(--bg-card);
+}
+
+@keyframes credit-icon-float {
+  from { transform: translateX(-50%) translateY(0) rotate(-2deg); }
+  to { transform: translateX(-50%) translateY(-5px) rotate(2deg); }
+}
+
+.credit-card.owner .credit-icon {
+  stroke: #ffffff;
+  filter:
+    drop-shadow(0 0 3px rgba(255, 255, 255, 0.55))
+    drop-shadow(0 0 5px rgba(255, 201, 77, 0.18))
+    drop-shadow(0 3px 5px rgba(0, 0, 0, 0.85));
+}
+
+.credit-card h2 {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 8px;
+  color: var(--text);
+  font-size: 1.25rem;
+  text-shadow: 0 0 calc(8px * var(--theme-vfx, 1)) color-mix(in srgb, var(--text) 18%, transparent);
+}
+
+.credit-role {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 12px;
+  border: 1px solid color-mix(in srgb, var(--credit-accent) 42%, var(--border));
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--credit-accent) 8%, transparent);
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 0 calc(6px * var(--theme-vfx, 1)) color-mix(in srgb, var(--credit-accent) 5%, transparent);
+}
+
+.credit-card.owner .credit-role {
+  border-color: rgba(255, 201, 77, 0.55);
+  color: var(--c-warning);
+}
+
+@media (min-width: 1180px) {
+  .credits-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .credits-page {
+    padding: 44px 14px 100px;
+  }
+
+  .credits-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 14px;
+  }
+
+  .credit-card {
+    padding: 28px 12px 18px;
+  }
+
+  .credit-avatar-wrap {
+    width: 128px;
+  }
+
+  .credit-avatar {
+    width: 112px;
+    height: 112px;
+  }
+
+  .credit-icon {
+    width: 52px;
+    height: 52px;
+  }
+
+  .crown-icon {
+    width: 76px;
+    height: 52px;
+  }
+}
+
+@media (max-width: 420px) {
+  .credits-grid {
+    grid-template-columns: 1fr;
+  }
+}

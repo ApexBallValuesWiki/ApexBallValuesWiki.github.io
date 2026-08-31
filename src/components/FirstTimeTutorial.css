@@ -1,0 +1,110 @@
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 24px;
+}
+
+.tutorial-card {
+  width: min(440px, 100%);
+  background: var(--bg-card, #0a0a0e);
+  border: 1px solid var(--border-strong, rgba(255, 255, 255, 0.2));
+  border-radius: 24px;
+  padding: 32px 28px 28px;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(77, 157, 255, 0.15);
+  font-family: var(--font, 'Montserrat', system-ui, sans-serif);
+}
+
+.tutorial-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.tutorial-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-faint, #555);
+  transition: all 0.3s ease;
+}
+
+.tutorial-dot.active {
+  width: 24px;
+  border-radius: 4px;
+  background: var(--accent, var(--c-info));
+  box-shadow: 0 0 10px var(--accent, var(--c-info));
+}
+
+.tutorial-step {
+  margin-bottom: 28px;
+}
+
+.tutorial-icon {
+  font-size: 2.8rem;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.tutorial-step h2 {
+  margin: 0 0 12px;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--text, #fff);
+}
+
+.tutorial-step p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--text-dim, #bfbfbf);
+}
+
+.tutorial-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.tutorial-skip,
+.tutorial-next {
+  min-height: 42px;
+  padding: 10px 24px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tutorial-skip {
+  background: transparent;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.16));
+  color: var(--text-dim, #bfbfbf);
+}
+
+.tutorial-skip:hover {
+  border-color: var(--border-strong, #fff);
+  color: var(--text, #fff);
+}
+
+.tutorial-next {
+  background: var(--text, #fff);
+  border: 1px solid var(--border-strong, #fff);
+  color: var(--accent-inverse, #000);
+  box-shadow: 0 0 16px rgba(77, 157, 255, 0.3);
+}
+
+.tutorial-next:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(77, 157, 255, 0.5);
+}

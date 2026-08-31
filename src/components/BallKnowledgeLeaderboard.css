@@ -1,0 +1,50 @@
+.bk-leaderboard {
+  padding: 18px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  margin-top: 18px;
+}
+
+.bk-leaderboard h3 {
+  margin: 0 0 16px;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.bk-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.bk-stat {
+  text-align: center;
+  padding: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.bk-stat-value {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--text);
+  font-family: ui-monospace, monospace;
+}
+
+.bk-stat-label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+@media (max-width: 640px) {
+  .bk-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
