@@ -1,38 +1,34 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.dirname(__dirname);
 
-// Read generated units data to fill in missing name/rarity. This used to read
-// the file as TEXT, regex out the array and `eval` it — which broke on any
-// trailing comment and shipped an eval into the build. The generated file is
-// plain data in a module we already own, so import it like any other module.
-async function loadGeneratedUnits() {
+// Read generated units data to fill in missing name/rarity
+function loadGeneratedUnits() {
   try {
-    const file = path.join(ROOT, 'src', 'data', 'generated', 'units.generated.js');
-    const mod = await import(pathToFileURL(file).href);
-    return Array.isArray(mod.GENERATED_UNITS) ? mod.GENERATED_UNITS : [];
+    const filePath = path.join(ROOT, 'src', 'data', 'generated', 'units.generated.js');
+    const content = fs.readFileSync(filePath, 'utf-8');
+    // Extract the ALL_UNITS array using eval (safe - this is our own generated file)
+    const match = content.match(/export const GENERATED_UNITS\s*=\s*(\[[\s\S]*?\]);/);
+    if (match) {
+      return eval(match[1]);
+    }
   } catch (e) {
     console.warn('Could not load generated units:', e.message);
-    return [];
   }
+  return [];
 }
-// Awaited here, not inside main(): the enrichment loop below reads ALL_UNITS and
-// a top-level `try` swallowed the failure, so the bake silently skipped it.
-const ALL_UNITS = await loadGeneratedUnits();
+const ALL_UNITS = loadGeneratedUnits();
 
-// ============================================================================
 // APEX BUILD-TIME DATA BAKE (SUPABASE FULLY DEPRECATED)
-// ----------------------------------------------------------------------------
 // Pulls the ENTIRE live database (values, WIKI, maps & crates overrides) from
 // our serverless Cloudflare Worker + KV store and bakes it into
 // `public/overrides/staticOverrides.json`. The runtime app fetches the Worker
 // first and gracefully falls back to this baked file if the Worker is ever
 // offline — so the site always boots with a known-good snapshot and database
 // egress stays at $0.00/month.
-// ============================================================================
 const KV_WORKER_URL =
   process.env.APEX_KV_URL ||
   process.env.VITE_APEX_KV_URL ||
@@ -169,11 +165,6 @@ async function main() {
       if (!wiki.type && unitsLookup[slug]) wiki.type = unitsLookup[slug].type;
     }
 
-    // deletedUnits must ride along: the baked snapshot is what the site (and
-    // the worker's own fallback) serves when it cannot reach KV, and without
-    // this list every site-wide deletion silently reappeared on those visitors.
-    const deletedUnits = Array.isArray(bundle?.deletedUnits) ? bundle.deletedUnits.filter((slug) => typeof slug === 'string' && slug) : [];
-
     const out = {
       timestamp: new Date().toISOString(),
       valueOverrides,
@@ -182,7 +173,6 @@ async function main() {
       crateOverrides,
       materialOverrides,
       unitsLookup,
-      deletedUnits,
     };
 
     const targetPath = path.join(ROOT, 'public', 'overrides', 'staticOverrides.json');

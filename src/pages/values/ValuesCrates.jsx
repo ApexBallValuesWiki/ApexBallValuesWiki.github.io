@@ -3,10 +3,8 @@ import EntityGrid from '../../components/EntityGrid';
 import { VALUES_NAV } from '../../config/navigation';
 import { useData } from '../../context/DataContext';
 
-// ============================================================================
 // VALUES / CRATES — every crate with its live data (drop rates, obtain) and
 // value when the team has set one. Mirrors the WIKI crates page, values-side.
-// ============================================================================
 export default function ValuesCrates() {
   const { crates } = useData();
 

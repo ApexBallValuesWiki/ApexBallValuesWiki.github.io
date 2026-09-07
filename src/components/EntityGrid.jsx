@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { getRarityPalette, getRarityGlow, isShinyRarity } from '../data/taxonomy';
 import { getBaseStats } from '../utils/unitStats';
 import { useScrollToHighlight } from '../utils/useScrollToHighlight';
+import { TermTip } from './StatMeta';
 import UnitIcon from './UnitIcon';
 import './EntityGrid.css';
 
@@ -86,25 +87,25 @@ export default function EntityGrid({ entities, linkBase, renderMeta, emptyLabel,
                   <div className="unit-card-stats">
                     {stats.damage != null && (
                       <div className="unit-card-stat">
-                        <span className="unit-card-stat-label">Damage</span>
+                        <TermTip term="damage" className="unit-card-stat-label">Damage</TermTip>
                         <span className="unit-card-stat-value">{stats.damage}</span>
                       </div>
                     )}
                     {stats.cooldown != null && (
                       <div className="unit-card-stat">
-                        <span className="unit-card-stat-label">Cooldown</span>
+                        <TermTip term="cooldown" className="unit-card-stat-label">Cooldown</TermTip>
                         <span className="unit-card-stat-value">{stats.cooldown}s</span>
                       </div>
                     )}
                     {stats.range != null && (
                       <div className="unit-card-stat">
-                        <span className="unit-card-stat-label">Range</span>
+                        <TermTip term="range" className="unit-card-stat-label">Range</TermTip>
                         <span className="unit-card-stat-value">{stats.range}</span>
                       </div>
                     )}
                     {stats.placementLimit != null && (
                       <div className="unit-card-stat">
-                        <span className="unit-card-stat-label">Placement</span>
+                        <TermTip term="placement" className="unit-card-stat-label">Placement</TermTip>
                         <span className="unit-card-stat-value">{stats.placementLimit}</span>
                       </div>
                     )}

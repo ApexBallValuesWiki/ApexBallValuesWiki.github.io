@@ -1,14 +1,11 @@
 import { UNIT_RARITIES } from './taxonomy';
 import { encodeRouteParam } from '../utils/routeParams';
 
-// ============================================================================
 // SITE NAVIGATION TREE
-// ----------------------------------------------------------------------------
 // Scope is currently reduced to Units (Normie / Shiny Normie only) while
 // real data/art gets built out — Items, Maps, Traits, and Skins are removed
 // from navigation for now. Re-add sections here once ready; the underlying
 // data/pages for them still exist and aren't deleted.
-// ============================================================================
 
 export const WIKI_NAV = [
   {

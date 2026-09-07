@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { slugify } from '../../utils/slug';
-import { processAdminImage } from '../../utils/adminImage';
+import { uploadUnitImage } from '../../utils/adminImage';
 import { compressImage } from '../../utils/adminSafety';
 
 // Create a REAL material — stored as a WIKI row with kind:'material' so it
@@ -22,8 +22,8 @@ export default function CreateMaterialForm({ session, onCreate, saving, existing
     if (!name.trim()) return setError('Type a material name first.');
     if (clash) return setError(`A material called "${name.trim()}" already exists.`);
     if (!session?.user?.id) return setError('Session expired. Please log in again.');
-    const { imageUrl, error: imageError } = await processAdminImage(imageFile);
-    if (imageError) setError(`${imageError} The ${fname.replace('Create','').replace('Form.jsx','').toLowerCase()} was created without a picture.`);
+    let imageUrl = null;
+    if (imageFile) imageUrl = await uploadUnitImage(await compressImage(imageFile), slug, session).catch(() => null);
     await onCreate({
       slug, name: name.trim(), kind: 'material',
       description: description.trim(), effect: effect.trim(),

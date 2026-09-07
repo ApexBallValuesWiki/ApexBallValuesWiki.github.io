@@ -1,7 +1,5 @@
-// ============================================================================
 // Ball Knowledge — pure time/date helpers, extracted from the component so
 // they're unit-testable. All the daily-puzzle + reset-math lives here.
-// ============================================================================
 
 export const EST_OFFSET_MS = 5 * 60 * 60 * 1000;
 export const RESET_HOUR_EST = 15; // 3PM EST
@@ -38,13 +36,9 @@ export function isNightmareMode(modeConfig) {
 }
 
 /**
- * Returns the next reset timestamp (ms) for the given mode.
- *
- * For Nightmare (3-day cycle), the next reset is derived from the
- * reset-adjusted day (getDailyKey) — NOT the raw calendar day. Using the raw
- * day previously made the timer jump to ~4 days at EST midnight and never
- * reach zero, because the raw day rolls over at midnight while the puzzle only
- * rolls over at the 3PM EST reset.
+ * Next reset timestamp (ms) for the given mode. Nightmare (3-day cycle) uses
+ * the reset-adjusted day (getDailyKey), NOT the raw calendar day — the raw
+ * day made the timer jump at EST midnight.
  */
 export function nextResetMs(nowMs, modeConfig) {
   const parts = getEstParts(nowMs);

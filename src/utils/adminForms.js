@@ -1,7 +1,6 @@
 import { VALUE_OVERRIDES } from '../data/values';
 import { GENERATED_VALUE_OVERRIDES } from '../data/generated/units.generated';
 import { attacksToLines, linesToAttacks } from './attacks';
-import { roleCan } from './teamMembers';
 
 export { attacksToLines, linesToAttacks };
 
@@ -18,19 +17,23 @@ export function ensureObject(val) {
   return {};
 }
 
-// Roles carry capabilities (see utils/teamMembers.js ROLE_CAPS) instead of a
-// hard-coded allow-list per screen — that list is what silently locked people
-// out of Create/Delete whenever a role key drifted from the worker's roster.
+export const VALUE_ROLES = ['owner', 'admin_plus', 'admin', 'lead_value_editor', 'value_editor', 'editor'];
+export const WIKI_ROLES = ['owner', 'admin_plus', 'admin', 'lead_wiki_editor', 'wiki_editor', 'editor'];
+export const FANART_ROLES = ['owner', 'admin_plus', 'admin', 'fanart_editor', 'editor'];
+
 export function canEditValue(role) {
-  return roleCan(role, 'values');
+  if (!role) return false;
+  return VALUE_ROLES.includes(role.toLowerCase());
 }
 
 export function canEditWiki(role) {
-  return roleCan(role, 'wiki');
+  if (!role) return false;
+  return WIKI_ROLES.includes(role.toLowerCase());
 }
 
 export function canEditFanart(role) {
-  return roleCan(role, 'fanart');
+  if (!role) return false;
+  return FANART_ROLES.includes(role.toLowerCase());
 }
 
 export function errorMessage(error, fallback = 'Something went wrong. Please try again.') {
@@ -72,18 +75,30 @@ export function valueRowToForm(row, slug) {
   };
 }
 
+// Special non-numeric base values: 'O/C' (one-of-one / overcomp — nobody
+// active can offer for it) and 'N/A' (not assignable). Stored as strings.
+export const SPECIAL_BASE_VALUES = ['O/C', 'N/A'];
+
+export function isSpecialBaseValue(raw) {
+  const cleaned = String(raw ?? '').trim().toUpperCase().replace(/\s+/g, '');
+  return SPECIAL_BASE_VALUES.includes(cleaned) ? cleaned : null;
+}
+
 export function normalizeValueForm(data) {
   const gems = data?.gems;
   const coins = data?.coins;
   const gemsMax = data?.gemsMax;
   const coinsMax = data?.coinsMax;
+  const special = isSpecialBaseValue(data?.baseValue);
+  const specialGems = isSpecialBaseValue(gems);
+  const specialCoins = isSpecialBaseValue(coins);
   return {
-    baseValue: Number(data?.baseValue) || 0,
+    baseValue: special || (Number(data?.baseValue) || 0),
     baseValueMax: (data?.baseValueMax !== '' && data?.baseValueMax != null) ? Number(data.baseValueMax) : null,
-    gems: (gems !== '' && gems != null) ? Number(gems) : 0,
-    gemsMax: (gemsMax !== '' && gemsMax != null) ? Number(gemsMax) : null,
-    coins: (coins !== '' && coins != null) ? Number(coins) : 0,
-    coinsMax: (coinsMax !== '' && coinsMax != null) ? Number(coinsMax) : null,
+    gems: specialGems || ((gems !== '' && gems != null) ? Number(gems) : 0),
+    gemsMax: specialGems ? null : ((gemsMax !== '' && gemsMax != null) ? Number(gemsMax) : null),
+    coins: specialCoins || ((coins !== '' && coins != null) ? Number(coins) : 0),
+    coinsMax: specialCoins ? null : ((coinsMax !== '' && coinsMax != null) ? Number(coinsMax) : null),
     demand: data?.demand || 'Normal',
     scarcity: data?.scarcity || 'Standard',
     trend: data?.trend || 'stable',

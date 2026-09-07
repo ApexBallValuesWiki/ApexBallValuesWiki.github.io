@@ -132,7 +132,7 @@ export default function ThemeEditor({ open, onClose }) {
   }
 
   function importThemeCode() {
-    const code = window.prompt('Paste APEX theme code:');
+    const code = window.prompt('Paste Testing theme code:');
     if (!code) return;
     try {
       let decoded = decodeURIComponent(atob(code.trim()));
@@ -153,7 +153,7 @@ export default function ThemeEditor({ open, onClose }) {
       <aside ref={panelRef} className="theme-panel" data-lenis-prevent onTouchMove={(event) => event.stopPropagation()} onClick={(event) => event.stopPropagation()}>
         <div className="theme-head">
           <div>
-            <div className="theme-kicker">APEX Interface</div>
+            <div className="theme-kicker">Testing Interface</div>
             <h2>Theme Editor</h2>
           </div>
           <button type="button" className="theme-close" onClick={onClose} aria-label="Close theme editor">

@@ -1,16 +1,12 @@
-// ============================================================================
 // APEX KV PUBLISH LAYER — full-bundle publish with concurrency protection.
 // Extracted from AdminHome so the publish flow is testable and reusable.
-// ============================================================================
 import { APEX_KV_URL, getAdminHeaders } from '../../utils/apexClient';
 import {
   loadLocalValueOverrides,
   loadLocalWikiOverrides,
   loadLocalMapOverrides,
   loadLocalCrateOverrides,
-  loadLocalMaterialOverrides,
   loadLocalDeletedOverrides,
-  loadLocalDeletedUnits,
 } from '../../utils/localOverrides';
 
 export async function fetchBakedBackupBundle() {
@@ -43,73 +39,35 @@ export async function buildFullPublishBundle() {
   const localWiki = loadLocalWikiOverrides() || {};
   const localMaps = loadLocalMapOverrides() || {};
   const localCrates = loadLocalCrateOverrides() || {};
-  const localMaterials = loadLocalMaterialOverrides() || {};
 
-  const deleted = loadLocalDeletedOverrides() || { value: [], wiki: [], map: [], crate: [], materials: [] };
+  const deleted = loadLocalDeletedOverrides() || { value: [], wiki: [], map: [], crate: [] };
 
-  // `unitGated` sections hold rows for UNITS, which is what bundle.deletedUnits
-  // tombstones. Materials (and, at worst, a slug collision on a map/crate) are
-  // NOT units — applying a unit's tombstone to them silently deleted rows the
-  // admin had just saved.
   const sections = [
-    { key: 'valueOverrides', baked: bakedData.valueOverrides, kv: kvData?.valueOverrides, local: localValues, deletedKey: 'value', unitGated: true },
-    { key: 'wikiOverrides', baked: bakedData.wikiOverrides, kv: kvData?.wikiOverrides, local: localWiki, deletedKey: 'wiki', unitGated: true },
-    { key: 'mapOverrides', baked: bakedData.mapOverrides, kv: kvData?.mapOverrides, local: localMaps, deletedKey: 'map', unitGated: true },
-    { key: 'crateOverrides', baked: bakedData.crateOverrides, kv: kvData?.crateOverrides, local: localCrates, deletedKey: 'crate', unitGated: true },
-    { key: 'materialOverrides', baked: bakedData.materialOverrides, kv: kvData?.materialOverrides, local: localMaterials, deletedKey: 'materials', unitGated: false },
+    { key: 'valueOverrides', baked: bakedData.valueOverrides, kv: kvData?.valueOverrides, local: localValues, deletedKey: 'value' },
+    { key: 'wikiOverrides', baked: bakedData.wikiOverrides, kv: kvData?.wikiOverrides, local: localWiki, deletedKey: 'wiki' },
+    { key: 'mapOverrides', baked: bakedData.mapOverrides, kv: kvData?.mapOverrides, local: localMaps, deletedKey: 'map' },
+    { key: 'crateOverrides', baked: bakedData.crateOverrides, kv: kvData?.crateOverrides, local: localCrates, deletedKey: 'crate' },
   ];
-
-  const siteWideDeleted = new Set([
-    ...(Array.isArray(kvData?.deletedUnits) ? kvData.deletedUnits : []),
-    ...loadLocalDeletedUnits(),
-  ]);
-
-  const DRAFT_LANES = [localValues, localWiki, localMaps, localCrates];
-  // A draft written for ANY unit section revives the whole unit — not just the
-  // section it was typed in. Saving a stat line on a deleted unit therefore
-  // keeps its wiki row alive too, instead of dropping half the entry.
-  const hasLiveDraft = (slug) => DRAFT_LANES.some((lane) => lane && slug in lane);
 
   const result = {
     timestamp: new Date().toISOString(),
     __baseVersion: typeof kvData?.__v === 'number' ? kvData.__v : undefined,
   };
 
-  for (const { key, baked, kv, local, deletedKey, unitGated } of sections) {
+  for (const { key, baked, kv, local, deletedKey } of sections) {
     const merged = {
       ...(baked || {}),
       ...(kv || {}),
       ...(local || {}),
     };
-    // A tombstone hides a slug UNLESS this admin has an actual draft row for it.
-    // Writing a row is a deliberate act (re-create after an accidental delete);
-    // deleting it silently is what made recreated units never appear.
     const deletedSlugs = deleted[deletedKey] || [];
     for (const slug of deletedSlugs) {
       if (!local || !(slug in local)) {
         delete merged[slug];
       }
     }
-    // Entries hidden site-wide (bundle.deletedUnits) are dropped too — unless a
-    // live draft is reviving them, in which case the SAVE wins and the registry
-    // entry is cleared further down. This is what makes "it won't save" work:
-    // the registry and the row disagree, and the row the admin just edited is
-    // the more recent, deliberate fact.
-    if (unitGated) {
-      for (const slug of siteWideDeleted) {
-        if (hasLiveDraft(slug)) continue;
-        if (!local || !(slug in local)) delete merged[slug];
-      }
-    }
     result[key] = merged;
   }
-
-  // Site-wide deleted units live in the same bundle. They used to be dropped
-  // on every full publish, which quietly un-deleted units on the next sync.
-  const restoredUnits = new Set([...(deleted.wiki || []), ...(deleted.value || [])]);
-  result.deletedUnits = [...siteWideDeleted].filter(
-    (slug) => !restoredUnits.has(slug) && !hasLiveDraft(slug)
-  );
 
   return result;
 }

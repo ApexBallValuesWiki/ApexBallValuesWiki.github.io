@@ -25,8 +25,3 @@ dist-ssr
 
 # Generated social-card PNGs are recreated by npm run cards
 /public/social/
-
-# Release tooling lives at the top of the distributed folder, not in the repo:
-# pushing from the package must never commit notify.ps1 / push.cmd.
-/notify.ps1
-/push.cmd

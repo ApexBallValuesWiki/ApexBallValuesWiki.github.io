@@ -1,10 +1,7 @@
-// ============================================================================
 // CLEAN-URL NORMALIZER
-// ----------------------------------------------------------------------------
 // The app migrated from HashRouter to BrowserRouter (clean URLs). This runs
 // once before the router boots and rewrites any legacy "…/#/route" bookmark
 // or Discord post into its clean path equivalent, so old links keep working.
-// ============================================================================
 
 const BASE_PATH = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '');
 
@@ -39,7 +36,7 @@ export function normalizeUrlForCleanRouting(input) {
       isProvided = true;
     } else if (input && (typeof input.search === 'string' || typeof input.hash === 'string')) {
       const baseOrigin =
-        (typeof window !== 'undefined' && window.location?.origin) || 'https://apexballvalueswiki.github.io';
+        (typeof window !== 'undefined' && window.location?.origin) || 'https://zenithvalues.github.io';
       const basePathname =
         input.pathname || (typeof window !== 'undefined' && window.location?.pathname) || '/';
       const origin = input.origin || baseOrigin;

@@ -1,4 +1,4 @@
-# Apex Values & WIKI — Ball Tower Defense
+# Apex WIKI & Values — Ball Tower Defense
 
 Companion site for **Ball Tower Defense** (Roblox) by Cash Grab Studios $$$$.
 React 19 + Vite, deployed to GitHub Pages with **clean URLs, pre-rendered

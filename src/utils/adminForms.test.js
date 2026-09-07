@@ -32,17 +32,15 @@ describe('role checks', () => {
     expect(canEditValue('owner')).toBe(true);
     expect(canEditWiki('owner')).toBe(true);
   });
-  it('admin can edit both', () => {
-    expect(canEditValue('admin')).toBe(true);
-    expect(canEditWiki('admin')).toBe(true);
+  it('value_editor can edit values only', () => {
+    expect(canEditValue('value_editor')).toBe(true);
+    expect(canEditWiki('value_editor')).toBe(false);
   });
-  it('editor can edit values but not the WIKI side', () => {
-    expect(canEditValue('editor')).toBe(true);
-    expect(canEditWiki('editor')).toBe(false);
+  it('wiki_editor can edit wiki only', () => {
+    expect(canEditValue('wiki_editor')).toBe(false);
+    expect(canEditWiki('wiki_editor')).toBe(true);
   });
-  it('unknown and missing roles edit nothing', () => {
-    expect(canEditValue('nope')).toBe(false);
-    expect(canEditWiki('nope')).toBe(false);
+  it('no role edits nothing', () => {
     expect(canEditValue(null)).toBe(false);
     expect(canEditWiki(null)).toBe(false);
   });

@@ -6,7 +6,7 @@ const HISTORICAL_EDIT_COUNTS = {
   'gustavo.rb1410@gmail.com': { value: 90, wiki: 83 },      // 173 edits total
   'destroyha3@gmail.com': { value: 117, wiki: 0 },         // 117 edits total (Nose)
   'treymurphy3rd@gmail.com': { value: 84, wiki: 0 },       // 84 edits total (DancyBalls)
-  'bananatempest25@gmail.com': { value: 30, wiki: 44 },    // 74 historical edits; pre-dates the current roster
+  'bananatempest25@gmail.com': { value: 30, wiki: 44 },    // 74 edits total (Nemuiito)
   'gloomy302010@gmail.com': { value: 0, wiki: 74 },        // 74 edits total (Gloomy)
   'alieldaw6@gmail.com': { value: 0, wiki: 52 },           // 52 edits total (Kron3d)
   'johnmustard129@gmail.com': { value: 0, wiki: 33 },      // 33 edits total (Silly Goober)
@@ -93,8 +93,8 @@ export default function ContributionGraph({ valueLogs = [], wikiLogs = [] }) {
 
       const item = {
         email,
-        name: member.displayName,
-        icon: member.roleIcon,
+        name: member.name,
+        icon: member.icon,
         roleLabel: member.roleLabel,
         count,
         percentRaw: percent,

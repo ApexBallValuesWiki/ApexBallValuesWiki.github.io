@@ -2,7 +2,7 @@ export const TOP_NAV_LINKS = [
   { to: '/wiki', label: 'WIKI' },
   { to: '/values', label: 'VALUES' },
   { to: '/values/calculator', label: 'CALCULATOR' },
-  { to: '/ball-knowledge', label: 'KNOWLEDGE' },
+  { to: '/minigames', label: 'MINIGAMES' },
   { to: '/achievements', label: 'ACHIEVEMENTS' },
   { to: '/theme-editor', label: 'THEME' },
 ];
@@ -11,7 +11,7 @@ export const MOBILE_NAV_LINKS = [
   { to: '/wiki', label: 'Wiki' },
   { to: '/values', label: 'Values' },
   { to: '/values/calculator', label: 'Calc' },
-  { to: '/ball-knowledge', label: 'Know' },
+  { to: '/minigames', label: 'Games' },
   { to: '/achievements', label: 'Awards' },
   { to: '/theme-editor', label: 'Theme' },
 ];
@@ -20,21 +20,18 @@ export const SHORTCUT_ROUTES = {
   w: '/wiki',
   v: '/values',
   c: '/values/calculator',
-  b: '/ball-knowledge',
+  b: '/minigames',
   t: '/theme-editor',
 };
 
 import { UNIT_RARITIES } from '../data/taxonomy';
 import { encodeRouteParam } from '../utils/routeParams';
 
-// ============================================================================
 // SITE NAVIGATION TREE
-// ----------------------------------------------------------------------------
 // Scope is currently reduced to Units (Normie / Shiny Normie only) while
 // real data/art gets built out — Items, Maps, Traits, and Skins are removed
 // from navigation for now. Re-add sections here once ready; the underlying
 // data/pages for them still exist and aren't deleted.
-// ============================================================================
 
 export const WIKI_NAV = [
   {

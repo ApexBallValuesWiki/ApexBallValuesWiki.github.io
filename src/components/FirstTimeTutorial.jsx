@@ -7,7 +7,7 @@ const TUTORIAL_KEY = 'apex-tutorial-seen-v1';
 const STEPS = [
   {
     icon: '📖',
-    title: 'Welcome to APEX Values & WIKI!',
+    title: 'Welcome to Apex WIKI & Values!',
     text: 'Your complete Ball Tower Defense companion — unit database, live values, and trade calculator.',
   },
   {

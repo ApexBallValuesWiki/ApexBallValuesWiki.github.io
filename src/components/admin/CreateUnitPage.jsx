@@ -1,17 +1,15 @@
 import { useState } from 'react';
 import { UNIT_RARITIES } from '../../data/taxonomy';
 import { slugify } from '../../utils/slug';
-import { processAdminImage } from '../../utils/adminImage';
+import { uploadUnitImage } from '../../utils/adminImage';
 import { compressImage } from '../../utils/adminSafety';
 import Dropdown from '../Dropdown';
 
-// ============================================================================
 // CREATE UNIT — a dedicated admin page for WIKI editors to add REAL units to
 // the site. This is not a "custom unit" concept: a created unit behaves
 // exactly like a built-in one (wiki page, shiny variant, values entry,
 // search, tier lists). After creation you land in the WIKI editor to fill
 // in the full stat sheet.
-// ============================================================================
 
 const BASE_RARITIES = UNIT_RARITIES.filter((r) => !r.startsWith('Shiny'));
 const TYPES = ['DPS', 'Support', 'Economy', 'Buff', 'Summoner'];
@@ -65,10 +63,10 @@ export default function CreateUnitPage({ session, onCreate, saving, existingSlug
     }
     setBusy(true);
     try {
-      // A picture that will not decode is NOT a reason to refuse the unit —
-      // create it and tell the admin to try the image again in the WIKI editor.
-      const { imageUrl, error: imageError } = await processAdminImage(imageFile);
-      if (imageError) setError(`${imageError} ${cleanName} is being created without that image.`);
+      let imageUrl = null;
+      if (imageFile) {
+        imageUrl = await uploadUnitImage(imageFile, slug, session);
+      }
       const payload = {
         slug,
         name: cleanName,
@@ -124,7 +122,6 @@ export default function CreateUnitPage({ session, onCreate, saving, existingSlug
     </section>
   );
 }
-
 
 function UnitFormFields({ name, setName, rarity, setRarity, type, setType, category, setCategory, description, setDescription, obtainText, setObtainText, imageFile, handleImage, working, submit, slug, slugClash }) {
   return (

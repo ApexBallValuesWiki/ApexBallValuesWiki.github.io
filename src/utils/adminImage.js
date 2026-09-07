@@ -1,10 +1,7 @@
-// ============================================================================
 // APEX UNIT IMAGE PREP
-// ----------------------------------------------------------------------------
 // Editors pick an image; it is resized/compressed in the browser and stored
 // as a compact WebP data URL inside the KV override itself — no storage
 // bucket, no upload service, nothing to clean up on delete.
-// ============================================================================
 
 function loadImageFromFile(file) {
   return new Promise((resolve, reject) => {
@@ -41,18 +38,14 @@ export async function prepareUnitImage(file, maxSize = 1024, quality = 0.84) {
   return new File([blob], `${(file.name || 'unit').replace(/\.[^.]+$/, '')}.webp`, { type: 'image/webp' });
 }
 
-/**
- * The old chain was encode -> File -> decode -> encode again: a WebP File that
- * `canvas.toBlob` could not produce (or that failed to re-decode) threw inside
- * the save, so the WHOLE record was rejected over its picture. One pass, from
- * the picked file straight to the data URL the entry stores.
- */
 export async function uploadContentImage(file, _prefix, _slug, _session) {
-  return fileToUnitRenderDataUrl(file, 512);
+  const prepared = await prepareUnitImage(file);
+  return fileToUnitRenderDataUrl(prepared, 512);
 }
 
 export async function uploadUnitImage(file, _slug, _session) {
-  return fileToUnitRenderDataUrl(file, 512);
+  const prepared = await prepareUnitImage(file);
+  return fileToUnitRenderDataUrl(prepared, 512);
 }
 
 export async function fileToUnitRenderDataUrl(file, size = 512) {
@@ -73,25 +66,6 @@ export async function fileToUnitRenderDataUrl(file, size = 512) {
   ctx.drawImage(image, x, y, width, height);
 
   return canvas.toDataURL('image/webp', 0.9);
-}
-
-/**
- * Every admin form used to wrap this call in its own ad-hoc try/catch (or in
- * none at all, which is how one unreadable PNG vetoed an entire unit save).
- * One shared rule instead: a missing file or a non-image is simply "no image";
- * a genuine encode failure is reported in `error` so the UI can say so while
- * the record still saves.
- */
-export async function processAdminImage(file, size = 512) {
-  if (!file) return { imageUrl: null, error: '' };
-  if (!file.type?.startsWith('image/')) {
-    return { imageUrl: null, error: 'That file is not an image — choose a PNG, JPEG or WebP.' };
-  }
-  try {
-    return { imageUrl: await fileToUnitRenderDataUrl(file, size), error: '' };
-  } catch (e) {
-    return { imageUrl: null, error: e?.message || 'Could not read that image.' };
-  }
 }
 
 /**

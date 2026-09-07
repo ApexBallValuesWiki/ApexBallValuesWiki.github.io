@@ -1,13 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// Clean URLs need absolute asset paths, so 'base' must match where the site
-// is actually served from. The GitHub Actions deploy sets
-//   VITE_BASE_PATH="/${{ github.event.repository.name }}/"
-// so GitHub Pages project sites (<owner>.github.io/<repo>/) always get
-// the right base automatically, even if the repo is renamed. Local dev/builds
-// fall back to '/' — override with VITE_BASE_PATH when manually building for
-// a subfolder deployment.
+// 'base' must match where the site is served. The GitHub Actions deploy sets
+// VITE_BASE_PATH="/<repo>/" for GitHub Pages project sites; local builds fall
+// back to '/' (override with VITE_BASE_PATH for manual subfolder builds).
 const githubRepoName = process.env.GITHUB_REPOSITORY?.split('/')[1];
 const deployBase = process.env.VITE_BASE_PATH || (process.env.GITHUB_ACTIONS && githubRepoName ? `/${githubRepoName}/` : '/');
 

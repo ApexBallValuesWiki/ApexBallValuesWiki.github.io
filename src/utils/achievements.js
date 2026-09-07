@@ -9,7 +9,8 @@ const PROGRESS_KEY = 'apex-achievement-progress-v1';
 const ALL_PAGES = [
   '/', '/wiki', '/wiki/units/Normie', '/wiki/maps', '/wiki/crates',
   '/values', '/values/units/Normie', '/values/calculator', '/values/crates',
-  '/ball-knowledge', '/achievements', '/credits',
+  '/minigames', '/minigames/ball-knowledge', '/minigames/ballonomics', '/minigames/balling',
+  '/achievements', '/credits',
 ];
 
 // Achievement definitions
@@ -25,6 +26,25 @@ export const ACHIEVEMENTS = [
   // Ball Knowledge Special
   { id: 'bk-speed', name: 'Speed Demon', desc: 'Complete Ball Knowledge in under 10 seconds', icon: '⚡', category: 'Ball Knowledge', goal: 1, stat: 'bk_speed_run' },
   { id: 'bk-perfect', name: 'Perfectionist', desc: 'Get 5 Ball Knowledge answers in a row', icon: '🔥', category: 'Ball Knowledge', goal: 1, stat: 'bk_streak_5' },
+  { id: 'bk-200', name: 'Encyclopedia', desc: 'Get 200 correct Ball Knowledge answers', icon: '📚', category: 'Ball Knowledge', goal: 200, stat: 'bk_correct' },
+  { id: 'bk-impossible-win', name: 'Down to the Wire', desc: 'Solve an Impossible Ball Knowledge puzzle', icon: '💀', category: 'Ball Knowledge', goal: 1, stat: 'bk_impossible_win' },
+  { id: 'bk-nightmare-win', name: 'Nightmare Slayer', desc: 'Solve a Nightmare Ball Knowledge puzzle', icon: '☠️', category: 'Ball Knowledge', goal: 1, stat: 'bk_nightmare_win' },
+  { id: 'bk-endless-5', name: 'Endless V', desc: 'Reach level 5 in Ball Knowledge Endless', icon: '♾️', category: 'Ball Knowledge', goal: 5, stat: 'bk_endless_best' },
+  { id: 'bk-endless-15', name: 'Endless XV', desc: 'Reach level 15 in Ball Knowledge Endless', icon: '🌀', category: 'Ball Knowledge', goal: 15, stat: 'bk_endless_best' },
+
+  // Ballonomics
+  { id: 'bono-first', name: 'First Call', desc: 'Make your first correct Ballonomics call', icon: '📈', category: 'Ballonomics', goal: 1, stat: 'bono_correct' },
+  { id: 'bono-sense', name: 'Market Sense', desc: 'Make 25 correct Ballonomics calls', icon: '📊', category: 'Ballonomics', goal: 25, stat: 'bono_correct' },
+  { id: 'bono-master', name: 'Market Master', desc: 'Make 100 correct Ballonomics calls', icon: '💼', category: 'Ballonomics', goal: 100, stat: 'bono_correct' },
+  { id: 'bono-perfect', name: 'Perfect Market', desc: 'Score 9/9 on a Ballonomics daily', icon: '🎯', category: 'Ballonomics', goal: 1, stat: 'bono_daily_perfect' },
+  { id: 'bono-streak', name: 'Hot Hand', desc: 'Reach a 10 chain in Ballonomics Endless', icon: '🔥', category: 'Ballonomics', goal: 1, stat: 'bono_endless_streak_10' },
+
+  // Balling
+  { id: 'ball-first', name: 'Sharp Eye', desc: 'Solve your first Balling puzzle', icon: '👁️', category: 'Balling', goal: 1, stat: 'balling_solved' },
+  { id: 'ball-ten', name: 'Blurred Lines', desc: 'Solve 10 Balling puzzles', icon: '🟪', category: 'Balling', goal: 10, stat: 'balling_solved' },
+  { id: 'ball-eagle', name: 'Eagle Eye', desc: 'Solve 25 Balling puzzles', icon: '🦅', category: 'Balling', goal: 25, stat: 'balling_solved' },
+  { id: 'ball-pixel', name: 'Pixel Perfect', desc: 'Solve a Balling puzzle at the very first pixel stage', icon: '🔎', category: 'Balling', goal: 1, stat: 'balling_pixel_perfect' },
+  { id: 'ball-chain-5', name: 'Chain Reaction', desc: 'Solve 5 Balling Quick Play rounds in a row', icon: '⛓️', category: 'Balling', goal: 1, stat: 'balling_quick_streak_5' },
 
   // Theme
   { id: 'theme-pioneer', name: 'Theme Pioneer', desc: 'Create your first custom theme', icon: '🎨', category: 'Theme', goal: 1, stat: 'themes_created' },
@@ -39,8 +59,12 @@ export const ACHIEVEMENTS = [
   { id: 'gen-explorer', name: 'Explorer', desc: 'Visit every page on the site', icon: '🗺️', category: 'General', goal: ALL_PAGES.length, stat: 'pages_visited_all' },
   { id: 'gen-veteran', name: 'Veteran', desc: 'Use the site for 30+ days', icon: '🏅', category: 'General', goal: 30, stat: 'days_active' },
   { id: 'gen-devotee', name: 'Daily Devotee', desc: 'Visit 7 days in a row', icon: '📅', category: 'General', goal: 7, stat: 'daily_streak' },
-  { id: 'gen-completionist', name: 'Completionist', desc: 'Unlock all achievements', icon: '🏆', category: 'General', goal: 17, stat: 'achievements_unlocked' },
+  { id: 'gen-completionist', name: 'Completionist', desc: 'Unlock all achievements', icon: '🏆', category: 'General', goal: 0, stat: 'achievements_unlocked' },
 ];
+
+// Completionist must always track "every OTHER achievement" — derive the goal
+// from the list itself so it can never go stale again.
+ACHIEVEMENTS.find((a) => a.id === 'gen-completionist').goal = ACHIEVEMENTS.length - 1;
 
 // Load progress from localStorage
 function loadProgress() {

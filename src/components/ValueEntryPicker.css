@@ -96,3 +96,51 @@
   color: var(--text-dim);
   flex-shrink: 0;
 }
+/* Full-catalog browse view (no search typed) */
+.vep-dropdown {
+  max-height: 440px;
+}
+
+.vep-group + .vep-group {
+  margin-top: 4px;
+}
+
+.vep-group-label {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 7px 10px 5px;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim, #bfbfbf);
+  background: rgba(6, 6, 6, 0.97);
+  backdrop-filter: blur(18px) saturate(140%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.vep-group-label-currency {
+  color: var(--accent, #4d9dff);
+}
+
+.vep-currency-option .vep-option-meta {
+  color: var(--text-faint, #7a7a7a);
+}
+
+.vep-currency-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.vep-option-hint {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint, #7a7a7a);
+}

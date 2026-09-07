@@ -29,9 +29,7 @@ jobs:
       - run: npm run cards
       - run: npm run build
         env:
-          # Root site (apexballvalueswiki.github.io), so assets must be absolute from '/'.
-          VITE_BASE_PATH: '/'
-          VITE_SITE_URL: https://apexballvalueswiki.github.io
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

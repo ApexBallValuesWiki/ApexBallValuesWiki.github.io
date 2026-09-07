@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BASE_UNITS } from '../data/units';
-import { labelAttacks } from '../utils/attacks';
 import {
   getEstParts,
   formatDateKey,
@@ -12,6 +11,8 @@ import {
   getModeDayKey as getModeDayKeyBase,
 } from '../utils/ballKnowledgeTime';
 import { incrementStat, setStat } from '../utils/achievements';
+import { endlessConfig, pickEndlessPuzzle, loadBestLevel, saveBestLevel } from '../utils/bkEndless';
+import { buildCandidates } from '../utils/bkCandidates';
 import './BallKnowledge.css';
 
 const STORAGE_PREFIX = 'apex-ball-knowledge';
@@ -78,62 +79,6 @@ function hasEntries(obj) {
 function formatEntries(obj) {
   if (!hasEntries(obj)) return '—';
   return Object.entries(obj).map(([k, v]) => `${k}: ${v}`).join(' / ');
-}
-
-function getDamageRows(upgrade) {
-  const rows = [];
-  Object.entries(upgrade.stats || {}).forEach(([key, value]) => {
-    if (/damage/i.test(key)) rows.push({ label: key, value });
-  });
-  labelAttacks(upgrade.attacks).forEach((attack) => {
-    Object.entries(attack.stats).forEach(([key, value]) => {
-      if (/damage/i.test(key)) rows.push({ label: attack.name === 'Stats' ? key : `${attack.label} ${key}`, value });
-    });
-  });
-  return rows;
-}
-
-function isUsefulCostPerDps(value) {
-  return value && !/^n\/?a\$?$/i.test(String(value).trim());
-}
-
-function isPlacementUpgrade(upgrade) {
-  if (!upgrade) return false;
-  if (upgrade.level === 0 || upgrade.level === 1) {
-    if (/placement/i.test(String(upgrade.label || '')) || /placement/i.test(String(upgrade.description || ''))) return true;
-  }
-  return /^\s*placement\s*$/i.test(String(upgrade.label || ''));
-}
-
-function upgradeContainsUnitName(unit, upgrade) {
-  if (!unit || !upgrade) return false;
-  const unitName = String(unit.name || '').trim().toLowerCase();
-  if (!unitName) return false;
-
-  const words = unitName.split(/\s+/).map((w) => w.replace(/[^a-z0-9]/gi, '')).filter((w) => w.length >= 3);
-  const stems = new Set([unitName, unitName.replace(/\s+/g, ''), ...words]);
-
-  const testText = `${upgrade.label || ''} ${upgrade.description || ''}`.toLowerCase();
-  for (const stem of stems) {
-    if (testText.includes(stem)) return true;
-  }
-  return false;
-}
-
-function buildCandidates() {
-  return BASE_UNITS.flatMap((unit) =>
-    (unit.upgrades || []).map((upgrade) => ({ unit, upgrade, damageRows: getDamageRows(upgrade) }))
-  ).filter(({ unit, upgrade, damageRows }) =>
-    unit.documented &&
-    !unit.unavailableData &&
-    !isPlacementUpgrade(upgrade) &&
-    !upgradeContainsUnitName(unit, upgrade) &&
-    hasEntries(upgrade.dps) &&
-    isUsefulCostPerDps(upgrade.costPerDps) &&
-    damageRows.length > 0 &&
-    upgrade.range &&
-    upgrade.cooldown
-  );
 }
 
 function hashString(value) {
@@ -319,6 +264,11 @@ export default function BallKnowledge() {
   const [message, setMessage] = useState('');
   const [nightmareRemaining, setNightmareRemaining] = useState(modeConfig.timeLimit);
   const verifiedAtRef = useRef(null);
+  // Endless chain mode: fresh puzzle per level, details trim as levels rise.
+  const [endless, setEndless] = useState(null); // { seed, level, usedSlugs, round, over }
+  const endlessTimer = useRef(null);
+
+  useEffect(() => () => clearTimeout(endlessTimer.current), []);
 
   useEffect(() => {
     try { localStorage.setItem('apex-ball-knowledge-mode', mode); } catch { /* ignore */ }
@@ -360,6 +310,19 @@ export default function BallKnowledge() {
   }, [dayKey, mode, userSeed]);
 
   useEffect(() => {
+    if (mode === 'endless' && !endless) {
+      setEndless({
+        seed: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        level: 1,
+        usedSlugs: [],
+        round: { guesses: [], won: false, lost: false },
+        over: false,
+      });
+      setMessage('');
+    }
+  }, [mode, endless]);
+
+  useEffect(() => {
     if (!progressKey) return;
     setProgress(loadProgress(progressKey));
     setGuess('');
@@ -389,13 +352,22 @@ export default function BallKnowledge() {
   }, [mode, progressKey, progress.won, progress.lost]);
 
   const puzzle = useMemo(() => getPuzzleForDay(candidates, dayKey, mode, userSeed), [candidates, dayKey, mode, userSeed]);
+  const endlessCfg = useMemo(() => endlessConfig(endless?.level || 1), [endless?.level]);
+  const endlessPuzzle = useMemo(
+    () => (endless ? pickEndlessPuzzle(candidates, endless.seed, endless.level, endless.usedSlugs) : null),
+    [endless, candidates]
+  );
+  const endlessRound = endless?.round || { guesses: [], won: false, lost: false };
   const suggestions = useMemo(() => {
     const q = normalizeGuess(guess);
-    const guessedSlugs = new Set(progress.guesses.map((g) => g.slug));
+    const guessedSlugs = new Set([
+      ...progress.guesses.map((g) => g.slug),
+      ...(mode === 'endless' ? endlessRound.guesses.map((g) => g.slug) : []),
+    ]);
     const availableUnits = units.filter((unit) => !guessedSlugs.has(unit.slug));
     if (!q) return availableUnits.slice(0, 24);
     return availableUnits.filter((unit) => normalizeGuess(unit.name).includes(q) || unit.slug.includes(q.replace(/\s+/g, '-'))).slice(0, 32);
-  }, [guess, progress.guesses, units]);
+  }, [guess, progress.guesses, units, mode, endlessRound.guesses]);
 
   const wrongGuesses = progress.guesses.filter((g) => !g.correct).length;
   const showDamage = modeConfig.startingDamage || wrongGuesses >= modeConfig.reveal.damage || progress.won || progress.lost;
@@ -412,6 +384,71 @@ export default function BallKnowledge() {
   function commitProgress(nextProgress) {
     setProgress(nextProgress);
     if (progressKey) saveProgress(progressKey, nextProgress);
+  }
+
+  function restartEndless() {
+    clearTimeout(endlessTimer.current);
+    setEndless({
+      seed: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      level: 1,
+      usedSlugs: [],
+      round: { guesses: [], won: false, lost: false },
+      over: false,
+    });
+    setGuess('');
+    setDropdownOpen(false);
+    setMessage('');
+  }
+
+  function submitEndlessGuess(event) {
+    event.preventDefault();
+    if (!endless || endless.over || endlessRound.won || !endlessPuzzle) return;
+
+    const normalized = normalizeGuess(guess);
+    const guessedUnit = units.find((u) => normalizeGuess(u.name) === normalized || u.slug === normalized.replace(/\s+/g, '-'));
+    if (!guessedUnit) {
+      setMessage('Pick a unit from the unit list.');
+      return;
+    }
+    if (endlessRound.guesses.some((g) => g.slug === guessedUnit.slug)) {
+      setMessage('You already guessed that unit this level.');
+      setGuess('');
+      return;
+    }
+
+    const correct = guessedUnit.slug === endlessPuzzle.unit.slug;
+    const nextGuesses = [...endlessRound.guesses, { slug: guessedUnit.slug, name: guessedUnit.name, correct }];
+
+    if (correct) {
+      incrementStat('bk_correct', 1);
+      const reached = endless.level;
+      if (reached > loadBestLevel()) {
+        saveBestLevel(reached);
+        setStat('bk_endless_best', reached);
+      }
+      setMessage(`Correct — level ${reached} cleared. The clues are thinning…`);
+      setEndless((prev) => ({ ...prev, round: { guesses: nextGuesses, won: true, lost: false } }));
+      clearTimeout(endlessTimer.current);
+      endlessTimer.current = setTimeout(() => {
+        setEndless((prev) => ({
+          ...prev,
+          level: prev.level + 1,
+          usedSlugs: [...prev.usedSlugs, endlessPuzzle.unit.slug],
+          round: { guesses: [], won: false, lost: false },
+        }));
+        setGuess('');
+        setDropdownOpen(false);
+        setMessage('');
+      }, 1000);
+    } else if (nextGuesses.length >= endlessCfg.maxGuesses) {
+      setEndless((prev) => ({ ...prev, over: true, round: { guesses: nextGuesses, won: false, lost: true } }));
+      setMessage(`Run over at level ${endless.level}. The answer is revealed below.`);
+    } else {
+      setEndless((prev) => ({ ...prev, round: { guesses: nextGuesses, won: false, lost: false } }));
+      setMessage('Not that unit. New clue may have unlocked.');
+    }
+    setGuess('');
+    setDropdownOpen(false);
   }
 
   function submitGuess(event) {
@@ -438,6 +475,8 @@ export default function BallKnowledge() {
     if (correct && !progress.won) {
       setStats((prev) => recordWin(prev, dayKey, nextProgress.guesses.length));
       incrementStat('bk_correct', 1);
+      if (mode === 'impossible') incrementStat('bk_impossible_win', 1);
+      if (mode === 'nightmare') incrementStat('bk_nightmare_win', 1);
       // Speed Demon: solved within 10 seconds of the day's first load
       if (progress.startTime && (Date.now() - progress.startTime) < 10000) {
         incrementStat('bk_speed_run', 1);
@@ -485,14 +524,125 @@ export default function BallKnowledge() {
     }
   }
 
-  if (timeState.status === 'loading') {
+  if (mode !== 'endless' && timeState.status === 'loading') {
     return <main className="bk-page"><div className="bk-panel card"><h1>Ball Knowledge</h1><p>Verifying global time…</p></div></main>;
   }
-  if (timeState.status === 'error') {
+  if (mode !== 'endless' && timeState.status === 'error') {
     return <main className="bk-page"><div className="bk-panel card"><h1>Ball Knowledge</h1><p className="bk-error">Couldn&apos;t verify global time, so today&apos;s puzzle is locked. This game does not use your PC clock. Check your connection and reload.</p></div></main>;
   }
-  if (!puzzle) {
+  if (mode !== 'endless' && !puzzle) {
     return <main className="bk-page"><div className="bk-panel card"><h1>Ball Knowledge</h1><p>No eligible upgrade clues found.</p></div></main>;
+  }
+
+  if (mode === 'endless') {
+    const wrongs = endlessRound.guesses.filter((g) => !g.correct).length;
+    const eLocked = endlessRound.won || endless?.over;
+    const eShowDamage = wrongs >= endlessCfg.reveal.damage || eLocked;
+    const eShowRange = wrongs >= endlessCfg.reveal.range || eLocked;
+    const eShowCooldown = wrongs >= endlessCfg.reveal.cooldown || eLocked;
+    const eShowRarity = wrongs >= endlessCfg.reveal.rarity || eLocked;
+    const eRenderDamage = endlessCfg.reveal.damage <= endlessCfg.maxGuesses || eShowDamage;
+    const eRenderRange = endlessCfg.reveal.range <= endlessCfg.maxGuesses || eShowRange;
+    const eRenderCooldown = endlessCfg.reveal.cooldown <= endlessCfg.maxGuesses || eShowCooldown;
+    const eRenderRarity = endlessCfg.reveal.rarity <= endlessCfg.maxGuesses || eShowRarity;
+    const guessesLeft = Math.max(0, endlessCfg.maxGuesses - endlessRound.guesses.length);
+    const eTitle = endlessPuzzle ? (endlessPuzzle.upgrade.description || endlessPuzzle.upgrade.label) : '';
+
+    return (
+      <main className="bk-page">
+        <motion.section className="bk-hero" variants={fadeUp} initial="initial" animate="animate">
+          <p className="bk-kicker">Endless Chain</p>
+          <h1>Ball Knowledge</h1>
+          <p className="bk-tagline">One puzzle per level. Every few levels the details trim: fewer guesses, fewer clues.</p>
+          <p className="bk-time-note">Level 7 loses DPS · 10 loses cost/DPS · 13 loses the level label · 16 is upgrade-name-only with a single guess.</p>
+        </motion.section>
+
+        <motion.section className="bk-mode-bar" variants={fadeUp} initial="initial" animate="animate" custom={0.05}>
+          {Object.entries(MODES).map(([id, cfg]) => (
+            <button key={id} type="button" className="bk-mode" onClick={() => setMode(id)}>
+              <span>{cfg.icon}</span> {cfg.label}
+            </button>
+          ))}
+          <button type="button" className="bk-mode active"><span>♾️</span> Endless</button>
+        </motion.section>
+
+        <motion.section className="bk-stats-strip" variants={fadeUp} initial="initial" animate="animate" custom={0.08}>
+          <StatTile label="Level" value={endless?.level || 1} />
+          <StatTile label="Best Level" value={loadBestLevel()} />
+          <StatTile label="Guesses Left" value={guessesLeft} />
+          <StatTile label="Cleared" value={(endless?.level || 1) - 1} />
+        </motion.section>
+
+        <motion.section className="bk-panel card" variants={fadeUp} initial="initial" animate="animate" custom={0.12}>
+          <div className="bk-panel-head">
+            <div>
+              <div className="bk-day">♾️ Endless · Level {endless?.level || 1} · {endlessCfg.maxGuesses} {endlessCfg.maxGuesses === 1 ? 'guess' : 'guesses'}</div>
+              <h2>Guess the unit</h2>
+            </div>
+          </div>
+
+          {endlessPuzzle && (
+            <div className="bk-clues">
+              <ClueCard label="Upgrade Name" value={eTitle} always />
+              {!endlessCfg.oneClueOnly && endlessCfg.showLevel && <ClueCard label="Level" value={endlessPuzzle.upgrade.label} always />}
+              {!endlessCfg.oneClueOnly && endlessCfg.showDps && <ClueCard label="DPS" value={formatEntries(endlessPuzzle.upgrade.dps)} always />}
+              {!endlessCfg.oneClueOnly && endlessCfg.showCostPerDps && <ClueCard label="Cost Per DPS" value={endlessPuzzle.upgrade.costPerDps} always />}
+              {!endlessCfg.oneClueOnly && eRenderDamage && <ClueCard label="Damage" value={endlessPuzzle.damageRows.map((r) => `${r.label}: ${r.value}`).join(' / ')} revealed={eShowDamage} lockedText={`Unlocks after ${endlessCfg.reveal.damage} wrong`} />}
+              {!endlessCfg.oneClueOnly && eRenderRange && <ClueCard label="Range" value={endlessPuzzle.upgrade.range} revealed={eShowRange} lockedText={`Unlocks after ${endlessCfg.reveal.range} wrong`} />}
+              {!endlessCfg.oneClueOnly && eRenderCooldown && <ClueCard label="Cooldown" value={endlessPuzzle.upgrade.cooldown} revealed={eShowCooldown} lockedText={`Unlocks after ${endlessCfg.reveal.cooldown} wrong`} />}
+              {!endlessCfg.oneClueOnly && eRenderRarity && <ClueCard label="Rarity" value={endlessPuzzle.unit.rarity} revealed={eShowRarity} lockedText={`Unlocks after ${endlessCfg.reveal.rarity} wrong`} />}
+            </div>
+          )}
+
+          {endless?.over ? (
+            <div className="bk-success bk-loss">
+              <div className="bk-result-label">Run Over — Reached Level {endless.level}</div>
+              <div className="bk-result-name">{endlessPuzzle ? endlessPuzzle.unit.name : '—'}</div>
+              <div className="bk-success-actions">
+                <button type="button" className="bk-link" onClick={restartEndless}>Restart Endless</button>
+              </div>
+            </div>
+          ) : (
+            <form className="bk-guess-form" onSubmit={submitEndlessGuess}>
+              <label htmlFor="bk-guess-endless">Your guess</label>
+              <div className="bk-guess-row">
+                <div className="bk-combobox">
+                  <input
+                    id="bk-guess-endless"
+                    value={guess}
+                    onChange={(e) => { setGuess(e.target.value); setDropdownOpen(true); }}
+                    onFocus={() => setDropdownOpen(true)}
+                    onBlur={() => setTimeout(() => setDropdownOpen(false), 120)}
+                    placeholder="Type a unit name…"
+                    autoComplete="off"
+                  />
+                  {dropdownOpen && (
+                    <div className="bk-suggestion-menu" data-lenis-prevent>
+                      {suggestions.length > 0 ? suggestions.map((unit) => (
+                        <button type="button" key={unit.slug} className="bk-suggestion-option" onMouseDown={(e) => e.preventDefault()} onClick={() => pickSuggestion(unit.name)}>
+                          <span>{unit.name}</span><small>{unit.rarity}</small>
+                        </button>
+                      )) : <div className="bk-suggestion-empty">No matching units.</div>}
+                    </div>
+                  )}
+                </div>
+                <button type="submit">Guess</button>
+              </div>
+            </form>
+          )}
+
+          {message && <div className={endlessRound.won ? 'bk-message success' : 'bk-message'}>{message}</div>}
+          {endlessRound.guesses.length > 0 && (
+            <div className="bk-guesses">
+              <h3>This level</h3>
+              <div className="bk-guess-list">
+                {endlessRound.guesses.map((entry) => <span key={entry.slug} className={entry.correct ? 'bk-guess-chip correct' : 'bk-guess-chip'}>{entry.correct ? '✓' : '×'} {entry.name}</span>)}
+              </div>
+            </div>
+          )}
+        </motion.section>
+      </main>
+    );
   }
 
   const upgradeTitle = puzzle.upgrade.description || puzzle.upgrade.label;
@@ -513,6 +663,9 @@ export default function BallKnowledge() {
             <span>{cfg.icon}</span> {cfg.label}
           </button>
         ))}
+        <button type="button" className={mode === 'endless' ? 'bk-mode active' : 'bk-mode'} onClick={() => setMode('endless')}>
+          <span>♾️</span> Endless
+        </button>
       </motion.section>
 
       <motion.section className="bk-stats-strip" variants={fadeUp} initial="initial" animate="animate" custom={0.08}>

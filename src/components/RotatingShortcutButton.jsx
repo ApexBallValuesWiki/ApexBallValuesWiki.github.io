@@ -145,7 +145,7 @@ export default function RotatingShortcutButton({ section = 'wiki' }) {
       <div className="heh-top-bar">
         <div className="heh-radar-status">
           <span className="heh-pulse-dot" />
-          <span>⚡ APEX {scope.toUpperCase()} MATRIX · {contentUnits.length} UNITS INDEXED</span>
+          <span>⚡ TESTING {scope.toUpperCase()} MATRIX · {contentUnits.length} UNITS INDEXED</span>
         </div>
 
         <div className="heh-timer-wrap">
@@ -252,7 +252,7 @@ export default function RotatingShortcutButton({ section = 'wiki' }) {
           <>
             <Link to="/values/units/search" className="heh-portal-link">🔍 Search Unit Values</Link>
             <Link to="/values/calculator" className="heh-portal-link">⚖️ Trade Calculator</Link>
-            <Link to="/ball-knowledge" className="heh-portal-link">🧠 Ball Knowledge Game</Link>
+            <Link to="/minigames" className="heh-portal-link">🧠 Ball Knowledge Game</Link>
           </>
         )}
       </div>

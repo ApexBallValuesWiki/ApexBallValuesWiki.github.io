@@ -25,7 +25,11 @@ function lazyWithRetry(importFunc) {
 
 const Home = lazyWithRetry(() => import('./pages/Home'));
 const BallKnowledge = lazyWithRetry(() => import('./pages/BallKnowledge'));
+const MinigamesHome = lazyWithRetry(() => import('./pages/minigames/MinigamesHome'));
+const Ballonomics = lazyWithRetry(() => import('./pages/minigames/Ballonomics'));
+const Balling = lazyWithRetry(() => import('./pages/minigames/Balling'));
 const AdminHome = lazyWithRetry(() => import('./pages/admin/AdminHome'));
+const NotFound = lazyWithRetry(() => import('./pages/NotFound'));
 const Credits = lazyWithRetry(() => import('./pages/Credits'));
 const ThemeStudio = lazyWithRetry(() => import('./pages/ThemeStudio'));
 
@@ -60,7 +64,7 @@ function LoadingFallback() {
   return (
     <main className="page-shell" aria-live="polite" aria-busy="true">
       <div className="card" style={{ padding: '1.25rem', textAlign: 'center' }}>
-        Loading APEX…
+        Loading Testing…
       </div>
     </main>
   );
@@ -82,7 +86,11 @@ export default function AppRoutes() {
   return (
     <Routes location={location} key={location.pathname}>
       <Route path="/" element={page(<Home />)} />
-      <Route path="/ball-knowledge" element={page(<BallKnowledge />)} />
+      <Route path="/minigames" element={page(<MinigamesHome />)} />
+      <Route path="/minigames/ball-knowledge" element={page(<BallKnowledge />)} />
+      <Route path="/minigames/ballonomics" element={page(<Ballonomics />)} />
+      <Route path="/minigames/balling" element={page(<Balling />)} />
+      <Route path="/ball-knowledge" element={<Navigate to="/minigames/ball-knowledge" replace />} />
       <Route path="/admin" element={page(<AdminHome />)} />
       <Route path="/admin/reset-password" element={page(<AdminHome />)} />
       <Route path="/theme-editor" element={page(<ThemeStudio />)} />
@@ -129,21 +137,21 @@ export default function AppRoutes() {
       <Route path="/values/crates" element={page(<ValuesCrates />)} />
       <Route path="/values/calculator" element={page(<TradeCalculator />)} />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={page(<NotFound />)} />
     </Routes>
   );
 }
 
-
-// ============================================================================
 // Route-chunk prefetch: call when a user hovers/focuses a link — the chunk
 // downloads before they click, so navigation feels instant. Same dynamic
 // imports as the lazy routes above → same chunks, no duplicates.
-// ============================================================================
 const PREFETCH_ROUTES = [
   ['/values/calculator', () => import('./pages/values/TradeCalculator')],
   ['/values', () => import('./pages/values/ValuesHome')],
-  ['/ball-knowledge', () => import('./pages/BallKnowledge')],
+  ['/minigames', () => import('./pages/minigames/MinigamesHome')],
+  ['/minigames/ball-knowledge', () => import('./pages/BallKnowledge')],
+  ['/minigames/ballonomics', () => import('./pages/minigames/Ballonomics')],
+  ['/minigames/balling', () => import('./pages/minigames/Balling')],
   ['/achievements', () => import('./pages/Achievements')],
   ['/theme-editor', () => import('./pages/ThemeStudio')],
   ['/wiki', () => import('./pages/wiki/WikiHome')],

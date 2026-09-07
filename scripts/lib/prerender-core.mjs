@@ -1,19 +1,8 @@
 #!/usr/bin/env node
-// ============================================================================
-// STATIC PRE-RENDERER + SOCIAL CARD META
-// ----------------------------------------------------------------------------
-// Runs automatically after `vite build` (see package.json "build").
-//
-// What it does:
-//   1. Emits a real `dist/<route>/index.html` for EVERY public route — every
-//      unit, item, map, trait, skin and value page — so GitHub Pages serves
-//      clean URLs (no hash, no client redirect) with correct per-page
-//      <title>/description/Open Graph/Twitter Card meta, and link previews
-//      show the page's social card image.
-//   2. Injects a small semantic content summary into #root of unit pages so
-//      crawlers see real content (React replaces it on boot).
-//   3. Generates dist/sitemap.xml, dist/robots.txt, dist/404.html (SPA
-//      fallback for client-only routes like /admin) and dist/.nojekyll.
+// STATIC PRE-RENDERER + SOCIAL CARD META — runs after `vite build`.
+// Emits dist/<route>/index.html for every public route (clean URLs with
+// per-page title/OG/Twitter meta and social card images), a semantic content
+// summary for crawlers, plus sitemap.xml, robots.txt, 404.html and .nojekyll.
 //
 // Config (both are set by the GitHub Actions deploy):
 //   VITE_BASE_PATH   e.g. "/apex-td-project/"  (defaults to "/")
@@ -31,11 +20,11 @@ import { SKINS_BY_CATEGORY, SHINY_SKINS_BY_CATEGORY } from '../../src/data/skins
 
 const ROOT = process.env.APEX_PROJECT_ROOT || dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const DIST = join(ROOT, 'dist');
-const SITE_NAME = 'APEX Values & WIKI';
+const SITE_NAME = 'Apex WIKI & Values';
 const BASE_PATH = (process.env.VITE_BASE_PATH || '/').replace(/\/+$/, '');
-const SITE_URL = (process.env.VITE_SITE_URL || 'https://apexballvalueswiki.github.io').replace(/\/+$/, '');
+const SITE_URL = (process.env.VITE_SITE_URL || 'https://zenithvalues.github.io').replace(/\/+$/, '');
 const DEFAULT_DESCRIPTION =
-  'APEX Values & WIKI — the complete companion for Ball Tower Defense by Cash Grab Studios $$$$. Unit database, live trade values, and trade calculator.';
+  'Apex WIKI & Values — the complete companion for Ball Tower Defense by Cash Grab Studios $$$$. Unit database, live trade values, and trade calculator.';
 
 const WINDOWS_ILLEGAL = /[<>:"\\|?*]/;
 const enc = encodeURIComponent;
@@ -56,9 +45,7 @@ function esc(value) {
     .replace(/>/g, '&gt;');
 }
 
-// ---------------------------------------------------------------------------
 // Route manifest
-// ---------------------------------------------------------------------------
 
 const routes = [];
 const seen = new Set();
@@ -80,7 +67,10 @@ function addRoute(path, meta) {
 
 // Core pages
 addRoute('/', { title: `${SITE_NAME} — Ball Tower Defense`, description: DEFAULT_DESCRIPTION, priority: '1.0' });
-addRoute('/ball-knowledge', { title: 'Ball Knowledge — daily reset tracker', priority: '0.5' });
+addRoute('/minigames', { title: 'Minigames — Ball TD arcade', priority: '0.7' });
+addRoute('/minigames/ball-knowledge', { title: 'Ball Knowledge — daily reset tracker', priority: '0.5' });
+addRoute('/minigames/ballonomics', { title: 'Ballonomics — higher or lower values game', priority: '0.5' });
+addRoute('/minigames/balling', { title: 'Balling — pixel reveal guessing game', priority: '0.5' });
 addRoute('/credits', { title: 'Credits', priority: '0.3' });
 addRoute('/wiki', { title: 'WIKI — Ball Tower Defense database', priority: '0.9' });
 addRoute('/wiki/compare', { title: 'Compare Units', priority: '0.5' });
@@ -187,9 +177,7 @@ for (const [category, skins] of Object.entries(SHINY_SKINS_BY_CATEGORY)) {
   }
 }
 
-// ---------------------------------------------------------------------------
 // HTML template rewriting
-// ---------------------------------------------------------------------------
 
 const template = readFileSync(join(DIST, 'index.html'), 'utf8');
 
@@ -253,7 +241,12 @@ for (const route of routes) {
 
 // SPA fallback + SEO housekeeping
 const homeHtml = renderRoute(routes[0]);
-writeFileSync(join(DIST, '404.html'), homeHtml);
+// 404.html = the SPA shell (not a copy of Home): GitHub Pages serves it at
+// the unknown URL, the router boots there, and the wildcard route renders
+// the real NotFound page with the visitor's original path shown.
+const shellHtml = template
+  .replace(/<title>[^<]*<\/title>/, '<title>Page not found | ' + SITE_NAME + '</title>');
+writeFileSync(join(DIST, '404.html'), shellHtml);
 writeFileSync(join(DIST, '.nojekyll'), '');
 writeFileSync(
   join(DIST, 'robots.txt'),

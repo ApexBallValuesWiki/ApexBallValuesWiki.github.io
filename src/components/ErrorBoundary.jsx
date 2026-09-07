@@ -1,106 +1,46 @@
 import { Component } from 'react';
 
-/**
- * Top-level crash guard: if any page throws during render, visitors get a
- * friendly recovery screen (with a way back home / reload) instead of a
- * blank white page. Kept intentionally dependency-free so it can never
- * itself fail.
- */
+// ERROR BOUNDARY — if any part of the UI crashes at render time, the site
+// shows a calm recovery screen instead of a blank white page. Reload always
+// fixes a one-off crash; "back to home" clears any bad route state.
+
 export default class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { error: null, errorInfo: null, copied: false };
+    this.state = { error: null };
   }
 
   static getDerivedStateFromError(error) {
-    const isChunkLoadError =
-      error?.message?.includes('Failed to fetch dynamically imported module') ||
-      error?.message?.includes('Importing a module script failed') ||
-      String(error).includes('dynamically imported module');
-
-    if (isChunkLoadError && typeof window !== 'undefined') {
-      const hasReloaded = sessionStorage.getItem('apex-chunk-reload-v1');
-      if (!hasReloaded) {
-        sessionStorage.setItem('apex-chunk-reload-v1', 'true');
-        window.location.reload();
-        return { error: null };
-      }
-    }
     return { error };
   }
 
-  componentDidCatch(error, errorInfo) {
-    // Surface crashes in the console for bug reports; keep rendering.
-    console.error('[APEX] Uncaught render error:', error, errorInfo);
-    this.setState({ errorInfo });
+  componentDidCatch(error, info) {
+    // Keep a trace in the console for debugging — never crash the UI for it.
+    console.error('[APEX] UI crash caught by boundary:', error, info?.componentStack);
   }
-
-  handleReload = () => {
-    window.location.reload();
-  };
-
-  handleHome = () => {
-    this.setState({ error: null, errorInfo: null });
-    window.location.assign(import.meta.env.BASE_URL || '/');
-  };
-
-  handleReset = () => {
-    this.setState({ error: null, errorInfo: null, copied: false });
-  };
-
-  handleCopyDetails = () => {
-    const { error, errorInfo } = this.state;
-    const details = `[APEX Error Details]\nException: ${String(error || '')}\nStack Trace:\n${errorInfo?.componentStack || ''}`;
-    try {
-      if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(details);
-        this.setState({ copied: true });
-        setTimeout(() => this.setState({ copied: false }), 2000);
-      }
-    } catch {
-      // ignore
-    }
-  };
 
   render() {
     if (!this.state.error) return this.props.children;
-
-    const { error, errorInfo, copied } = this.state;
-
+    const message = String(this.state.error?.message || this.state.error).slice(0, 200);
     return (
-      <main
-        className="page-shell"
-        style={{ display: 'grid', placeItems: 'center', minHeight: '70vh', padding: '32px 16px' }}
-      >
-        <div className="card" style={{ padding: '2rem', maxWidth: 640, width: '100%', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <h1 style={{ marginTop: 0, fontSize: '1.4rem', color: 'var(--danger, var(--c-danger))' }}>Diagnostic Error Boundary</h1>
-          <p style={{ opacity: 0.85, fontSize: '0.9rem', margin: 0 }}>
-            An unexpected runtime exception was caught. Component stack trace details are recorded below:
+      <div style={{ minHeight: '70vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+        <div style={{ maxWidth: '460px', textAlign: 'center', background: 'rgba(16,16,24,0.85)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '18px', padding: '32px 28px' }}>
+          <div style={{ fontSize: '36px', marginBottom: '8px' }}>💥</div>
+          <h1 style={{ margin: '0 0 8px', fontSize: '22px' }}>Something went wrong</h1>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', margin: '0 0 6px' }}>
+            A part of the page crashed — the rest of the site is fine. Try reloading.
           </p>
-
-          <div style={{ background: 'var(--bg-elevated, #12121c)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm, 10px)', padding: 14, overflowX: 'auto', maxHeight: 220, fontSize: '0.78rem', fontFamily: 'monospace' }}>
-            <strong style={{ color: '#ff6b6b', display: 'block', marginBottom: 8 }}>{String(error || 'Unknown Error')}</strong>
-            <pre style={{ margin: 0, whiteSpace: 'pre-wrap', color: 'var(--text-dim, #bfbfbf)' }}>
-              {errorInfo?.componentStack || 'No component stack trace available.'}
-            </pre>
-          </div>
-
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 8 }}>
-            <button type="button" className="badge filled" onClick={this.handleCopyDetails} style={{ cursor: 'pointer' }}>
-              {copied ? '✓ Copied Details!' : '📋 Copy Error Details'}
+          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '12px', margin: '0 0 18px', fontFamily: 'monospace', wordBreak: 'break-word' }}>{message}</p>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+            <button type="button" onClick={() => window.location.reload()} style={{ padding: '10px 18px', borderRadius: '10px', border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #5a78ff, #7a5aff)', color: '#fff', fontWeight: 600 }}>
+              Reload
             </button>
-            <button type="button" className="badge" onClick={this.handleReset} style={{ cursor: 'pointer', border: '1px solid var(--border-strong)' }}>
-              ⚡ Reset Component
-            </button>
-            <button type="button" className="badge dim" onClick={this.handleReload} style={{ cursor: 'pointer' }}>
-              Reload page
-            </button>
-            <button type="button" className="badge dim" onClick={this.handleHome} style={{ cursor: 'pointer' }}>
-              Go home
+            <button type="button" onClick={() => { this.setState({ error: null }); window.location.href = '/'; }} style={{ padding: '10px 18px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', background: 'transparent', color: '#fff' }}>
+              Back to Home
             </button>
           </div>
         </div>
-      </main>
+      </div>
     );
   }
 }

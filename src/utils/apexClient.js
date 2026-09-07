@@ -1,10 +1,7 @@
-// ============================================================================
 // APEX KV API CLIENT (Cloudflare Workers KV — Supabase-free)
-// ----------------------------------------------------------------------------
 // The single-file Cloudflare Worker (scripts/cloudflare-proxy-worker.js,
 // deployed as `apex-db`) is the ONLY backend. It serves the live database
 // bundle, announcements, bug reports and fanart straight from KV.
-// ============================================================================
 
 export const APEX_KV_URL =
   import.meta.env.VITE_APEX_KV_URL ||
@@ -37,20 +34,73 @@ export async function fetchKvBundle({ cacheBust = true } = {}) {
   }
 }
 
-/** Fetch the currently active global announcement (or null). */
-export async function fetchActiveAnnouncement() {
+/** Fetch the ACTIVE global announcements (a list; may be empty). */
+export async function fetchActiveAnnouncements() {
   // no-store + cache-buster: a replaced announcement must show up on the
-  // NEXT poll, never a stale cached response.
+  // NEXT poll, never a stale cached response. Handles both the new list
+  // format ({announcements: [...]}) and the legacy single-object format.
   const response = await fetch(`${APEX_KV_URL}/announcements?_=${Date.now()}`, { cache: 'no-store' }).catch(() => null);
+  if (!response || !response.ok) return [];
+  try {
+    const data = await response.json();
+    const now = Date.now();
+    const alive = (a) => a && a.message && (!a.expiresAt || new Date(a.expiresAt).getTime() > now);
+    if (Array.isArray(data?.announcements)) return data.announcements.filter(alive);
+    if (data && data.message && alive(data)) return [data]; // legacy worker
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+/** Fetch the currently active global announcement (legacy helper, first item). */
+export async function fetchActiveAnnouncement() {
+  const list = await fetchActiveAnnouncements();
+  return list[0] || null;
+}
+
+/** Remove ONE announcement by id (owner or admin). */
+export async function deleteAnnouncement(id) {
+  const response = await fetch(`${APEX_KV_URL}/announcements/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: getAdminHeaders(),
+  }).catch(() => null);
+  return { ok: !!(response && response.ok) };
+}
+
+/** Live worker version (for the dashboard's deploy-status chip). */
+export async function fetchWorkerVersion() {
+  const response = await fetch(`${APEX_KV_URL}/version?_=${Date.now()}`, { cache: 'no-store' }).catch(() => null);
   if (!response || !response.ok) return null;
   try {
     const data = await response.json();
-    if (!data || !data.message) return null;
-    if (data.expiresAt && new Date(data.expiresAt).getTime() < Date.now()) return null;
-    return data;
+    return data?.version || null;
   } catch {
     return null;
   }
+}
+
+/** Read the maintenance-mode state (public). Never throws. */
+export async function fetchMaintenanceStatus() {
+  const response = await fetch(`${APEX_KV_URL}/maintenance?_=${Date.now()}`, { cache: 'no-store' }).catch(() => null);
+  if (!response || !response.ok) return { on: false, message: '' };
+  try {
+    const data = await response.json();
+    return { on: !!data?.on, message: data?.message || '', at: data?.at || null, by: data?.by || null };
+  } catch {
+    return { on: false, message: '' };
+  }
+}
+
+/** Turn maintenance mode on/off (owner or admin). */
+export async function setMaintenance(on, message = '') {
+  const response = await fetch(`${APEX_KV_URL}/maintenance`, {
+    method: 'POST',
+    headers: getAdminHeaders(),
+    body: JSON.stringify({ on: !!on, message }),
+  }).catch(() => null);
+  const data = response ? await response.json().catch(() => ({})) : {};
+  return { ok: !!(response && response.ok), status: response ? response.status : 0, error: data.error };
 }
 
 /**

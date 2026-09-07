@@ -5,11 +5,16 @@ import UnitIcon from '../UnitIcon';
 import Dropdown from '../Dropdown';
 import ValueTrendGraph from '../ValueTrendGraph';
 import { DEMAND_LABELS, SCARCITY_LABELS, getRarityGlow, isShinyRarity, UNIT_RARITIES } from '../../data/taxonomy';
-import { upgradeToForm, ensureArray, linesToObject } from '../../utils/adminForms';
-import { computeTradeValue, getCombinedMultiplier } from '../../utils/calculator';
+import { upgradeToForm, ensureArray, linesToObject, objectToLines } from '../../utils/adminForms';
+import { computeTradeValue } from '../../utils/calculator';
 import { getDisplayName } from '../../utils/teamMembers';
 
-const TRENDS = ['stable', 'rising', 'falling'];
+const TRENDS = [
+  { value: 'stable', label: 'Stable' },
+  { value: 'rising', label: 'Rising' },
+  { value: 'falling', label: 'Dropping' },
+  { value: 'fluctuating', label: 'Fluctuating' },
+];
 
 const RARITY_OPTIONS = [
   { value: 'all', label: 'All units' },
@@ -42,84 +47,24 @@ export function clearPersistedLogs() {
   try { localStorage.removeItem(ADMIN_LOG_KEY); } catch { /* ignore */ }
 }
 
-const RECYCLE_META = {
-  units: { label: 'Unit', icon: '🗿' },
-  map: { label: 'Map', icon: '🗺️' },
-  crate: { label: 'Crate', icon: '📦' },
-  materials: { label: 'Material', icon: '🧪' },
-  skin: { label: 'Skin', icon: '🎨' },
-};
-
-/**
- * The one place that shows EVERYTHING hidden from the site. Deleting used to be
- * invisible outside the editor that did it, and 'Restore' only undid one of the
- * two tombstone registries — so an accidental delete looked unrecoverable.
- */
-/**
- * Picker pane with a collapse control. On phones the unit list used to sit
- * above the form and eat the whole screen, so the form was "missing" — it was
- * just below the fold. Collapsed state is remembered per section.
- */
-export function AdminPickerPane({ title, count = 0, collapsible = false, collapsed = false, onToggle, children }) {
-  return (
-    <aside className="admin-unit-picker card" data-collapsed={collapsed ? 'true' : 'false'}>
-      <div className="admin-section-head">
-        <h2>{title}</h2>
-        <span className="admin-count-badge">{count}</span>
-        {collapsible && (
-          <button
-            type="button"
-            className="admin-picker-toggle"
-            onClick={onToggle}
-            aria-expanded={!collapsed}
-            title={collapsed ? 'Show the list' : 'Hide the list'}
-          >
-            {collapsed ? '▾ show' : '▴ hide'}
-          </button>
-        )}
-      </div>
-      {/* The body is always rendered; CSS hides it on touch widths only, so a
-          preference saved on a phone can never leave a desktop picker closed. */}
-      <div className="admin-picker-body" data-collapsed={collapsible && collapsed ? 'true' : 'false'}>
-        {children}
-      </div>
-    </aside>
-  );
-}
-
-export function DeletedUnitsPanel({ units = [], entries = [], onRestore, onRestoreEntry, restoring }) {
-  const rows = [
-    ...units.map((slug) => ({ kind: 'units', slug })),
-    ...(entries || []).map((entry) => ({ kind: entry.kind, slug: entry.slug })),
-  ];
-  if (!rows.length) return null;
+export function DeletedUnitsPanel({ units = [], onRestore, restoring }) {
+  if (!units.length) return null;
   return (
     <section className="admin-editor card" style={{ marginTop: 14 }}>
       <p className="admin-kicker">Recycle bin</p>
-      <h2>🗑️ Deleted content</h2>
-      <p className="admin-muted">
-        Hidden from the whole site (Values, WIKI, search, counts). Restore brings it back everywhere — including any entry you re-create under the same slug.
-      </p>
+      <h2>🗑️ Deleted Units</h2>
+      <p className="admin-muted">These units are hidden from the entire site (Values, WIKI, search, counts). Restore brings them back everywhere.</p>
       <div className="admin-drafts-list">
-        {rows.map(({ kind, slug }) => {
-          const meta = RECYCLE_META[kind] || RECYCLE_META.units;
-          const key = `${kind}:${slug}`;
-          return (
-            <div key={key} className="admin-drafts-row">
-              <span>{meta.icon} {slug} <small className="admin-muted">· {meta.label}</small></span>
-              <span className="admin-drafts-row-actions">
-                <button
-                  type="button"
-                  onClick={() => (kind === 'units' ? onRestore(slug) : onRestoreEntry(kind, slug))}
-                  disabled={restoring === slug || restoring === key}
-                  title={`Bring this ${meta.label.toLowerCase()} back to the site`}
-                >
-                  {restoring === slug || restoring === key ? 'Restoring…' : '↩️ Restore'}
-                </button>
-              </span>
-            </div>
-          );
-        })}
+        {units.map((slug) => (
+          <div key={slug} className="admin-drafts-row">
+            <span>🗿 {slug}</span>
+            <span className="admin-drafts-row-actions">
+              <button type="button" onClick={() => onRestore(slug)} disabled={restoring === slug} title="Bring this unit back to the site">
+                {restoring === slug ? 'Restoring…' : '↩️ Restore'}
+              </button>
+            </span>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -140,7 +85,7 @@ export function AdminMessage({ message, action }) {
 export function AuthPanel({ title, message, children }) {
   return (
     <section className="admin-auth card">
-      <p className="admin-kicker">APEX Admin Portal</p>
+      <p className="admin-kicker">Testing Admin Portal</p>
       <h1>{title}</h1>
       <AdminMessage message={message} />
       {children}
@@ -181,7 +126,7 @@ export function EditorTitle({ unit, label, live, dirty, wikiRows = [], imageMap 
   );
 }
 
-export function UnitPicker({ units = [], total = 0, query = '', setQuery, filter = 'all', setFilter, selectedUnit, selectUnit, valueRows = [], wikiRows = [], mode = 'values', imageMap = {}, recentEdits = [], onSelectRecent, collapsible = false, collapsed = false, onToggle }) {
+export function UnitPicker({ units = [], total = 0, query = '', setQuery, filter = 'all', setFilter, selectedUnit, selectUnit, valueRows = [], wikiRows = [], mode = 'values', imageMap = {}, recentEdits = [], onSelectRecent }) {
   const safeUnits = Array.isArray(units) ? units : [];
   const liveRows = mode === 'values' ? (Array.isArray(valueRows) ? valueRows : []) : (Array.isArray(wikiRows) ? wikiRows : []);
   const [activeIdx, setActiveIdx] = useState(-1);
@@ -227,13 +172,7 @@ export function UnitPicker({ units = [], total = 0, query = '', setQuery, filter
       <div className="admin-section-head">
         <h2>Units</h2>
         <span className="admin-count-badge">{total}</span>
-        {collapsible && (
-          <button type="button" className="admin-picker-toggle" onClick={onToggle} aria-expanded={!collapsed} title={collapsed ? 'Show the list' : 'Hide the list'}>
-            {collapsed ? '▾ show' : '▴ hide'}
-          </button>
-        )}
       </div>
-      <div className="admin-picker-body" data-collapsed={collapsible && collapsed ? 'true' : 'false'}>
       <input
         className="admin-search"
         value={query}
@@ -302,14 +241,50 @@ export function UnitPicker({ units = [], total = 0, query = '', setQuery, filter
           );
         })}
       </div>
-      </div>
     </aside>
+  );
+}
+
+// Text input for min-max ranges that keeps a LOCAL raw string while typing,
+// so '-' can be typed freely (the old controlled rebuild ate trailing
+// dashes: '5-' instantly snapped back to '5').
+export function RangeTextInput({ label, min, max, onCommit, placeholder }) {
+  const external = max ? `${min ?? ''}-${max}` : `${min ?? ''}`;
+  const [raw, setRaw] = useState(external);
+  const lastExternal = useRef(external);
+  if (external !== lastExternal.current) {
+    lastExternal.current = external;
+    if (raw !== external) setRaw(external);
+  }
+
+  function handleChange(event) {
+    const val = event.target.value;
+    setRaw(val);
+    const trimmed = val.trim();
+    if (trimmed.includes('-')) {
+      const parts = trimmed.split('-').map((s) => s.trim());
+      onCommit(parts[0] ?? '', parts[1] ?? '');
+    } else {
+      onCommit(trimmed, '');
+    }
+  }
+
+  return (
+    <label className="admin-field">
+      <span>{label}</span>
+      <input
+        className="admin-text-input"
+        type="text"
+        value={raw}
+        onChange={handleChange}
+        placeholder={placeholder}
+      />
+    </label>
   );
 }
 
 export function ValueEditor({ unit, form = {}, tradeValue = 0, selectedRow, updateField, saveValue, resetValue, refresh, saving, message, messageAction, dirty, imageMap = {}, wikiRows = [], commitRangeRef }) {
   const safeUnit = unit || { slug: 'ball', name: 'Ball', rarity: 'Normie', type: 'DPS' };
-  const mult = getCombinedMultiplier(form.demand, form.scarcity);
   const compGems = computeTradeValue(form.gems, form.demand, form.scarcity);
   const compCoins = computeTradeValue(form.coins, form.demand, form.scarcity);
 
@@ -363,7 +338,7 @@ export function ValueEditor({ unit, form = {}, tradeValue = 0, selectedRow, upda
       <EditorTitle unit={safeUnit} label="Editing Values" live={!!selectedRow} dirty={dirty} imageMap={imageMap} wikiRows={wikiRows} />
 
       <div className="admin-preview-value">
-        <span>Computed Live Outputs (Demand × Scarcity = {mult.toFixed(3)}x)</span>
+        <span>Exact Live Outputs — numbers publish exactly as typed</span>
         <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', marginTop: 4 }}>
           <strong style={{ color: 'var(--c-info)' }} title={tradeValueMax ? `${formatFullNumber(tradeValue)} - ${formatFullNumber(tradeValueMax)} exact` : `${formatFullNumber(tradeValue)} exact`}>
             Value: {tradeValueMax ? `${formatCompactNumber(tradeValue)}-${formatCompactNumber(tradeValueMax)}` : formatCompactNumber(tradeValue)}
@@ -392,46 +367,20 @@ export function ValueEditor({ unit, form = {}, tradeValue = 0, selectedRow, upda
             placeholder="e.g. 90-100 or 500"
           />
         </label>
-        <label className="admin-field">
-          <span>Gems (type 10-20 for range)</span>
-          <input
-            className="admin-text-input"
-            type="text"
-            value={form.gemsMax ? `${form.gems || ''}-${form.gemsMax}` : `${form.gems ?? ''}`}
-            onChange={(e) => {
-              const val = e.target.value.trim();
-              if (val.includes('-')) {
-                const parts = val.split('-').map(s => s.trim());
-                updateField('gems', parts[0] || '');
-                updateField('gemsMax', parts[1] || '');
-              } else {
-                updateField('gems', val);
-                updateField('gemsMax', '');
-              }
-            }}
-            placeholder="e.g. 10-20 or 5"
-          />
-        </label>
-        <label className="admin-field">
-          <span>Coins (type 5-10 for range)</span>
-          <input
-            className="admin-text-input"
-            type="text"
-            value={form.coinsMax ? `${form.coins || ''}-${form.coinsMax}` : `${form.coins ?? ''}`}
-            onChange={(e) => {
-              const val = e.target.value.trim();
-              if (val.includes('-')) {
-                const parts = val.split('-').map(s => s.trim());
-                updateField('coins', parts[0] || '');
-                updateField('coinsMax', parts[1] || '');
-              } else {
-                updateField('coins', val);
-                updateField('coinsMax', '');
-              }
-            }}
-            placeholder="e.g. 5-10 or 3"
-          />
-        </label>
+        <RangeTextInput
+          label="Gems (type 10-20 for range)"
+          min={form.gems}
+          max={form.gemsMax}
+          onCommit={(nextMin, nextMax) => { updateField('gems', nextMin); updateField('gemsMax', nextMax); }}
+          placeholder="e.g. 10-20 or 5"
+        />
+        <RangeTextInput
+          label="Coins (type 5-10 for range)"
+          min={form.coins}
+          max={form.coinsMax}
+          onCommit={(nextMin, nextMax) => { updateField('coins', nextMin); updateField('coinsMax', nextMax); }}
+          placeholder="e.g. 5-10 or 3"
+        />
         <AdminSelect label="Demand" value={form.demand} onChange={(value) => updateField('demand', value)} options={DEMAND_LABELS} />
         <AdminSelect label="Scarcity" value={form.scarcity} onChange={(value) => updateField('scarcity', value)} options={SCARCITY_LABELS} />
         <AdminSelect label="Trend" value={form.trend} onChange={(value) => updateField('trend', value)} options={TRENDS} />
@@ -461,16 +410,7 @@ export function ValueEditor({ unit, form = {}, tradeValue = 0, selectedRow, upda
 export function WikiEditor({ unit, form = {}, selectedRow, updateField, imageFile, setImageFile, saveWiki, resetWiki, refresh, saving, message, messageAction, dirty, imageMap = {}, wikiRows = [], canDeleteUnit, onDeleteUnit }) {
   const [dragging, setDragging] = useState(false);
   const safeUnit = unit || { slug: 'ball', name: 'Ball', rarity: 'Normie', type: 'DPS' };
-  // The blob URL used to be re-created on EVERY render and never revoked: a leak
-  // per keystroke, and the preview flickered as the previous URL died.
-  const [previewSrc, setPreviewSrc] = useState(null);
-  useEffect(() => {
-    if (!imageFile) { setPreviewSrc(null); return undefined; }
-    let url = '';
-    try { url = URL.createObjectURL(imageFile); setPreviewSrc(url); } catch { setPreviewSrc(null); }
-    return () => { if (url) URL.revokeObjectURL(url); };
-  }, [imageFile]);
-  const shownImage = imageFile ? previewSrc : (form.imageUrl || null);
+  const previewSrc = imageFile ? URL.createObjectURL(imageFile) : form.imageUrl;
   const safeUpgrades = ensureArray(form.upgradeForms);
 
   async function acceptImage(file) {
@@ -517,8 +457,8 @@ export function WikiEditor({ unit, form = {}, selectedRow, updateField, imageFil
             onDrop={onDrop}
             onPaste={onPaste}
           >
-            {shownImage ? (
-              <img src={shownImage} alt="Selected unit preview" className="admin-image-preview" />
+            {previewSrc ? (
+              <img src={previewSrc} alt="Selected unit preview" className="admin-image-preview" />
             ) : (
               <strong>Drop unit artwork image here</strong>
             )}
@@ -526,17 +466,7 @@ export function WikiEditor({ unit, form = {}, selectedRow, updateField, imageFil
               📸 Upload Render / Image
               <input type="file" accept="image/*" onChange={(event) => acceptImage(event.target.files?.[0])} />
             </label>
-            {imageFile ? (
-              <button type="button" className="admin-upload-button" onClick={() => setImageFile(null)}>
-                ✖ Discard picked image
-              </button>
-            ) : null}
             <span className="admin-upload-meta">Auto-compressed in your browser · drag, browse or paste (Ctrl+V)</span>
-            <AdminInput
-              label="Image URL (or paste a link instead of uploading)"
-              value={form.imageUrl || ''}
-              onChange={(value) => { setImageFile(null); updateField('imageUrl', value); }}
-            />
           </div>
 
           <AdminInput label="Type" value={form.type} onChange={(value) => updateField('type', value)} />
@@ -889,7 +819,7 @@ export function AdminSelect({ label, value, onChange, options = [] }) {
       <Dropdown
         value={value}
         onChange={onChange}
-        options={(options || []).map((option) => ({ value: option, label: option }))}
+        options={(options || []).map((option) => (option && typeof option === 'object' ? option : { value: option, label: option }))}
         placeholder="Select…"
         ariaLabel={label}
       />
@@ -897,19 +827,10 @@ export function AdminSelect({ label, value, onChange, options = [] }) {
   );
 }
 
-export function ContentEditor({ kind, item, form = {}, setForm, imageFile, setImageFile, onSave, onReset, onDelete, saving, dirty }) {
+export function ContentEditor({ kind, item, form = {}, setForm, imageFile, setImageFile, onSave, onReset, saving, dirty }) {
   const [dragging, setDragging] = useState(false);
   const mapMode = kind === 'maps';
-  // Same blob-URL lifecycle as the unit editor: created once per picked file
-  // and revoked, not recreated (and leaked) on every keystroke.
-  const [previewSrc, setPreviewSrc] = useState(null);
-  useEffect(() => {
-    if (!imageFile) { setPreviewSrc(null); return undefined; }
-    let url = '';
-    try { url = URL.createObjectURL(imageFile); setPreviewSrc(url); } catch { setPreviewSrc(null); }
-    return () => { if (url) URL.revokeObjectURL(url); };
-  }, [imageFile]);
-  const shownImage = imageFile ? previewSrc : (form.imageUrl || null);
+  const previewSrc = imageFile ? URL.createObjectURL(imageFile) : form.imageUrl;
   const accept = async (file) => {
     if (!file?.type?.startsWith('image/')) return;
     setImageFile(await compressImage(file)); // in-browser downscale before publish
@@ -920,12 +841,10 @@ export function ContentEditor({ kind, item, form = {}, setForm, imageFile, setIm
     <section className="admin-editor card">
       <EditorTitle unit={item} label={`Editing ${mapMode ? 'Map' : 'Crate'}`} dirty={dirty} />
       <div className={`admin-upload-zone ${dragging ? 'dragging' : ''}`} onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={(event) => { event.preventDefault(); setDragging(false); accept(event.dataTransfer.files?.[0]); }}>
-        {shownImage ? <img src={shownImage} alt="Content preview" className="admin-image-preview" /> : <strong>Drop artwork image here</strong>}
+        {previewSrc ? <img src={previewSrc} alt="Content preview" className="admin-image-preview" /> : <strong>Drop artwork image here</strong>}
         <label className="admin-upload-button">📸 UPLOAD IMAGE<input type="file" accept="image/*" onChange={(event) => accept(event.target.files?.[0])} /></label>
-        {imageFile ? <button type="button" className="admin-upload-button" onClick={() => setImageFile(null)}>✖ Discard picked image</button> : null}
-        <span className="admin-upload-meta">Resized in your browser to a compact WebP · stored inside the entry</span>
+        <span className="admin-upload-meta">Automatic cloud compression &amp; optimization</span>
       </div>
-      <AdminInput label="Image URL (or paste a link instead of uploading)" value={form.imageUrl || ''} onChange={(value) => { setImageFile(null); setForm((p) => ({ ...p, imageUrl: value })); }} />
       <div className="admin-form-grid">
         <AdminInput label="Display Name" value={form.name || ''} onChange={(value) => setForm((p) => ({ ...p, name: value }))} />
         {mapMode ? (
@@ -955,17 +874,6 @@ export function ContentEditor({ kind, item, form = {}, setForm, imageFile, setIm
       <div className="admin-actions">
         <button type="button" className="filled" onClick={onSave} disabled={saving} title="Ctrl+S">{saving ? 'Saving…' : `💾 Save ${mapMode ? 'Map' : 'Crate'}`}</button>
         <button type="button" onClick={onReset}>🔄 Reset Override</button>
-        {onDelete && item?.slug && (
-          <button
-            type="button"
-            className="admin-btn-danger"
-            onClick={() => onDelete(item)}
-            disabled={saving}
-            title="Remove this entry that the team created (static entries cannot be deleted)"
-          >
-            🗑 Delete
-          </button>
-        )}
       </div>
     </section>
   );

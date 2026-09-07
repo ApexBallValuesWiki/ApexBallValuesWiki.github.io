@@ -1,11 +1,9 @@
-// ============================================================================
 // Single source of truth for every category/rarity/section used across the
 // site's navigation, WIKI pages, and Values pages. Keep this in sync with
 // site structure. Colors are placeholders in the black/white theme
 // (accent grayscale + rarity-tinted borders only).
-// ============================================================================
 
-// --- Unit Rarities (used in both WIKI > Units and Values > Units) ----------
+// Unit Rarities (used in both WIKI > Units and Values > Units)
 // All rarities enabled to display all 148 units from the Ball TD stat sheet.
 export const UNIT_RARITIES = [
   'Normie',
@@ -49,13 +47,13 @@ export const ALL_UNIT_RARITIES = [
   'Shiny ???',
 ];
 
-// --- Unit "type" classification (gameplay role) -----------------------------
+// Unit "type" classification (gameplay role)
 export const UNIT_TYPES = ['DPS', 'Economy', 'Support', 'Summoner'];
 
-// --- Unit category tags (obtainability / event status) ---------------------
+// Unit category tags (obtainability / event status)
 export const UNIT_CATEGORIES = ['Standard', 'Seasonal', 'Exclusive', 'Unobtainable'];
 
-// --- Items ------------------------------------------------------------------
+// Items
 export const ITEM_CONSUMABLES = [
   'Frost Key',
   'Hard Frost Key',
@@ -120,7 +118,7 @@ export const ITEM_CRATES = [
   'Valentines Crate',
 ];
 
-// --- Maps --------------------------------------------------------------------
+// Maps
 export const MAPS = [
   'DoodleMap',
   'IsleOfBalls',
@@ -142,7 +140,7 @@ export const MAPS = [
   'HallowManor',
 ];
 
-// --- Traits --------------------------------------------------------------------
+// Traits
 export const TRAITS = [
   'Strength',
   'Sizeup2x',
@@ -163,7 +161,7 @@ export const TRAITS = [
   'Binoculars',
 ];
 
-// --- Skins (per-rarity skin lists; identical lists reused for Shiny Skins) --
+// Skins (per-rarity skin lists; identical lists reused for Shiny Skins)
 export const SKIN_CATEGORIES = [
   'Normie',
   'Odd',
@@ -253,10 +251,8 @@ export const SKINS = {
   '???': ['Chud Worm', 'Mr. Clark', 'Present Of Doom', 'The Spoon Man', 'True Ooze Master'],
 };
 
-// ============================================================================
 // TRADE CALCULATOR — FORMULA CONSTANTS
 // TradeValue = BaseValue × DemandMultiplier × ScarcityMultiplier
-// ============================================================================
 export const DEMAND = {
   Abysmal: 0.94,
   'Extremely Low': 0.95,
@@ -284,14 +280,11 @@ export const SCARCITY = {
 export const DEMAND_LABELS = Object.keys(DEMAND);
 export const SCARCITY_LABELS = Object.keys(SCARCITY);
 
-// ============================================================================
 // RARITY COLORS
-// ----------------------------------------------------------------------------
 // Each rarity has a 6-stop palette (light → dark). `glow` (the brightest
 // stop) is used as the solid glow color for rarity name/labels. The full
 // array is used as a left-to-right gradient for card accent borders/stripes.
 // "Shiny <Rarity>" variants reuse their base rarity's palette.
-// ============================================================================
 export const RARITY_PALETTES = {
   Normie: ['#C0C0C0', '#BDBDBD', '#B0B0B0', '#A8A8A8', '#959595', '#8F8F8F'],
   Odd: ['#33A033', '#2E8B2E', '#238B23', '#206B20', '#155A15', '#0F4F0F'],
@@ -341,14 +334,11 @@ export function isShinyRarity(rarityName) {
   return typeof rarityName === 'string' && rarityName.startsWith('Shiny');
 }
 
-// ============================================================================
 // DEMAND / SCARCITY BAR COLORS
-// ----------------------------------------------------------------------------
 // Demand runs dark red (Abysmal, worst) through the spectrum to purple
 // (Godly, best). Scarcity runs red (Flooded — lots of copies) to purple
 // (Rare — very few copies). Both power the filled progress bars on unit
 // value cards.
-// ============================================================================
 export const DEMAND_COLORS = {
   Abysmal: '#4d0000',
   'Extremely Low': '#7a0000',

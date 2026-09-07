@@ -81,24 +81,10 @@
   min-height: 0;
 }
 
-/* ============================================================
-   SHELL NAVIGATION — one list, two surfaces
-   ------------------------------------------------------------
-   .admin-nav is rendered twice: as a rail on wide screens and as a
-   horizontally scrollable sticky bar below 900px. Nothing is ever
-   display:none-d again; that is how the panel lost its sub-pages on phones.
-   ============================================================ */
-.admin-nav-desktop {
-  display: block;
-  flex-shrink: 0;
-}
-
-.admin-nav-mobile {
-  display: none;
-}
-
-.admin-nav--vertical {
+/* Sidebar */
+.admin-sidebar {
   width: 220px;
+  flex-shrink: 0;
   background: var(--bg-card);
   border-right: 1px solid var(--border);
   padding: 16px 0;
@@ -106,13 +92,12 @@
   flex-direction: column;
   gap: 2px;
   position: sticky;
-  top: calc(var(--announcement-height, 0px) + 68px + 57px);
-  max-height: calc(100vh - 130px);
+  top: 49px;
+  height: calc(100vh - 49px);
   overflow-y: auto;
-  overscroll-behavior: contain;
 }
 
-.admin-nav-item {
+.admin-sidebar-item {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -124,160 +109,33 @@
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: all 0.15s;
   text-align: left;
   width: 100%;
-  -webkit-tap-highlight-color: transparent;
 }
 
-.admin-nav--horizontal .admin-nav-item {
-  width: auto;
-  flex: 0 0 auto;
-  padding: 10px 14px;
-  white-space: nowrap;
-  border-bottom: 2px solid transparent;
+.admin-sidebar-item:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--text);
 }
 
-.admin-nav--horizontal {
-  flex-direction: row;
-  gap: 6px;
-  padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.admin-nav--horizontal::-webkit-scrollbar {
-  display: none;
-}
-
-.admin-nav-icon {
-  font-size: 1rem;
-  width: 20px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-/* Touch targets: the whole bar stays under ~48px tall. */
-@media (max-width: 900px) {
-  .admin-nav-desktop {
-    display: none;
-  }
-  .admin-nav-mobile {
-    display: block;
-    position: sticky;
-    /* Sits directly under the sticky top bar so the section you are in never
-       scrolls out of reach. */
-    top: calc(var(--announcement-height, 0px) + 68px);
-    z-index: 39;
-    background: var(--bg-elevated);
-    border-bottom: 1px solid var(--border);
-    backdrop-filter: blur(8px);
-  }
-  .admin-nav {
-    background: transparent;
-    border-right: none;
-    max-height: none;
-    position: static;
-  }
-  .admin-nav--vertical {
-    width: auto;
-  }
-  .admin-layout-main {
-    display: block;
-  }
-  .admin-content {
-    padding: 14px 12px calc(24px + env(safe-area-inset-bottom, 0px));
-  }
-}
-
-/* In-section tabs (Values/WIKI, Maps/Crates, Create hub) */
-.admin-subtabs {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding: 10px 14px;
-  margin: 0 0 14px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-}
-
-.admin-subtabs::-webkit-scrollbar {
-  display: none;
-}
-
-.admin-subtab {
-  flex: 0 0 auto;
-  padding: 8px 14px;
-  min-height: 38px;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--text-dim);
-  font-family: inherit;
-  font-size: 0.8rem;
-  font-weight: 800;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.admin-subtab[aria-selected='true'] {
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
-  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+.admin-sidebar-item.active {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
   color: var(--accent);
+  border-right: 3px solid var(--accent);
+  font-weight: 900;
 }
 
-/* The picker pane collapses to a full-width sheet on touch screens.
-   Collapsed means: title + count + toggle only, so the form is immediately
-   reachable instead of sitting below a 300-row list. */
-@media (max-width: 900px) {
-  .admin-unit-picker .admin-picker-body[data-collapsed='true'] {
-    display: none;
-  }
+.admin-sidebar-icon {
+  font-size: 1rem;
+  width: 24px;
+  text-align: center;
 }
 
-.admin-picker-toggle {
-  margin-left: auto;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: transparent;
-  color: var(--text-dim);
-  font-family: inherit;
-  font-size: 0.7rem;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.admin-picker-toggle:active {
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-}
-
-/* The picker pane collapses to a full-width sheet on touch screens. */
-@media (max-width: 700px) {
-  .admin-content-layout,
-  .admin-layout {
-    flex-direction: column;
-    height: auto;
-  }
-  .admin-content-layout > .admin-unit-picker,
-  .admin-layout > .admin-unit-picker {
-    width: 100%;
-    max-height: 42vh;
-  }
-  .admin-topbar {
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 10px 12px;
-  }
-  .admin-topbar-actions {
-    width: 100%;
-    justify-content: flex-end;
-  }
+.admin-sidebar-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 8px 16px;
 }
 
 /* Content Area */
@@ -499,6 +357,9 @@
 }
 
 @media (max-width: 768px) {
+  .admin-sidebar {
+    display: none;
+  }
   .admin-dashboard {
     grid-template-columns: 1fr;
   }
@@ -769,7 +630,7 @@
    custom themes keep applying everywhere in the admin panel.
    ============================================================ */
 
-/* ---- Two-column editor layout: editor left, search right ---- */
+/* Two-column editor layout: editor left, search right */
 .admin-layout,
 .admin-content-layout {
   display: grid;
@@ -827,7 +688,7 @@
   }
 }
 
-/* ---- Section heads, badges, muted text ---- */
+/* Section heads, badges, muted text */
 .admin-section-head {
   display: flex;
   align-items: center;
@@ -874,7 +735,7 @@
   font-weight: 700;
 }
 
-/* ---- Search & filter (picker sidebar) ---- */
+/* Search & filter (picker sidebar) */
 .admin-search {
   width: 100%;
   padding: 9px 12px;
@@ -946,7 +807,7 @@
   border: 1px solid color-mix(in srgb, var(--c-success) 45%, transparent);
 }
 
-/* ---- Editor title block ---- */
+/* Editor title block */
 .admin-editor-head {
   display: flex;
   align-items: center;
@@ -1022,7 +883,7 @@
   border: 1px solid color-mix(in srgb, var(--c-success) 40%, transparent);
 }
 
-/* ---- Computed preview strip ---- */
+/* Computed preview strip */
 .admin-preview-value {
   margin: 12px 0;
   padding: 12px 16px;
@@ -1039,7 +900,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ---- Form grid & fields ---- */
+/* Form grid & fields */
 .admin-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1105,7 +966,7 @@
   overflow-x: auto;
 }
 
-/* ---- Action row ---- */
+/* Action row */
 .admin-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1115,7 +976,7 @@
   border-top: 1px solid var(--border);
 }
 
-/* ---- Image upload zone ---- */
+/* Image upload zone */
 .admin-image-preview {
   width: 132px;
   height: 132px;
@@ -1156,7 +1017,7 @@
   color: var(--text-faint);
 }
 
-/* ---- Upgrade level editor ---- */
+/* Upgrade level editor */
 .admin-level-editor {
   display: flex;
   flex-direction: column;
@@ -1211,7 +1072,7 @@
   color: var(--text);
 }
 
-/* ---- Change logs ---- */
+/* Change logs */
 .admin-log-list {
   display: flex;
   flex-direction: column;
@@ -1260,7 +1121,7 @@
   background: var(--bg-elevated);
 }
 
-/* ---- Auth screens & denied state ---- */
+/* Auth screens & denied state */
 .admin-auth {
   max-width: 460px;
   margin: 8vh auto 0;
@@ -1309,7 +1170,7 @@
   color: var(--danger);
 }
 
-/* ---- Announcement composer row ---- */
+/* Announcement composer row */
 .admin-panel-slide-row {
   display: flex;
   align-items: center;
@@ -1335,7 +1196,7 @@
   min-width: 200px;
 }
 
-/* ---- Bug report admin ---- */
+/* Bug report admin */
 .admin-bug-reports {
   display: flex;
   flex-direction: column;
@@ -1366,7 +1227,7 @@
   border-color: color-mix(in srgb, var(--c-success) 45%, transparent);
 }
 
-/* ---- Contribution graph active cell ---- */
+/* Contribution graph active cell */
 .isActive {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
@@ -1689,7 +1550,6 @@
   justify-content: space-between;
 }
 
-
 /* ============================================================
    DASHBOARD (8 info cards) + LOGS HELPERS
    ============================================================ */
@@ -1761,7 +1621,7 @@
   color: var(--c-warning);
 }
 
-/* ===================== Batch 1–3 quality additions ====================== */
+/* Batch 1–3 quality additions */
 
 /* Keyboard-highlighted row in the unit picker (↑/↓ navigation) */
 .admin-unit.kbd-active {
@@ -1931,7 +1791,7 @@
   width: 100%;
 }
 
-/* ---------------- Mobile admin audit (#6) ---------------- */
+/* Mobile admin audit (#6) */
 @media (max-width: 900px) {
   .admin-content-layout {
     grid-template-columns: 1fr !important;
@@ -1968,7 +1828,7 @@
   }
 }
 
-/* ================= Motion pass: entrances, staggers, pops ================= */
+/* Motion pass: entrances, staggers, pops */
 @keyframes apex-slide-in {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: none; }

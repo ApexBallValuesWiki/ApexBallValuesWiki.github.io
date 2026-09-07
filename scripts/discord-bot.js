@@ -1,6 +1,4 @@
-// ============================================================================
-// APEX VALUES & WIKI — DISCORD BOT (Cloudflare Worker)
-// ============================================================================
+// APEX TESTING — DISCORD BOT (Cloudflare Worker)
 // Deploy this as a separate Cloudflare Worker.
 // It reads from your existing APEX_OVERRIDES KV namespace.
 //
@@ -17,7 +15,6 @@
 //    - DISCORD_PUBLIC_KEY: your public key (from General Information)
 //    - APEX_OVERRIDES: KV namespace binding (same as your main worker)
 // 6. After deploying, run: POST /register-commands to register slash commands
-// ============================================================================
 
 const DISCORD_API = 'https://discord.com/api/v10';
 
@@ -313,7 +310,6 @@ function formatCompact(n) {
   return String(Math.round(n));
 }
 
-
 // Enrich db with unitsLookup if missing
 async function ensureUnitsData(db) {
   if (!db.unitsLookup || Object.keys(db.unitsLookup).length === 0) {
@@ -389,7 +385,7 @@ async function handleValue(options, env) {
 
   return {
     embeds: [{
-      author: { name: 'APEX Values & WIKI — Values Database',  },
+      author: { name: 'APEX Testing — Values Database',  },
       title: `${unit.name || unit.slug}`,
       description: `> ${unit.rarity || 'Unknown'} · ${unit.type || 'Unit'}`,
       color: 5814783,
@@ -444,7 +440,7 @@ async function handleSearch(options, env) {
 
   return {
     embeds: [{
-      author: { name: 'APEX Values & WIKI — Unit Search',  },
+      author: { name: 'APEX Testing — Unit Search',  },
       title: `🔍 Search: "${query}"`,
       description: lines.join('\n') + extra,
       color: 5814783,
@@ -493,7 +489,7 @@ async function handleTrade(options, env) {
 
   return {
     embeds: [{
-      author: { name: 'APEX Values & WIKI — Trade Calculator',  },
+      author: { name: 'APEX Testing — Trade Calculator',  },
       title: `${verdictEmoji} Trade Result: ${verdict}`,
       color,
       fields: [
@@ -528,7 +524,7 @@ async function handleTop(options, env) {
 
   return {
     embeds: [{
-      author: { name: 'APEX Values & WIKI — Top Valued Units',  },
+      author: { name: 'APEX Testing — Top Valued Units',  },
       title: `🏆 Leaderboard — Top ${count}`,
       color: 16766720,
       description: lines.join('\n'),
@@ -555,7 +551,7 @@ async function handleDemand(env) {
 
   return {
     embeds: [{
-      author: { name: 'APEX Values & WIKI — Market Analytics',  },
+      author: { name: 'APEX Testing — Market Analytics',  },
       title: '📊 Demand Distribution',
       color: 5814783,
       description: lines.join('\n'),

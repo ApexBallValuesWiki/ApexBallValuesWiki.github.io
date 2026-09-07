@@ -1,31 +1,23 @@
-// ============================================================================
-// APEX — CLOUDFLARE KV ENGINE (ZERO-SUPABASE, INFINITE FREE LIVE DATABASE)
-// ============================================================================
-// Storing your entire live Values & WIKI overrides directly in Cloudflare KV.
-// Edits are live INSTANTLY for everyone, with ZERO dependency on developers,
-// ZERO manual git pushes, and ABSOLUTE ZERO Supabase egress or billing limits!
-//
-// How to deploy in 1 minute:
-// 1. Go to your Cloudflare Dashboard -> Workers & Pages -> Click "Create Application".
-// 2. Paste this exact code into your Worker editor.
-// 3. Go to your Worker Settings -> KV Namespace Bindings -> Click "Add Binding".
-// 4. Name the binding "APEX_OVERRIDES" and select/create a KV Namespace.
-// 5. Save & Deploy!
-// ============================================================================
+// APEX — Cloudflare KV worker: the live Values & WIKI database.
+// Deploy: Dashboard -> Workers & Pages -> create/paste this code, then
+// Settings -> KV Namespace Bindings -> bind "APEX_OVERRIDES" -> Deploy.
+
+// Build marker for this worker — bump on every deploy so the admin panel
+// can tell the team when a deploy is still pending.
+const WORKER_VERSION = '2026-09-02.1';
 
 // Simple in-memory fallback for initial tests/cold starts in case KV is not bound
 let IN_MEMORY_DB_FALLBACK = null;
 let IN_MEMORY_PASSWORDS_FALLBACK = null;
 let IN_MEMORY_BUG_REPORTS = null;
 let IN_MEMORY_ANNOUNCEMENTS_FALLBACK = null;
+let IN_MEMORY_MAINTENANCE_FALLBACK = null;
 let IN_MEMORY_FANART_FALLBACK = null;
 let IN_MEMORY_CHANGELOG_FALLBACK = null;
 
-// ============================================================================
 // LOGIN RATE LIMITING (brute-force protection)
 // Per-isolate sliding window: 5 failed logins per IP within 5 minutes ->
 // 10 minute lockout. Success resets the counter.
-// ============================================================================
 const LOGIN_ATTEMPTS = new Map();
 const LOGIN_WINDOW_MS = 5 * 60 * 1000;
 const LOGIN_MAX_FAILS = 5;
@@ -56,7 +48,6 @@ function recordLoginFail(ip) {
   LOGIN_ATTEMPTS.set(ip, rec);
 }
 
-// ============================================================================
 // BUNDLE VERSIONING + CHANGE HISTORY
 // The live bundle carries __v (bumped on every write). Full-bundle POSTs can
 // pass __baseVersion — a stale version is rejected with 409 so concurrent
@@ -64,7 +55,6 @@ function recordLoginFail(ip) {
 // Every per-slug write/delete appends to:
 //   changeLog            — shared recent-changes feed (cap 200)
 //   history:<sec>:<slug> — per-unit edit history (cap 50) for trends/rollback
-// ============================================================================
 const BUNDLE_SECTIONS = {
   value: 'valueOverrides',
   wiki: 'wikiOverrides',
@@ -204,6 +194,13 @@ export default {
 async function handleRequest(request, env, ctx) {
   const url = new URL(request.url);
   const path = url.pathname;
+
+  // WORKER VERSION — bump on every deploy. The admin dashboard compares
+  // this against the version the site expects and shows a chip when the
+  // worker is outdated (features that need a deploy stay visible).
+  if (path === '/version' && request.method === 'GET') {
+    return new Response(JSON.stringify({ version: WORKER_VERSION }), { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
+  }
 
   // Handle CORS preflight check immediately with standard 204 No Content
   if (request.method === 'OPTIONS') {
@@ -760,51 +757,123 @@ async function handleRequest(request, env, ctx) {
     }
 
     LOGIN_ATTEMPTS.delete(ip);
-    return new Response(JSON.stringify({ success: true, message: 'Authenticated successfully!' }), {
+    // Members still on the default passcode must change it before editing
+    // (the client blocks the admin panel until they do).
+    const mustChangePassword = livePass === 'apex2026';
+    return new Response(JSON.stringify({ success: true, message: 'Authenticated successfully!', mustChangePassword }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  // 9. GET /announcements - Get active announcements (auto-expires)
-  if (path === '/announcements' && request.method === 'GET') {
-    let data = null;
+  // ANNOUNCEMENTS — a LIST of active announcements (multiple can be live at
+  // once, each with its own type and expiry; max 5). Stored in KV as a JSON
+  // array under 'announcements'; a legacy single-object value is migrated
+  // automatically. Expired entries are dropped on every read/write.
+  async function readAnnouncements(env) {
+    let raw = null;
+    try { raw = env.APEX_OVERRIDES ? await env.APEX_OVERRIDES.get('announcements') : IN_MEMORY_ANNOUNCEMENTS_FALLBACK; } catch {}
+    let list = [];
     try {
-      if (env.APEX_OVERRIDES) { data = await env.APEX_OVERRIDES.get('announcements'); }
-      else { data = IN_MEMORY_ANNOUNCEMENTS_FALLBACK; }
-    } catch (e) { console.error('Failed to read announcements from KV:', e); }
-    if (!data) data = 'null';
-    try {
-      const parsed = JSON.parse(data);
-      if (parsed && parsed.expiresAt && new Date(parsed.expiresAt).getTime() <= Date.now()) {
-        // Expired: remove it from KV so every client stops seeing it.
-        try { if (env.APEX_OVERRIDES) await env.APEX_OVERRIDES.delete('announcements'); else IN_MEMORY_ANNOUNCEMENTS_FALLBACK = null; } catch {}
-        data = 'null';
-      }
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (Array.isArray(parsed)) list = parsed;
+      else if (parsed && parsed.message) list = [parsed]; // legacy single object
     } catch {}
-    return new Response(data, { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
+    const now = Date.now();
+    return list.filter((a) => a && a.message && (!a.expiresAt || new Date(a.expiresAt).getTime() > now));
+  }
+  async function writeAnnouncements(env, list) {
+    const s = JSON.stringify(list.slice(0, 5));
+    if (env.APEX_OVERRIDES) await env.APEX_OVERRIDES.put('announcements', s);
+    else IN_MEMORY_ANNOUNCEMENTS_FALLBACK = s;
   }
 
-  // 10. POST /announcements - Send a global announcement (owner only)
+  if (path === '/announcements' && request.method === 'GET') {
+    try {
+      const list = await readAnnouncements(env);
+      return new Response(JSON.stringify({ announcements: list }), { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
+    } catch (e) {
+      return new Response(JSON.stringify({ announcements: [] }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+  }
+
   if (path === '/announcements' && request.method === 'POST') {
     let passcode = null; let emailHeader = null;
     request.headers.forEach((val, key) => { const k = key.toLowerCase(); if (k === 'x-admin-passcode') passcode = val; if (k === 'x-admin-email') emailHeader = val; });
     const passwordsMap = await getPasswordsMap();
     const cleanEmail = String(emailHeader || '').trim().toLowerCase();
     const role = TEAM_ROLES[cleanEmail];
-    if (role !== 'owner') return new Response(JSON.stringify({ error: 'Owner only' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+    if (role !== 'owner' && role !== 'admin') return new Response(JSON.stringify({ error: 'Owner or admin only' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
     if (passcode !== passwordsMap[cleanEmail]) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
     const payload = await request.json().catch(() => null);
-    if (!payload?.message) return new Response(JSON.stringify({ error: 'Missing message' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
-    const announcement = { id: Date.now(), message: payload.message, type: payload.type || 'info', sentAt: new Date().toISOString(), expiresAt: new Date(Date.now() + (payload.durationMinutes || 60) * 60000).toISOString(), sentBy: cleanEmail };
-    try { const s = JSON.stringify(announcement); if (env.APEX_OVERRIDES) await env.APEX_OVERRIDES.put('announcements', s); else IN_MEMORY_ANNOUNCEMENTS_FALLBACK = s; } catch (e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { 'Content-Type': 'application/json' } }); }
-    return new Response(JSON.stringify({ success: true, announcement }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    const message = String(payload?.message || '').trim();
+    if (!message) return new Response(JSON.stringify({ error: 'Missing message' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    if (message.length > 200) return new Response(JSON.stringify({ error: 'Message too long (max 200 chars)' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    const list = await readAnnouncements(env);
+    if (list.length >= 5) return new Response(JSON.stringify({ error: 'Announcement limit reached (5 active). Clear one first.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    const announcement = { id: Date.now(), title: String(payload?.title || '').trim().slice(0, 60), message, type: payload.type || 'info', sentAt: new Date().toISOString(), expiresAt: new Date(Date.now() + (payload.durationMinutes || 60) * 60000).toISOString(), sentBy: cleanEmail };
+    list.push(announcement);
+    try { await writeAnnouncements(env, list); } catch (e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { 'Content-Type': 'application/json' } }); }
+    await appendChangeLog(env, { id: announcement.id, at: new Date().toISOString(), by: cleanEmail, section: 'announcements', kind: 'edit', detail: `Published announcement: ${message.slice(0, 60)}` });
+    return new Response(JSON.stringify({ success: true, announcements: list }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
 
-  // 11. POST /announcements/clear
+  const annSeg = path.split('/').filter(Boolean);
+  if (annSeg[0] === 'announcements' && annSeg.length === 2 && request.method === 'DELETE') {
+    let passcode = null; let emailHeader = null;
+    request.headers.forEach((val, key) => { const k = key.toLowerCase(); if (k === 'x-admin-passcode') passcode = val; if (k === 'x-admin-email') emailHeader = val; });
+    const passwordsMap = await getPasswordsMap();
+    const cleanEmail = String(emailHeader || '').trim().toLowerCase();
+    const role = TEAM_ROLES[cleanEmail];
+    if (role !== 'owner' && role !== 'admin') return new Response(JSON.stringify({ error: 'Owner or admin only' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+    if (passcode !== passwordsMap[cleanEmail]) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+    const list = await readAnnouncements(env);
+    const next = list.filter((a) => String(a.id) !== String(annSeg[1]));
+    try { await writeAnnouncements(env, next); } catch (e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { 'Content-Type': 'application/json' } }); }
+    await appendChangeLog(env, { id: Date.now(), at: new Date().toISOString(), by: cleanEmail, section: 'announcements', kind: 'delete', detail: 'Removed an announcement' });
+    return new Response(JSON.stringify({ success: true, announcements: next }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  }
+
   if (path === '/announcements/clear' && request.method === 'POST') {
+    let passcode = null; let emailHeader = null;
+    request.headers.forEach((val, key) => { const k = key.toLowerCase(); if (k === 'x-admin-passcode') passcode = val; if (k === 'x-admin-email') emailHeader = val; });
+    const passwordsMap = await getPasswordsMap();
+    const cleanEmail = String(emailHeader || '').trim().toLowerCase();
+    const role = TEAM_ROLES[cleanEmail];
+    if (role !== 'owner' && role !== 'admin') return new Response(JSON.stringify({ error: 'Owner or admin only' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+    if (passcode !== passwordsMap[cleanEmail]) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
     try { if (env.APEX_OVERRIDES) await env.APEX_OVERRIDES.delete('announcements'); else IN_MEMORY_ANNOUNCEMENTS_FALLBACK = null; } catch (e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { 'Content-Type': 'application/json' } }); }
+    await appendChangeLog(env, { id: Date.now(), at: new Date().toISOString(), by: cleanEmail, section: 'announcements', kind: 'delete', detail: 'Cleared all announcements' });
     return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  }
+
+  // MAINTENANCE MODE — owner/admin can close the site for everyone except
+  // the team. GET is public; POST is owner/admin-only.
+  if (path === '/maintenance' && request.method === 'GET') {
+    let state = { on: false };
+    try {
+      const raw = env.APEX_OVERRIDES ? await env.APEX_OVERRIDES.get('maintenance') : IN_MEMORY_MAINTENANCE_FALLBACK;
+      if (raw) state = JSON.parse(raw);
+    } catch {}
+    return new Response(JSON.stringify({ on: !!state.on, message: state.message || '', at: state.at || null, by: state.by || null }), { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
+  }
+  if (path === '/maintenance' && request.method === 'POST') {
+    let passcode = null; let emailHeader = null;
+    request.headers.forEach((val, key) => { const k = key.toLowerCase(); if (k === 'x-admin-passcode') passcode = val; if (k === 'x-admin-email') emailHeader = val; });
+    const passwordsMap = await getPasswordsMap();
+    const cleanEmail = String(emailHeader || '').trim().toLowerCase();
+    const role = TEAM_ROLES[cleanEmail];
+    if (role !== 'owner' && role !== 'admin') return new Response(JSON.stringify({ error: 'Owner or admin only' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+    if (passcode !== passwordsMap[cleanEmail]) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+    const payload = await request.json().catch(() => null);
+    const state = { on: !!payload?.on, message: String(payload?.message || '').slice(0, 200), at: new Date().toISOString(), by: cleanEmail };
+    try {
+      const s = JSON.stringify(state);
+      if (env.APEX_OVERRIDES) await env.APEX_OVERRIDES.put('maintenance', s);
+      else IN_MEMORY_MAINTENANCE_FALLBACK = s;
+    } catch (e) { return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { 'Content-Type': 'application/json' } }); }
+    await appendChangeLog(env, { id: Date.now(), at: new Date().toISOString(), by: cleanEmail, section: 'maintenance', kind: state.on ? 'edit' : 'delete', detail: state.on ? `Maintenance mode ON${state.message ? `: ${state.message}` : ''}` : 'Maintenance mode OFF' });
+    return new Response(JSON.stringify({ success: true, ...state }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
 
   // 11a. GET /fanart - Read all FanArt gallery entries from KV
@@ -976,18 +1045,6 @@ async function handleRequest(request, env, ctx) {
         return new Response(JSON.stringify({ error: 'Invalid JSON entry' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
       }
       bundle[sectionKey][slug] = entry;
-      // Editing a unit IS a deliberate revive: drop its site-wide tombstone so
-      // the row we just wrote is not hidden by the registry (the panel's own
-      // publish bundle already treats a live draft this way — the server has to
-      // agree, or a save appears to do nothing). Only unit sections are gated;
-      // materials are not units. The shiny twin goes with the base unit.
-      if (section === 'value' || section === 'wiki' || section === 'map' || section === 'crate') {
-        const base = slug.startsWith('shiny-') ? slug.slice('shiny-'.length) : slug;
-        const stale = [slug, `shiny-${slug}`, base].filter((s) => bundle.deletedUnits.includes(s));
-        if (stale.length) {
-          bundle.deletedUnits = bundle.deletedUnits.filter((s) => !stale.includes(s));
-        }
-      }
     }
     const writeError = await writeOverridesBundle(env, bundle);
     if (writeError) return writeError;

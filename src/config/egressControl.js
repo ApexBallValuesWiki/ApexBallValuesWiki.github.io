@@ -1,5 +1,3 @@
-// ============================================================================
-// ============================================================================
 // Controls whether public visitors (`/`, `/wiki`, `/values`, `/calculator`)
 // send background sync requests to the Cloudflare KV worker.
 //
@@ -12,5 +10,4 @@
 //                       the static Vite/GitHub Pages bundle (100 GB/mo free
 //                       GitHub egress). Only Admins logged into `/admin`
 //                       sync live data.
-// ============================================================================
 export const PUBLIC_LIVE_SYNC_ENABLED = true;

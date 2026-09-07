@@ -1,7 +1,5 @@
 #!/usr/bin/env node
-// ============================================================================
 // SOCIAL CARD GENERATOR
-// ----------------------------------------------------------------------------
 // Generates 1200x630 Open Graph images into public/social/ (committed to the
 // repo — Vite copies public/ into dist/ on every build, so the deploy needs
 // no native deps). Re-run manually whenever units change:
@@ -11,7 +9,6 @@
 // Requires the devDependency `sharp` (SVG -> PNG rasterization). Unit art is
 // pulled from src/assets/units/<slug>.png when it exists; other units get a
 // branded rarity-gradient token with their initial.
-// ============================================================================
 
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -24,7 +21,7 @@ const ROOT = process.env.APEX_PROJECT_ROOT || dirname(dirname(dirname(fileURLToP
 const OUT_DIR = join(ROOT, 'public', 'social');
 const UNIT_ASSETS = join(ROOT, 'src', 'assets', 'units');
 const LOGO_PATH = join(ROOT, 'src', 'assets', 'apex-values-wiki-logo.png');
-const SITE_LABEL = 'APEX Values & WIKI';
+const SITE_LABEL = 'Apex WIKI & Values';
 
 let sharp;
 try {

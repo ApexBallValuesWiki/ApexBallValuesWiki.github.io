@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { slugify } from '../../utils/slug';
-import { processAdminImage } from '../../utils/adminImage';
+import { uploadContentImage } from '../../utils/adminImage';
 import { compressImage } from '../../utils/adminSafety';
 
 // Create a REAL map — appears on /wiki/maps and the Maps editor like built-ins.
@@ -21,8 +21,8 @@ export default function CreateMapForm({ session, onCreate, saving, existingSlugs
     if (!name.trim()) return setError('Type a map name first.');
     if (clash) return setError(`A map called "${name.trim()}" already exists.`);
     if (!session?.user?.id) return setError('Session expired. Please log in again.');
-    const { imageUrl, error: imageError } = await processAdminImage(imageFile);
-    if (imageError) setError(`${imageError} The ${fname.replace('Create','').replace('Form.jsx','').toLowerCase()} was created without a picture.`);
+    let imageUrl = null;
+    if (imageFile) imageUrl = await uploadContentImage(await compressImage(imageFile), slug, session).catch(() => null);
     await onCreate({
       slug, name: name.trim(), description: description.trim(), difficulty,
       unlock_requirement: unlock.trim(), image_url: imageUrl,

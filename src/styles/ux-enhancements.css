@@ -1,32 +1,30 @@
 /* ============================================================
    BACKGROUND PATTERNS — grid, dots, lines
-   Applied directly on <body> (a fixed ::before at z-index -1 used to hide
-   behind the body background, which is why patterns "didn't change").
-   Line color is customizable via the Pattern Color picker.
+   Painted on the .holo-bg layer (the fixed backdrop that covers the
+   page). Painting them on <body> never showed: the opaque holo backdrop
+   sits on top of the body background, which is why the pattern option
+   "didn't change anything". Line color is customizable via Pattern Color.
    ============================================================ */
-[data-bg-pattern="grid"] body {
+[data-bg-pattern="grid"] .holo-bg {
   background-image:
-    linear-gradient(color-mix(in srgb, var(--bg-pattern-color, #fff) 22%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--bg-pattern-color, #fff) 22%, transparent) 1px, transparent 1px);
+    linear-gradient(color-mix(in srgb, var(--bg-pattern-color, #fff) 26%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--bg-pattern-color, #fff) 26%, transparent) 1px, transparent 1px);
   background-size: 60px 60px;
-  background-attachment: fixed;
 }
 
-[data-bg-pattern="dots"] body {
-  background-image: radial-gradient(circle, color-mix(in srgb, var(--bg-pattern-color, #fff) 30%, transparent) 1.5px, transparent 1.5px);
+[data-bg-pattern="dots"] .holo-bg {
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--bg-pattern-color, #fff) 34%, transparent) 1.5px, transparent 1.5px);
   background-size: 32px 32px;
-  background-attachment: fixed;
 }
 
-[data-bg-pattern="lines"] body {
+[data-bg-pattern="lines"] .holo-bg {
   background-image: repeating-linear-gradient(
     45deg,
     transparent,
     transparent 40px,
-    color-mix(in srgb, var(--bg-pattern-color, #fff) 10%, transparent) 40px,
-    color-mix(in srgb, var(--bg-pattern-color, #fff) 10%, transparent) 41px
+    color-mix(in srgb, var(--bg-pattern-color, #fff) 13%, transparent) 40px,
+    color-mix(in srgb, var(--bg-pattern-color, #fff) 13%, transparent) 41px
   );
-  background-attachment: fixed;
 }
 
 /* ============================================================

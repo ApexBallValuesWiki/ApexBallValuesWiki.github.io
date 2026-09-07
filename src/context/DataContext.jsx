@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { UNIT_VALUES as STATIC_UNIT_VALUES, CONSUMABLE_VALUES as STATIC_CONSUMABLE_VALUES } from '../data/values';
 import { ALL_UNITS, createShinyUnit } from '../data/units';
+import { isSpecialBaseValue } from '../utils/adminForms';
 import { computeTradeValue } from '../utils/calculator';
 import { APEX_KV_URL, fetchKvBundle } from '../utils/apexClient';
 import { rowToWikiOverride } from '../utils/wikiOverrides';
@@ -15,8 +16,14 @@ const DataContext = createContext(null);
 function rowToValueData(row) {
   if (!row) return null;
   const max = row.base_value_max ?? row.baseValueMax ?? null;
+  const special = isSpecialBaseValue(row.base_value ?? row.baseValue);
+  const specialGems = isSpecialBaseValue(row.gems);
+  const specialCoins = isSpecialBaseValue(row.coins);
   return {
-    baseValue: Number(row.base_value ?? row.baseValue ?? 0),
+    specialValue: special,
+    specialGems,
+    specialCoins,
+    baseValue: special ? null : Number(row.base_value ?? row.baseValue ?? 0),
     baseValueMax: (max !== "" && max != null) ? Number(max) : null,
     gems: Number(row.gems ?? 0),
     coins: Number(row.coins ?? 0),
@@ -39,20 +46,21 @@ function withLiveValue(entry, rowsBySlug, localValueOverrides = {}) {
 
   const live = rowToValueData(localOver ? { ...(dbRow || {}), ...localOver } : dbRow);
   if (!live) return entry;
-  const tradeValue = computeTradeValue(live.baseValue, live.demand, live.scarcity);
-  const gems = computeTradeValue(live.gems, live.demand, live.scarcity);
-  const coins = computeTradeValue(live.coins, live.demand, live.scarcity);
+  // O/C and N/A apply to Value, Gems AND Coins — a marker replaces that
+  // number; the other fields still show whatever was entered.
+  const tradeValue = live.specialValue ? null : computeTradeValue(live.baseValue);
+  const gems = live.specialGems ? null : computeTradeValue(live.gems);
+  const coins = live.specialCoins ? null : computeTradeValue(live.coins);
 
   let tradeValueMax = null;
   let gemsMax = null;
   let coinsMax = null;
   if (live.baseValueMax && Number(live.baseValueMax) > Number(live.baseValue)) {
-    tradeValueMax = computeTradeValue(Number(live.baseValueMax), live.demand, live.scarcity);
-    // Use stored max values if available, otherwise scale proportionally
+    tradeValueMax = computeTradeValue(Number(live.baseValueMax));
     const gemsMaxVal = live.gemsMax != null ? Number(live.gemsMax) : Math.round(Number(live.gems) * (Number(live.baseValueMax) / Number(live.baseValue)));
     const coinsMaxVal = live.coinsMax != null ? Number(live.coinsMax) : Math.round(Number(live.coins) * (Number(live.baseValueMax) / Number(live.baseValue)));
-    gemsMax = computeTradeValue(gemsMaxVal, live.demand, live.scarcity);
-    coinsMax = computeTradeValue(coinsMaxVal, live.demand, live.scarcity);
+    gemsMax = computeTradeValue(gemsMaxVal);
+    coinsMax = computeTradeValue(coinsMaxVal);
   }
 
   return {
@@ -82,11 +90,9 @@ function saveCachedTable(key, rows) {
   }
 }
 
-// ---------------------------------------------------------------------------
 // KV bundle -> row mappers. The bundle may contain BOTH snake_case DB-row
 // payloads (base_value, image_url) and camelCase entries (baseValue,
 // imageUrl) depending on which editor wrote them — normalize both.
-// ---------------------------------------------------------------------------
 function bundleToValueRows(data = {}) {
   return Object.entries(data?.valueOverrides || {}).map(([slug, val]) => ({
     slug,
@@ -445,9 +451,10 @@ export function DataProvider({ children }) {
     for (const unit of [...fromSource(localWikiOverrides), ...fromSource(rowMap)]) {
       if (!seen.has(unit.slug)) { seen.add(unit.slug); bases.push(unit); }
     }
-    const visible = bases.filter((unit) => !isUnitDeleted(unit.slug));
+    const deleted = new Set(localDeleted?.wiki || []);
+    const visible = bases.filter((unit) => !deleted.has(unit.slug) && !isUnitDeleted(unit.slug));
     return [...visible, ...visible.map(createShinyUnit)];
-  }, [wikiRows, localWikiOverrides, staticSlugs, isUnitDeleted]);
+  }, [wikiRows, localWikiOverrides, staticSlugs, localDeleted, isUnitDeleted]);
 
   // Editor-created maps: map rows whose slug is outside the static map list.
   const createdMaps = useMemo(() => {
@@ -469,11 +476,8 @@ export function DataProvider({ children }) {
         documented: true,
       });
     }
-    // Entries this site deleted (KV registry or this browser's pending marks)
-    // must disappear from the editor list too, or they look alive here and
-    // dead everywhere else.
-    return list.filter((m) => !isUnitDeleted(m.slug));
-  }, [mapRows, localMapOverrides, isUnitDeleted]);
+    return list;
+  }, [mapRows, localMapOverrides]);
 
   // Skins created/edited by editors live as WIKI rows with a `kind` marker
   // so they never pollute unit lists. (Materials used to live here too —
@@ -505,15 +509,15 @@ export function DataProvider({ children }) {
 
   const createdMaterials = useMemo(
     () => Object.values(materialRowMap)
-      .filter((row) => row.slug && !staticMaterialSlugs.has(row.slug) && !row.slug.startsWith('shiny-') && !isUnitDeleted(row.slug))
+      .filter((row) => row.slug && !staticMaterialSlugs.has(row.slug) && !row.slug.startsWith('shiny-'))
       .map((row) => ({ slug: row.slug, name: row.name || row.slug, kind: 'material', description: row.description || '', effect: row.effect || '', obtain: Array.isArray(row.obtain) ? row.obtain : [], imageUrl: row.image_url ?? row.imageUrl ?? null, documented: true })),
-    [materialRowMap, staticMaterialSlugs, isUnitDeleted]
+    [materialRowMap, staticMaterialSlugs]
   );
 
   const createdSkins = useMemo(
-    () => Object.entries(kindRows).filter(([, row]) => row.kind === 'skin' && !isUnitDeleted(row.slug || ''))
+    () => Object.entries(kindRows).filter(([, row]) => row.kind === 'skin')
       .map(([slug, row]) => ({ slug, name: row.name || slug, category: row.category || 'Exclusive', shiny: !!row.shiny, description: row.description || '', imageUrl: row.image_url ?? row.imageUrl ?? null, documented: true })),
-    [kindRows, isUnitDeleted]
+    [kindRows]
   );
   const getWikiOverride = useCallback(
     (slug) => {
@@ -545,12 +549,8 @@ export function DataProvider({ children }) {
       demand: null, scarcity: null, trend: null, tradeValue: null, hasValue: false,
     }));
     const list = [...STATIC_UNIT_VALUES.map(mergeWiki), ...createdValueEntries.map(mergeWiki)];
-    // Visibility has ONE source: the site-wide deleted-units registry (KV)
-    // unioned with this browser's pending marks (isUnitDeleted). The per-brain
-    // wiki/value tombstones are a publish-time mechanism only — reading them
-    // here as well is what made a deleted unit look different in every place.
-    return list.filter((u) => !isUnitDeleted(u.slug));
-  }, [rowsBySlug, createdUnits, localValueOverrides, getWikiOverride, isUnitDeleted]);
+    return list.filter((u) => !localDeleted?.wiki?.includes(u.slug) && !localDeleted?.value?.includes(u.slug) && !isUnitDeleted(u.slug));
+  }, [rowsBySlug, createdUnits, localValueOverrides, getWikiOverride, localDeleted, isUnitDeleted]);
 
   const consumableValues = useMemo(
     () => STATIC_CONSUMABLE_VALUES.map((entry) => withLiveValue(entry, rowsBySlug, localValueOverrides)),

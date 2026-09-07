@@ -1,7 +1,24 @@
 import { useEffect, useState, useCallback } from 'react';
-import { TEAM_MEMBERS, getTeamRole } from '../utils/teamMembers';
+import { canEditValue, canEditWiki } from '../utils/adminForms';
+import { TEAM_MEMBERS } from '../utils/teamMembers';
 
-// Fire from anywhere after login/logout to instantly update the Header
+const ADMIN_ROLES = new Set([
+  'owner',
+  'admin_plus',
+  'admin',
+  'lead_value_editor',
+  'lead_wiki_editor',
+  'value_editor',
+  'wiki_editor',
+  'editor',
+]);
+
+export function isAdminRole(role) {
+  if (!role) return false;
+  return ADMIN_ROLES.has(role.toLowerCase()) || canEditValue(role) || canEditWiki(role);
+}
+
+// Fire this from anywhere after login/logout to instantly update the Header
 export function notifyAdminAuthChange() {
   window.dispatchEvent(new CustomEvent('apex-admin-auth-changed'));
 }
@@ -16,9 +33,9 @@ export function useAdminStatus() {
     const savedPasscode = localStorage.getItem('apex-admin-passcode-v1');
     if (savedEmail && savedPasscode) {
       const cleanEmail = savedEmail.trim().toLowerCase();
-      const role = getTeamRole(cleanEmail);
-      if (role) {
-        setState({ loading: false, isAdmin: true, role, email: cleanEmail });
+      const member = TEAM_MEMBERS[cleanEmail];
+      if (member) {
+        setState({ loading: false, isAdmin: true, role: member.roleKey, email: cleanEmail });
         return true;
       }
     }

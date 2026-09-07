@@ -3,9 +3,7 @@ import { GENERATED_UNITS } from './generated/units.generated';
 import { slugify } from '../utils/slug';
 import { normalizeAttacks } from '../utils/attacks';
 
-// ============================================================================
 // UNITS DATABASE
-// ----------------------------------------------------------------------------
 // Data is sourced from the community "Ball TD Units stat sheet", parsed by
 // scripts/parse_units.py + scripts/build_units_js.py into
 // src/data/generated/units.generated.js (GENERATED_UNITS).
@@ -13,7 +11,6 @@ import { normalizeAttacks } from '../utils/attacks';
 // Shiny units are generated from the base units here so the WIKI can show
 // both base rarity pages and Shiny rarity pages without duplicating the giant
 // stat sheet by hand.
-// ============================================================================
 
 export const UNIT_OVERRIDES = {
   // 'ball': { description: 'The original Ball. Everyone starts here.' },
@@ -111,14 +108,11 @@ export function createShinyUnit(baseUnit) {
   return applyOverrides(unit);
 }
 
-// ============================================================================
 // REAL UNITS ADDED MANUALLY
-// ----------------------------------------------------------------------------
 // These exist in the game but were once managed by the (now removed) custom
 // unit system — they are ordinary units now, same as the generated ones.
 // Images/descriptions still come from their live WIKI overrides in KV.
 // (Cube and Nemesis were removed from the site by owner decision.)
-// ============================================================================
 export const EXTRA_STATIC_UNITS = [
   {
     "slug": "lifeguardball",

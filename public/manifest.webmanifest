@@ -1,6 +1,6 @@
 {
-  "name": "APEX Values & WIKI",
-  "short_name": "APEX Values",
+  "name": "Apex WIKI & Values",
+  "short_name": "Apex",
   "description": "Values, WIKI, trade calculator, and unit tools for Ball Tower Defense.",
   "start_url": "./",
   "display": "standalone",

@@ -89,12 +89,12 @@ export default function BugReport() {
   if (submitted) {
     return (
       <main className="bug-report-page">
-        <PageIntro eyebrow="APEX Support" title="Report Submitted!">
-          <p>Thank you for helping improve the site! Your bug report has been received.</p>
+        <PageIntro eyebrow="Testing Support" title="Report Submitted!">
+          <p>Thank you for helping improve the Test Realm! Your bug report has been received.</p>
         </PageIntro>
         <div className="card bug-report-success">
           <p>
-            Your report helps make the site better for everyone.
+            Your report helps make Testing better for everyone.
           </p>
           <div className="bug-report-success-actions">
             <button type="button" className="filled" onClick={() => setSubmitted(false)}>
@@ -111,7 +111,7 @@ export default function BugReport() {
 
   return (
     <main className="bug-report-page">
-      <PageIntro eyebrow="APEX Support" title="Report a Bug">
+      <PageIntro eyebrow="Testing Support" title="Report a Bug">
         <p>
           Found something wrong? Let us know! Fill out this form to report bugs, incorrect data,
           broken links, or anything else.

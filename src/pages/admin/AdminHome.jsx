@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { buildAdminHref, isResetPasswordPath, selectionPatch, useAdminNav } from '../../components/admin/adminNav';
-import { AdminShellNav, AdminSubTabs, isAdminViewVisible } from '../../components/admin/AdminShellNav';
+import { useEffect, useMemo, useState, useRef, useCallback} from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { ALL_UNITS } from '../../data/units';
 import CreateHub from '../../components/admin/CreateHub';
 import staticOverridesJson from '../../data/overrides/staticOverrides.json';
@@ -11,11 +10,13 @@ import { ALL_SKINS, ALL_SHINY_SKINS } from '../../data/skins';
 import { useData } from '../../context/DataContext';
 import { SHINY_UNITS } from '../../data/units';
 import { useWikiImageOverrides } from '../../hooks/useWikiImageOverrides';
-import { isShinyRarity } from '../../data/taxonomy';
+import { UNIT_RARITIES, isShinyRarity } from '../../data/taxonomy';
 import { computeTradeValue } from '../../utils/calculator';
-import { APEX_KV_URL, getAdminHeaders, pushKvEntry, deleteKvEntry, fetchChangeLog, logoutEverywhere, addDeletedUnit, restoreDeletedUnit } from '../../utils/apexClient';
+import { slugify } from '../../utils/slug';
+import { APEX_KV_URL, getAdminHeaders, pushKvEntry, deleteKvEntry, fetchChangeLog, logoutEverywhere, addDeletedUnit, restoreDeletedUnit, fetchUnitHistory, fetchMaintenanceStatus, setMaintenance } from '../../utils/apexClient';
 import AnnouncementStudio from '../../components/admin/AnnouncementStudio';
 import AdminDashboard from '../../components/admin/AdminDashboard';
+import ChangeFeed from '../../components/admin/ChangeFeed';
 import { buildFullPublishBundle, pushBundleToCloudflareKV } from '../../components/admin/adminKV';
 import { removeCachedWikiImage, saveCachedWikiImage, loadCachedWikiImages } from '../../utils/wikiImageCache';
 import {
@@ -45,29 +46,26 @@ import {
   markLocalUnitDeleted,
   unmarkLocalUnitDeleted,
   unmarkLocalOverrideDeleted,
-  clearLocalDeletedOverrides,
-  clearUnitTombstones,
-  isLocalUnitTombstoned,
-  loadLocalDeletedUnits
+  clearLocalDeletedOverrides
 } from '../../utils/localOverrides';
-import { getDisplayName, getTeamRole, ROLE_ICONS } from '../../utils/teamMembers';
+import { getDisplayName, TEAM_MEMBERS } from '../../utils/teamMembers';
 import { notifyAdminAuthChange } from '../../hooks/useAdminStatus';
-import { AdminLog, AdminMessage, AdminPickerPane, AuthPanel, ContentEditor, DeletedUnitsPanel, UnitPicker, ValueEditor, WikiEditor, loadPersistedLogs, persistLog } from '../../components/admin/AdminParts';
+import Dropdown from '../../components/Dropdown';
+import { AdminLog, AdminMessage, AuthPanel, ContentEditor, DeletedUnitsPanel, UnitPicker, ValueEditor, WikiEditor, loadPersistedLogs, persistLog } from '../../components/admin/AdminParts';
+import ContributionGraph from '../../components/admin/ContributionGraph';
 import BugReportAdmin from '../../components/bugs/BugReportAdmin';
 import MarketAnalytics from '../../components/MarketAnalytics';
 import { createUndoRedo } from '../../utils/undoRedo';
 import {
-  fuzzyMatch, saveFormDraft, loadFormDraft, clearFormDraft, shouldReseedEditor,
+  fuzzyMatch, saveFormDraft, loadFormDraft, clearFormDraft,
   pushRecentEdit, loadRecentEdits, scorePasscode, compressImage,
 } from '../../utils/adminSafety';
 import { recordValueChange } from '../../components/ValueTrendGraph';
 import './AdminHome.css';
 
-// ============================================================================
 // NORMAL → SHINY AUTOSYNC
 // Automatically generates the Shiny variant when saving a Normal unit.
 // Rules: 1.5× all damage/DPS stats, everything else identical.
-// ============================================================================
 const SHINY_DAMAGE_MULTIPLIER = 1.5;
 
 function findShinyUnit(normalUnit, allUnits) {
@@ -169,14 +167,39 @@ async function autoSyncShinyVariant(normalPayload, normalUnit, allUnits, session
   });
 }
 
+const NEW_UNIT_RARITY_GROUPS = [
+  { label: 'Base Rarities', options: UNIT_RARITIES.filter((r) => !r.startsWith('Shiny')).map((r) => ({ value: r, label: r })) },
+  { label: 'Shiny Rarities', options: UNIT_RARITIES.filter((r) => r.startsWith('Shiny')).map((r) => ({ value: r, label: r })) },
+];
 
-const ROLE_EMOJI = ROLE_ICONS;
+const ROLE_EMOJI = {
+  owner: '👑',
+  admin: '🛡️',
+  editor: '✏️',
+  lead_value_editor: '💰',
+  lead_wiki_editor: '📖',
+  value_editor: '💰',
+  wiki_editor: '📖',
+  fanart_editor: '🎨',
+};
 
+const SIDEBAR_ITEMS = [
+  { id: 'dashboard', icon: '📊', label: 'Dashboard' },
+  { id: 'values', icon: '💰', label: 'Values Editor' },
+  { id: 'wiki', icon: '📖', label: 'WIKI Editor' },
+  { id: 'create', icon: '✨', label: 'Create' },
+  { id: 'maps', icon: '🗺️', label: 'Maps' },
+  { id: 'crates', icon: '📦', label: 'Crates' },
+  { id: 'materials', icon: '🧪', label: 'Materials' },
+  { id: 'bugs', icon: '🐛', label: 'Bug Reports' },
+  { id: 'announcements', icon: '📢', label: 'Announcements' },
+  { id: 'logs', icon: '📈', label: 'Logs & Info' },
+];
 
 export default function AdminHome() {
   const location = useLocation();
   const navigate = useNavigate();
-  const resetMode = isResetPasswordPath(location.pathname);
+  const resetMode = location.pathname.endsWith('/reset-password');
   const { refresh, refreshWiki, refreshContent, createdUnits, createdMaps, createdSkins, createdMaterials, materialRowMap, deletedUnitSlugs, isUnitDeleted, wikiRows: liveWikiRows = [] } = useData();
   const generatedUnits = useMemo(() => {
     return ALL_UNITS.filter((unit) => {
@@ -191,57 +214,22 @@ export default function AdminHome() {
   const [adminUser, setAdminUser] = useState(null);
   const [adminLoading, setAdminLoading] = useState(false);
 
-  const role = adminUser?.role || null;
-  const valueAllowed = canEditValue(role);
-  const wikiAllowed = canEditWiki(role);
-
-  // WHICH SECTION / WHICH ENTRY — owned by the URL, not by component state.
-  // That is what makes a refresh keep your place (it used to reset to the
-  // Dashboard with the first unit selected) and what makes every sub-page
-  // linkable and back-button friendly.
-  const goto = useCallback((patch) => navigate(buildAdminHref(patch), { replace: !!patch.replace }), [navigate]);
-  const nav = useAdminNav({
-    pathname: location.pathname,
-    canView: useCallback((id) => isAdminViewVisible(id, { role, valueAllowed, wikiAllowed }), [role, valueAllowed, wikiAllowed]),
-  });
-  const activeView = nav.view;
-  const navTools = nav.tools;
-  const canView = nav.canView;
-  const visibleTools = useMemo(() => {
-    if (!navTools) return null;
-    const allowed = navTools.filter((tool) => canView(tool.id));
-    return allowed.length ? allowed : null;
-  }, [navTools, canView]);
-  const activeTool = nav.tool || (activeView === 'values' || activeView === 'wiki' ? 'values' : activeView);
-  const setActiveView = useCallback((next) => goto({ view: next, tool: next === 'values' || next === 'wiki' ? next : undefined }), [goto]);
-  const setActiveTool = useCallback((next) => goto({ view: next, tool: next }), [goto]);
-
-  const selectedSlug = nav.selection && activeView === 'values' || nav.selection && activeView === 'wiki'
-    ? nav.selection
-    : generatedUnits[0]?.slug || '';
-  const setSelectedSlug = useCallback((slug) => goto(selectionPatch(activeView, slug)), [goto, activeView]);
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [resetSaving, setResetSaving] = useState(false);
+  // Members still on the DEFAULT passcode ('apex2026') are locked to the
+  // password-change screen until they set their own — no editing before.
+  const [mustChangePassword, setMustChangePassword] = useState(() => {
+    try {
+      return localStorage.getItem('apex-admin-passcode-v1') === 'apex2026';
+    } catch { return false; }
+  });
 
   const [query, setQuery] = useState('');
   const [unitFilter, setUnitFilter] = useState('all');
   const [previewMode, setPreviewMode] = useState(true);
-  // Collapsed picker panes, remembered per section: on a phone the entry list
-  // otherwise stacks above the form and the fields look like they are missing.
-  const [pickerOpen, setPickerOpen] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('apex-admin-picker-open-v1') || '{}') || {}; } catch { return {}; }
-  });
-  const togglePicker = useCallback((section) => {
-    setPickerOpen((prev) => {
-      const next = { ...prev, [section]: !prev[section] };
-      try { localStorage.setItem('apex-admin-picker-open-v1', JSON.stringify(next)); } catch { /* private mode */ }
-      return next;
-    });
-  }, []);
   const [valueRows, setValueRows] = useState([]);
   const [valueLog] = useState([]);
   const [wikiRows, setWikiRows] = useState([]);
@@ -300,19 +288,71 @@ export default function AdminHome() {
     () => units.map((u) => ({ ...u, imageUrl: adminImageMap[u.slug] || imageMap[u.slug] || u.imageUrl || u.image_url || null })),
     [units, adminImageMap, imageMap]
   );
+  const [selectedSlug, setSelectedSlug] = useState(generatedUnits[0]?.slug || '');
+  const [activeTool, setActiveTool] = useState('values');
+  const [newUnitName, setNewUnitName] = useState('');
+  const [newUnitRarity, setNewUnitRarity] = useState('Normie');
+  const [contentSlug, setContentSlug] = useState(ALL_MAPS[0]?.slug || CRATES[0]?.slug || '');
   const [contentForm, setContentForm] = useState({});
   const [contentImageFile, setContentImageFile] = useState(null);
+  const [activeView, setActiveView] = useState('dashboard');
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Subpages live in the URL (?view=…&tool=…) so a refresh keeps you where
+  // you were and deep links (e.g. /admin?view=create) work.
+  useEffect(() => {
+    try {
+      const v = searchParams.get('view');
+      const t = searchParams.get('tool');
+      const known = SIDEBAR_ITEMS.some((i) => i.id === v);
+      if (known) setActiveView(v); // role gates are enforced at render time
+      if (t === 'values' || t === 'wiki' || t === 'maps' || t === 'crates') setActiveTool(t);
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    try {
+      const next = {};
+      if (activeView !== 'dashboard') next.view = activeView;
+      if (activeTool !== 'values') next.tool = activeTool;
+      setSearchParams(next, { replace: true });
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeView, activeTool]);
 
-  // Always resolve against the FULL list: searching filters the picker, and
-  // resolving against the filtered subset would silently swap which unit the
-  // form (and a save) applies to.
-  // The list hides recycle-binned units, so a deep link / remembered selection can
-  // name a slug that is not selectable. Falling back to the first unit in that case
-  // is how a save lands on the WRONG unit, so an explicit-but-unresolvable slug now
-  // resolves to nothing and the editors show their "pick something first" state.
-  const hiddenSelection = !!selectedSlug && isUnitDeleted(selectedSlug);
-  const selectedUnit = unitsWithImages.find((unit) => unit.slug === selectedSlug)
-    || (selectedSlug ? undefined : unitsWithImages[0]);
+  // Maintenance mode (owner/admin): closes the site for visitors
+  const [maintenance, setMaintenanceState] = useState({ on: false, message: '', loading: true });
+  const refreshMaintenance = useCallback(async () => {
+    const state = await fetchMaintenanceStatus();
+    setMaintenanceState({ on: !!state.on, message: state.message || '', loading: false });
+  }, []);
+  useEffect(() => {
+    refreshMaintenance();
+    const pollId = window.setInterval(refreshMaintenance, 60000);
+    const onUpdated = () => refreshMaintenance();
+    window.addEventListener('apex-maintenance-updated', onUpdated);
+    return () => { window.clearInterval(pollId); window.removeEventListener('apex-maintenance-updated', onUpdated); };
+  }, [refreshMaintenance]);
+
+  async function handleToggleMaintenance() {
+    if (role !== 'owner' && role !== 'admin') return;
+    const turningOn = !maintenance.on;
+    const extra = turningOn ? '\n\nVisitors will see a "we are under maintenance" page until it is turned off. Team members keep full access.' : '';
+    if (!window.confirm(`${turningOn ? 'Turn maintenance mode ON and close the site for visitors?' : 'Turn maintenance mode OFF and reopen the site?'}${extra}`)) return;
+    setMaintenanceState((p) => ({ ...p, loading: true }));
+    const res = await setMaintenance(turningOn, '');
+    if (res.ok) {
+      window.dispatchEvent(new CustomEvent('apex-maintenance-updated'));
+      setMessage(turningOn ? '🛠 Maintenance mode is ON — visitors now see the maintenance page.' : '✅ Maintenance mode is OFF — the site is open again.');
+      setMessageAction(null);
+      await refreshMaintenance();
+    } else {
+      setMaintenanceState((p) => ({ ...p, loading: false }));
+      setMessage(`⚠️ Could not switch maintenance mode: ${res.error || 'worker not reachable'}. Needs the updated worker deployed.`);
+      setMessageAction(null);
+    }
+  }
+
+  const selectedUnit = unitsWithImages.find((unit) => unit.slug === selectedSlug) || unitsWithImages[0];
   const selectedValueRow = useMemo(() => {
     const dbRow = valueRows.find((row) => row.slug === selectedUnit?.slug);
     if (!previewMode || !selectedUnit) return dbRow || null;
@@ -327,26 +367,8 @@ export default function AdminHome() {
     return localOver ? { ...(dbRow || {}), ...localOver, slug: selectedUnit.slug } : (dbRow || null);
   }, [wikiRows, selectedUnit, previewMode, dataVersion]);
 
-  // Created maps/crates live as override rows outside the static list, so they
-  // are appended here — otherwise the editor cannot re-open (or delete) them.
-  const createdMapEntries = (createdMaps || []).filter((m) => !ALL_MAPS.some((s2) => s2.slug === m.slug));
-  const createdCrateEntries = (crateRows || []).filter((r) => r && r.slug && !CRATES.some((c) => c.slug === r.slug));
-  const contentItems = activeTool === 'maps'
-    ? [...ALL_MAPS, ...createdMapEntries]
-    : [...CRATES, ...createdCrateEntries];
-  const [contentQuery, setContentQuery] = useState('');
-  // Search FILTERS the list (it used to select the first name match on every
-  // keystroke, which read like the search was broken).
-  const contentView = useMemo(() => {
-    const q = contentQuery.trim().toLowerCase();
-    const items = !q
-      ? contentItems
-      : contentItems.filter((item) => `${item.name} ${item.slug}`.toLowerCase().includes(q));
-    return { items: items.length ? items : contentItems, filtered: Boolean(q) && items.length > 0 };
-  }, [contentItems, contentQuery]);
-  const contentSlug = nav.selection;
+  const contentItems = activeTool === 'maps' ? ALL_MAPS : CRATES;
   const selectedContentItem = contentItems.find((item) => item.slug === contentSlug) || contentItems[0];
-  const setContentSlug = useCallback((slug) => goto({ view: activeView, selection: slug }), [goto, activeView]);
   const selectedContentRow = (activeTool === 'maps' ? mapRows : crateRows).find((row) => row.slug === selectedContentItem?.slug);
 
   const [valueForm, setValueForm] = useState(() => valueRowToForm(null, generatedUnits[0]?.slug));
@@ -355,6 +377,7 @@ export default function AdminHome() {
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
   const [localChangeLog, setLocalChangeLog] = useState(() => loadPersistedLogs());
+  const [liveDbTime, setLiveDbTime] = useState(null);
   const [serverEdits, setServerEdits] = useState([]);
   const [messageAction, setMessageAction] = useState(null);
   const [recentEdits, setRecentEdits] = useState(() => loadRecentEdits());
@@ -362,7 +385,7 @@ export default function AdminHome() {
   const [draftsVersion, setDraftsVersion] = useState(0);
   const undoRedo = useMemo(() => createUndoRedo(), []);
   const commitRangeRef = useRef(null);
-  const justSavedSlugRef = useRef('');   // slug whose save we must not overwrite
+  const justSavedRef = useRef(false);
   const bundleVersionRef = useRef(0);
 
   // Baseline-snapshot dirty tracking. The old row-vs-form comparison was
@@ -396,8 +419,7 @@ export default function AdminHome() {
     const leaving = wasAdminRef.current && !onAdmin;
     wasAdminRef.current = onAdmin;
     if (leaving && anyDirtyRef.current && !window.confirm('You have unsaved changes. Leave the admin panel anyway?')) {
-      // Put the panel back exactly as it was, section and selection included.
-      navigate({ pathname: '/admin', search: location.search });
+      navigate('/admin');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
@@ -409,9 +431,8 @@ export default function AdminHome() {
     const changed = prev.tool !== activeTool || prev.view !== activeView;
     if (!changed) return;
     if (anyDirtyRef.current && !window.confirm('You have unsaved changes. Switch anyway?')) {
-      // Rewind the URL (replace: no extra history entry) so the Back button
-      // does not bounce the admin straight back into the prompt.
-      goto({ view: prev.view, tool: prev.tool, replace: true });
+      setActiveTool(prev.tool);
+      setActiveView(prev.view);
       return; // ref intentionally unchanged → re-run sees no change, no loop
     }
     viewGuardRef.current = { tool: activeTool, view: activeView };
@@ -423,15 +444,18 @@ export default function AdminHome() {
     const savedPasscode = localStorage.getItem('apex-admin-passcode-v1');
     if (savedEmail && savedPasscode) {
       const cleanEmail = savedEmail.trim().toLowerCase();
-      const role = getTeamRole(cleanEmail);
-      if (role) {
+      const member = TEAM_MEMBERS[cleanEmail];
+      if (member) {
         setSession({
           user: {
             id: cleanEmail,
             email: cleanEmail,
           }
         });
-        setAdminUser({ email: cleanEmail, role });
+        setAdminUser({
+          email: cleanEmail,
+          role: member.roleKey,
+        });
       }
     }
     setAuthLoading(false);
@@ -444,15 +468,21 @@ export default function AdminHome() {
     }
     setAdminLoading(true);
     const cleanEmail = session.user.email.toLowerCase();
-    const role = getTeamRole(cleanEmail);
-    if (role) {
-      setAdminUser({ email: cleanEmail, role });
+    const member = TEAM_MEMBERS[cleanEmail];
+    if (member) {
+      setAdminUser({
+        email: cleanEmail,
+        role: member.roleKey,
+      });
     } else {
       setAdminUser(null);
     }
     setAdminLoading(false);
   }, [session]);
 
+  const role = adminUser?.role || null;
+  const valueAllowed = canEditValue(role);
+  const wikiAllowed = canEditWiki(role);
   const stats = {
     units: units.length,
     values: valueRows.length,
@@ -463,7 +493,6 @@ export default function AdminHome() {
   const edits24h = serverEdits.filter((e) => new Date(e?.at || 0).getTime() >= dayAgo).length
     + localChangeLog.filter((e) => new Date(e?.changed_at || 0).getTime() >= dayAgo).length;
   const anyAllowed = valueAllowed || wikiAllowed;
-  void anyAllowed;
 
   // Track changes locally for the Admin Log display (persisted to localStorage)
   function logChange(slug, kind, detail) {
@@ -479,9 +508,10 @@ export default function AdminHome() {
     setLocalChangeLog((prev) => [entry, ...prev].slice(0, 200));
   }
 
-  // (no legacy "default to the values tool" effect here: the section now comes
-  // from the URL, and an effect that rewrites it would break deep links and
-  // cost the back button its history.)
+  useEffect(() => {
+    if (valueAllowed) setActiveTool('values');
+    else if (wikiAllowed) setActiveTool('wiki');
+  }, [valueAllowed, wikiAllowed]);
 
   async function refreshAdminData({ logsOnly: _logsOnly = false } = {}) {
     setDataVersion((v) => v + 1);
@@ -499,6 +529,7 @@ export default function AdminHome() {
       const res = await fetch(`${APEX_KV_URL}/overrides`).catch(() => null);
       if (res && res.ok) kvData = await res.json();
       if (typeof kvData?.__v === 'number') bundleVersionRef.current = kvData.__v;
+      if (kvData?.timestamp) setLiveDbTime(new Date(kvData.timestamp));
     } catch {
       kvData = null; // Worker offline → fall back to static + local layers only
     }
@@ -636,12 +667,7 @@ export default function AdminHome() {
       }
       if (typeof result.version === 'number') bundleVersionRef.current = result.version;
       if (result.ok) {
-        // The bundle we just published already contains the deletedUnits list,
-        // so every local mark it accounted for is now redundant: leaving them
-        // behind is how a unit stayed hidden for one admin and visible for all
-        // the others.
         clearLocalDeletedOverrides();
-        for (const slug of loadLocalDeletedUnits()) unmarkLocalUnitDeleted(slug);
       }
     } catch (e) {
       setMessage(`⚠️ Failed to build publish bundle: ${e.message}`);
@@ -658,21 +684,10 @@ export default function AdminHome() {
     if (section === 'wiki') return (loadLocalWikiOverrides() || {})[slug];
     if (section === 'map') return (loadLocalMapOverrides() || {})[slug];
     if (section === 'crate') return (loadLocalCrateOverrides() || {})[slug];
-    // Materials used to fall through to `null`, which silently pushed every
-    // material create onto the full-bundle path instead of a one-entry write.
-    if (section === 'materials') return (loadLocalMaterialOverrides() || {})[slug];
     return null;
   }
 
   async function pushEntryToKV(section, slug, { silent = true } = {}) {
-    // Never write to a slug the admin cannot actually have selected: the row in
-    // the database is not what is on their screen. Only the two UNIT sections are
-    // hidden by the recycle bin — maps, crates and materials have their own
-    // pickers, so a colliding slug must stay saveable there.
-    if (!slug || ((section === 'value' || section === 'wiki') && isUnitDeleted(slug))) {
-      setMessage('That entry is hidden in the recycle bin — restore it before saving it.');
-      return false;
-    }
     const draft = localDraftFor(section, slug);
     if (!draft) {
       // No local draft — fall back to a full publish.
@@ -682,12 +697,6 @@ export default function AdminHome() {
     if (result.ok) {
       if (typeof result.version === 'number') bundleVersionRef.current = result.version;
       unmarkLocalOverrideDeleted(section, slug);
-      // The server dropped the site-wide tombstone on that write (see
-      // cloudflare-proxy-worker); drop this browser's marks too so the entry is
-      // visible again immediately rather than after a reload.
-      if (section === 'value' || section === 'wiki' || section === 'map' || section === 'crate') {
-        clearUnitTombstones(slug);
-      }
       if (!silent) setMessage(`✓ Published to live database (v${result.version}).`);
     } else if (result.status === 401) {
       setMessage('⚠️ Saved locally, but cloud publish failed: Your saved login/passcode is invalid.');
@@ -707,33 +716,6 @@ export default function AdminHome() {
       setMessageAction({ label: '🔄 Try again', run: () => { deleteEntryFromKV(section, slug); } });
     }
     return result.ok;
-  }
-
-  // Delete a creator-made map/crate/skin/material: remove it from the local lane,
-  // tombstone it so a full publish cannot resurrect it, then delete the KV
-  // entry. Static entries are never offered here (the UI hides the button).
-  async function deleteCreated(kind, slug, name) {
-    if (!wikiAllowed) { setMessage('Your team role cannot delete content.'); return; }
-    if (!slug) return;
-    if (!window.confirm(`Delete ${kind.replace(/\?$/, '')} "${name || slug}"? This removes it from the live site.`)) return;
-    const section = { map: 'map', crate: 'crate', materials: 'materials', wiki: 'wiki' }[kind] || kind;
-    try {
-      if (kind === 'map') setLocalMapOverride(slug, null);
-      else if (kind === 'crate') setLocalCrateOverride(slug, null);
-      else if (kind === 'materials') setLocalMaterialOverride(slug, null);
-      else setLocalWikiOverride(slug, null);
-      markLocalOverrideDeleted(section, slug);
-      if (kind === 'map') setMapRows((prev) => prev.filter((r) => r.slug !== slug));
-      if (kind === 'crate') setCrateRows((prev) => prev.filter((r) => r.slug !== slug));
-      if (kind === 'wiki') setWikiRows((prev) => prev.filter((r) => r.slug !== slug));
-      logChange(slug, kind === 'map' ? 'map' : kind === 'crate' ? 'crate' : kind, `Deleted ${kind} ${name || slug}`);
-      await deleteEntryFromKV(section, slug);
-      setMessage(`✓ Deleted "${name || slug}".`);
-      if (kind === 'map' || kind === 'crate') setContentSlug(null);
-      if (kind === 'materials') setMaterialSlug(null);
-    } catch (error) {
-      setMessage(`Delete failed: ${errorMessage(error)}`);
-    }
   }
 
   // Revert a server history entry: restore its `before` payload (or delete
@@ -758,6 +740,53 @@ export default function AdminHome() {
     }
   }
 
+  function isContentFormDirty(form, row, item, kind) {
+    if (!item) return false;
+    const isMap = kind === 'maps';
+
+    // Compare the camelCase FORM fields against the snake_case DATABASE ROW
+    // fields safely: both sides are normalized to strings, and the "original"
+    // side uses the exact same fallback chain the form-init effect uses, so a
+    // just-saved payload always evaluates to dirty === false.
+    const str = (v) => (v === null || v === undefined ? '' : String(v));
+
+    const currentName = str(form.name);
+    const currentDesc = str(form.description);
+    const currentImage = str(form.imageUrl);
+
+    const originalName = str(row?.name || item.name);
+    const originalDesc = str(row?.description);
+    const originalImage = str(row?.image_url || row?.imageUrl || (isMap ? item.image : item.imageUrl));
+
+    if (isMap) {
+      const currentDiff = str(form.difficulty);
+      const currentUnlock = str(form.unlockRequirement);
+
+      const originalDiff = str(row?.difficulty);
+      const originalUnlock = str(row?.unlock_requirement || item.unlockRequirement);
+
+      return currentName !== originalName ||
+             currentDesc !== originalDesc ||
+             currentImage !== originalImage ||
+             currentDiff !== originalDiff ||
+             currentUnlock !== originalUnlock;
+    }
+
+    const currentObtain = str(form.obtain);
+    const currentEffect = str(form.effect);
+    const currentChances = JSON.stringify(form.chances || {});
+
+    const originalObtain = str(row?.obtain);
+    const originalEffect = str(row?.effect);
+    const originalChances = JSON.stringify(row?.chances || {});
+
+    return currentName !== originalName ||
+           currentDesc !== originalDesc ||
+           currentImage !== originalImage ||
+           currentObtain !== originalObtain ||
+           currentEffect !== originalEffect ||
+           currentChances !== originalChances;
+  }
 
   useEffect(() => {
     if (anyAllowed) refreshAdminData();
@@ -765,12 +794,10 @@ export default function AdminHome() {
   }, [anyAllowed]);
 
   useEffect(() => {
-    // Only the unit that was just saved is exempt from re-seeding. Keying this
-    // off the slug is what stops saved values from riding along to the next unit.
-    if (!shouldReseedEditor(justSavedSlugRef.current, selectedUnit?.slug)) {
+    if (justSavedRef.current) {
+      justSavedRef.current = false;
       return; // Skip re-seed right after save to preserve user input
     }
-    justSavedSlugRef.current = '';
     const seededValue = valueRowToForm(selectedValueRow, selectedUnit?.slug);
     const seededWiki = wikiRowToForm(selectedWikiRow, selectedUnit);
     setValueForm(seededValue);
@@ -798,19 +825,13 @@ export default function AdminHome() {
   // localStorage (throttle: 400ms) so a refresh/navigation never loses work.
   useEffect(() => {
     if (activeTool !== 'values' || !selectedUnit?.slug || !valueDirty) return undefined;
-    // Pin the draft to the unit this edit belongs to: the 400ms timer can
-    // otherwise fire after a unit switch and store A's values under B's slug.
-    const draftSlug = selectedUnit.slug;
-    const t = setTimeout(() => saveFormDraft('value', draftSlug, valueForm), 400);
+    const t = setTimeout(() => saveFormDraft('value', selectedUnit.slug, valueForm), 400);
     return () => clearTimeout(t);
   }, [valueForm, valueDirty, activeTool, selectedUnit?.slug]);
 
   useEffect(() => {
     if (activeTool !== 'wiki' || !selectedUnit?.slug || !wikiDirty) return undefined;
-    // Pin the draft to the unit this edit belongs to: the 400ms timer can
-    // otherwise fire after a unit switch and store A's values under B's slug.
-    const draftSlug = selectedUnit.slug;
-    const t = setTimeout(() => saveFormDraft('wiki', draftSlug, wikiForm), 400);
+    const t = setTimeout(() => saveFormDraft('wiki', selectedUnit.slug, wikiForm), 400);
     return () => clearTimeout(t);
   }, [wikiForm, wikiDirty, activeTool, selectedUnit?.slug]);
 
@@ -818,8 +839,7 @@ export default function AdminHome() {
     if (!selectedContentItem?.slug) return undefined;
     const kind = activeTool === 'maps' ? 'maps' : 'crates';
     if (!contentDirty) return undefined;
-    const draftSlug = selectedContentItem.slug;
-    const t = setTimeout(() => saveFormDraft(kind, draftSlug, contentForm), 400);
+    const t = setTimeout(() => saveFormDraft(kind, selectedContentItem.slug, contentForm), 400);
     return () => clearTimeout(t);
   }, [contentForm, contentDirty, activeTool, selectedContentItem?.slug]);
 
@@ -881,9 +901,9 @@ export default function AdminHome() {
     event.preventDefault();
     setAuthMessage('');
     const cleanEmail = email.trim().toLowerCase();
-    const memberRole = getTeamRole(cleanEmail);
-    if (!memberRole) {
-      setAuthMessage('⚠️ Email not found on the APEX team roster.');
+    const member = TEAM_MEMBERS[cleanEmail];
+    if (!member) {
+      setAuthMessage('⚠️ Email not found on the Testing team roster.');
       return;
     }
     
@@ -898,8 +918,10 @@ export default function AdminHome() {
       });
       
       if (response.ok) {
+        const loginData = await response.json().catch(() => ({}));
         localStorage.setItem('apex-admin-email-v1', cleanEmail);
         localStorage.setItem('apex-admin-passcode-v1', password.trim());
+        setMustChangePassword(loginData.mustChangePassword === true || password.trim() === 'apex2026');
         
         const mockSession = {
           user: {
@@ -908,7 +930,10 @@ export default function AdminHome() {
           }
         };
         setSession(mockSession);
-        setAdminUser({ email: cleanEmail, role: memberRole });
+        setAdminUser({
+          email: cleanEmail,
+          role: member.roleKey,
+        });
         setPreviewMode(true);
         setAuthMessage('✓ Authenticated in Serverless Sandbox Editor mode!');
         notifyAdminAuthChange();
@@ -982,6 +1007,7 @@ export default function AdminHome() {
         setPassword('');
         setNewPassword('');
         setConfirmPassword('');
+        setMustChangePassword(false);
         setAuthMessage('✅ Password updated successfully! You have been logged out for security. Please log in below with your NEW password to verify it works.');
         notifyAdminAuthChange();
         navigate('/admin');
@@ -1003,34 +1029,19 @@ export default function AdminHome() {
   const skinSlugs = useMemo(() => new Set([...ALL_SKINS.map((m) => m.slug), ...ALL_SHINY_SKINS.map((m) => m.slug), ...(createdSkins || []).map((m) => m.slug)]), [createdSkins]);
   const materialSlugs = useMemo(() => new Set([...MATERIALS.map((m) => m.slug), ...(createdMaterials || []).map((m) => m.slug)]), [createdMaterials]);
 
-  // Creating anything is also an explicit UNDELETE: without this the deleted
-  // slug stays tombstoned, the publish bundle strips the brand-new row again and
-  // the entry looks like it vanished into nothing (the parrot-ball deadlock).
-  async function resurrectSlug(slug) {
-    clearUnitTombstones(slug);
-    try {
-      await restoreDeletedUnit(slug);
-    } catch {
-      /* registry may not answer; this browser is already un-hidden */
-    }
-  }
-
   async function handleCreateUnit(payload) {
     if (!wikiAllowed) return;
     if (!(await verifySession())) return;
-    if (isLocalUnitTombstoned(payload.slug) || deletedUnitSlugs?.has?.(payload.slug)) {
-      await resurrectSlug(payload.slug);
-      logChange(payload.slug, 'wiki', `Restored ${payload.slug} (re-created)`);
-    }
     setLocalWikiOverride(payload.slug, payload);
     setWikiRows((prev) => [payload, ...prev.filter((r) => r.slug !== payload.slug)]);
     logChange(payload.slug, 'wiki', `Created unit ${payload.name} (${payload.rarity})`);
     setMessage(`✓ Created ${payload.name}! Now fill in its stat sheet below — Ctrl+S saves as you go.`);
     setMessageAction(null);
-    goto({ view: 'wiki', tool: 'wiki' });
+    setActiveTool('wiki');
     setSelectedSlug(payload.slug);
+    setActiveView('wiki');
     try { await Promise.all([refreshAdminData(), refresh(), refreshWiki()]); } catch { /* ignore */ }
-    await pushEntryToKV('wiki', payload.slug).catch(() => {});
+    pushEntryToKV('wiki', payload.slug);
   }
 
   // Delete ANY unit (built-in or created) from the entire site: it vanishes
@@ -1047,11 +1058,11 @@ export default function AdminHome() {
     const name = selectedUnit.name;
     clearFormDraft('wiki');
     clearFormDraft('value');
-    setLocalWikiOverride(baseSlug, null);
-    setLocalValueOverride(baseSlug, null);
+    // IMPORTANT: the unit's wiki/value rows are KEPT (local + KV). The
+    // deleted-units registry is what hides it site-wide — and keeping the
+    // rows is what makes restore possible. Deleting the rows here used to
+    // destroy created units forever (they had no other copy of their data).
     markLocalUnitDeleted(baseSlug);
-    markLocalOverrideDeleted('wiki', baseSlug);
-    markLocalOverrideDeleted('value', baseSlug);
     removeCachedWikiImage(baseSlug);
     setWikiRows((prev) => prev.filter((r) => r.slug !== baseSlug && r.slug !== `shiny-${baseSlug}`));
     setValueRows((prev) => prev.filter((r) => r.slug !== baseSlug && r.slug !== `shiny-${baseSlug}`));
@@ -1065,48 +1076,76 @@ export default function AdminHome() {
     // still hides the unit in this browser).
     const res = await addDeletedUnit(baseSlug);
     if (!res.ok && res.status === 404) setMessage(`🗑️ Deleted "${name}" locally — syncs site-wide once the worker update is deployed.`);
-    await deleteEntryFromKV('wiki', baseSlug).catch(() => {});
-    await deleteEntryFromKV('value', baseSlug).catch(() => {});
   }
 
   async function handleRestoreUnit(slug) {
-    if (!slug) return;
     setRestoringUnit(slug);
     try {
-      // 1. this browser's two tombstone registries
-      clearUnitTombstones(slug);
-      // 2. the site-wide registry (bundle.deletedUnits)
-      const res = await restoreDeletedUnit(slug);
-      // 3. publish the recovered rows, so other browsers converge now instead
-      //    of whenever the next unrelated save happens to fire.
-      await pushToCloudflareKV({ isRestore: true });
-      await Promise.all([refreshAdminData(), refresh()]);
-      if (res.ok) setMessage(`↩️ Restored ${slug} — it is live everywhere again.`);
-      else if (res.status === 404) setMessage(`↩️ Restored ${slug} on this device. The site-wide registry route is not on the deployed worker yet — redeploy it to finish the restore for everyone.`);
-      else setMessage(`↩️ Restored locally; the site-wide registry said: ${res.error || `HTTP ${res.status}`}`);
-    } finally {
-      setRestoringUnit(null);
-    }
-  }
-
-  // Restore a tombstoned map/crate/material/skin from the recycle bin.
-  async function handleRestoreEntry(kind, slug) {
-    if (!slug) return;
-    setRestoringUnit(`${kind}:${slug}`);
-    try {
-      unmarkLocalOverrideDeleted(kind, slug);
       unmarkLocalUnitDeleted(slug);
-      await pushEntryToKV(kind === 'map' ? 'map' : kind === 'crate' ? 'crate' : kind === 'materials' ? 'materials' : 'wiki', slug, { silent: true });
+      // HONEST RESTORE: the old code ignored the worker's answer and always
+      // claimed success — a rejected restore (expired login, old worker)
+      // looked like it worked while the unit stayed hidden forever.
+      const res = await restoreDeletedUnit(slug).catch(() => ({ ok: false, status: 0 }));
+      if (!res.ok) {
+        if (res.status === 401) {
+          setMessage(`⚠️ Could not restore "${slug}" — your login expired. Log in again, then press Restore once more.`);
+          setMessageAction(null);
+          return;
+        }
+        // Local mark is cleared; the site-wide registry syncs once the
+        // worker update is deployed. Say so instead of claiming success.
+        setMessage(`↩️ "${slug}" is restored in this browser. It returns for everyone once the worker update is deployed.`);
+        setMessageAction(null);
+        await refreshAdminData().catch(() => {});
+        return;
+      }
+      // DEEP RESTORE: units deleted by the OLD code had their rows wiped
+      // from the database. If this unit's data is missing, rebuild it from
+      // the server-side edit history (every save was recorded there).
+      const revived = await resurrectUnitFromHistory(slug);
       await Promise.all([refreshAdminData(), refresh()]);
-      setMessage(`↩️ Restored "${slug}".`);
+      setMessage(revived
+        ? `↩️ Restored "${slug}" — its data was rebuilt from edit history and it is live everywhere again.`
+        : `↩️ Restored "${slug}" — it is live everywhere again.`);
+      setMessageAction(null);
     } finally {
       setRestoringUnit(null);
     }
   }
 
-  // ---- Materials editor (editing; creation lives in the Create hub) ------
-  const materialSlug = nav.selection;
-  const setMaterialSlug = useCallback((slug) => goto({ view: 'materials', selection: slug }), [goto]);
+  // Rebuild a wiped unit's rows (wiki + value, base and shiny) from the
+  // worker's edit history. Returns true if anything was rebuilt.
+  async function resurrectUnitFromHistory(slug) {
+    if (!session?.user?.id) return false;
+    let rebuilt = false;
+    for (const section of ['wiki', 'value']) {
+      for (const s of [slug, `shiny-${slug}`]) {
+        try {
+          const history = await fetchUnitHistory(section, s);
+          if (!Array.isArray(history) || !history.length) continue;
+          // newest record that still carries data (after for edits, before
+          // for the wipe-delete itself)
+          let row = null;
+          for (let i = history.length - 1; i >= 0; i -= 1) {
+            const r = history[i];
+            const candidate = r?.after || r?.before;
+            if (candidate && typeof candidate === 'object' && (candidate.slug || r.slug === s)) { row = candidate; break; }
+          }
+          if (!row) continue;
+          const payload = { ...row, slug: s, resurrected: true, resurrected_at: new Date().toISOString() };
+          if (section === 'wiki') setLocalWikiOverride(s, payload);
+          else setLocalValueOverride(s, payload);
+          await pushKvEntry(section, s, payload).catch(() => {});
+          logChange(s, section, `Deep-restore: rebuilt ${section} row from edit history`);
+          rebuilt = true;
+        } catch { /* history unavailable — skip */ }
+      }
+    }
+    return rebuilt;
+  }
+
+  // Materials editor (editing; creation lives in the Create hub)
+  const [materialSlug, setMaterialSlug] = useState(null);
   const [materialQuery, setMaterialQuery] = useState('');
   const [materialForm, setMaterialForm] = useState({ name: '', description: '', effect: '', obtainText: '', imageUrl: null });
   const [materialImageFile, setMaterialImageFile] = useState(null);
@@ -1122,19 +1161,7 @@ export default function AdminHome() {
     return [...base, ...(createdMaterials || [])].filter((m) => !q || String(m.name).toLowerCase().includes(q) || m.slug.includes(q));
   }, [materialRowMap, createdMaterials, materialQuery]);
 
-  // materialList is search-filtered, so resolve the selection against every
-  // material — otherwise typing in the box re-selects the first match and a
-  // save lands on the wrong material.
-  const allMaterials = useMemo(() => {
-    const base = MATERIALS.map((m) => {
-      const row = materialRowMap?.[m.slug];
-      return row ? { ...m, name: row.name || m.name, imageUrl: row.image_url ?? row.imageUrl ?? null } : { ...m };
-    });
-    return [...base, ...(createdMaterials || [])];
-  }, [materialRowMap, createdMaterials]);
-  // Fall back to the full roster: the filtered list can legitimately be empty
-  // (e.g. the only match was just deleted), and indexing it would crash.
-  const selectedMaterial = allMaterials.find((m) => m.slug === materialSlug) || allMaterials[0];
+  const selectedMaterial = materialList.find((m) => m.slug === materialSlug) || materialList[0];
 
   // CLEAR THE WORKSPACE (one time): materials used to be stored as WIKI rows
   // with a kind marker. They now live in their OWN system. On first load we
@@ -1172,26 +1199,14 @@ export default function AdminHome() {
   }, [selectedMaterial?.slug]);
 
   async function saveMaterial() {
-    if (!wikiAllowed || !selectedMaterial) {
-      setMessage('Nothing selected — pick a material in the list first, then save.');
-      return;
-    }
+    if (!wikiAllowed || !selectedMaterial) return;
     if (!session?.user?.id) { setMessage('Session expired. Please log in again.'); return; }
     if (!(await verifySession())) return;
     setSaving(true);
     setMessage('');
     try {
       let imageUrl = materialForm.imageUrl || null;
-      let imageError = '';
-      if (materialImageFile) {
-        // Same rule as the unit editor: a picture that cannot be encoded must
-        // not veto the whole record.
-        try {
-          imageUrl = await uploadUnitImage(materialImageFile, selectedMaterial.slug, session);
-        } catch (imageFailure) {
-          imageError = errorMessage(imageFailure);
-        }
-      }
+      if (materialImageFile) imageUrl = await uploadUnitImage(materialImageFile, selectedMaterial.slug, session);
       const payload = {
         slug: selectedMaterial.slug,
         name: materialForm.name.trim() || selectedMaterial.slug,
@@ -1205,44 +1220,36 @@ export default function AdminHome() {
       };
       setLocalMaterialOverride(payload.slug, payload);
       logChange(payload.slug, 'material', `Material updated: ${payload.name}`);
-      setMessage(
-        imageError
-          ? `✓ Saved material "${payload.name}" — but the image was not applied (${imageError}). Paste an image URL instead.`
-          : `✓ Saved material "${payload.name}"!`
-      );
+      setMessage(`✓ Saved material "${payload.name}"!`);
       setMessageAction(null);
       materialSeedRef.current = null; // re-seed from the saved state
       try { await Promise.all([refreshAdminData(), refreshWiki()]); } catch { /* ignore */ }
-      // The publish failure must surface: silently reporting "Saved!" while
-      // nothing reached the cloud is how edits looked lost on the live site.
-      try { await pushEntryToKV('materials', payload.slug); }
-      catch { setMessage("⚠️ Saved on this device, but the cloud publish failed. Use 'Try again'."); }
+      pushEntryToKV('materials', payload.slug);
     } catch (error) {
       setMessage(`Material save failed: ${errorMessage(error)}`);
     }
     setSaving(false);
   }
 
-  // ---- Create hub handlers (real entities, no "custom" concept) ----------
+  // Create hub handlers (real entities, no "custom" concept)
   async function handleCreateMap(payload) {
     if (!wikiAllowed) return;
     if (!(await verifySession())) return;
-    await resurrectSlug(payload.slug);
     setLocalMapOverride(payload.slug, payload);
     setMapRows((prev) => [payload, ...prev.filter((r) => r.slug !== payload.slug)]);
     logChange(payload.slug, 'map', `Created map ${payload.name}`);
     setMessage(`✓ Created map "${payload.name}"! Now fill in its details in the Maps editor.`);
     setMessageAction(null);
-    goto({ view: 'maps', tool: 'maps' });
+    setActiveView('maps');
+    setActiveTool('maps');
     setContentSlug(payload.slug);
     try { await Promise.all([refreshAdminData(), refreshContent()]); } catch { /* ignore */ }
-    await pushEntryToKV('map', payload.slug).catch(() => {});
+    pushEntryToKV('map', payload.slug);
   }
 
   async function handleCreateSkin(payload) {
     if (!wikiAllowed) return;
     if (!(await verifySession())) return;
-    await resurrectSlug(payload.slug);
     setLocalWikiOverride(payload.slug, payload);
     setWikiRows((prev) => [payload, ...prev.filter((r) => r.slug !== payload.slug)]);
     logChange(payload.slug, 'skin', `Created skin ${payload.name}${payload.shiny ? ' (Shiny)' : ''}`);
@@ -1255,14 +1262,13 @@ export default function AdminHome() {
   async function handleCreateMaterial(payload) {
     if (!wikiAllowed) return;
     if (!(await verifySession())) return;
-    await resurrectSlug(payload.slug);
     setLocalMaterialOverride(payload.slug, payload);
     logChange(payload.slug, 'material', `Created material ${payload.name}`);
     setMessage(`✓ Created material "${payload.name}"! Edit it any time under Materials.`);
     setMessageAction(null);
     setActiveView('materials');
     try { await Promise.all([refreshAdminData(), refreshWiki()]); } catch { /* ignore */ }
-    await pushEntryToKV('materials', payload.slug).catch(() => {});
+    pushEntryToKV('materials', payload.slug);
   }
 
   // Lightweight credential probe (any admin-authed endpoint works). Only a
@@ -1301,7 +1307,7 @@ export default function AdminHome() {
     }
   }
 
-  // ---- Unpublished-work indicator (#20) ---------------------------------
+  // Unpublished-work indicator (#20)
   // Honest definition of "unsaved": live form drafts (autosaved, not yet
   // saved/published) + deletions that have not reached the cloud yet.
   const SECTION_META = {
@@ -1356,22 +1362,6 @@ export default function AdminHome() {
     setSelectedSlug(entry.slug);
   }
 
-  // Everything this browser has tombstoned outside the unit registry, so the
-  // recycle bin lists maps/crates/skins/materials too (they used to be
-  // deletable but invisible once gone).
-  const recycleEntries = useMemo(() => {
-    const out = [];
-    const deleted = loadLocalDeletedOverrides() || {};
-    for (const kind of ['map', 'crate', 'materials']) {
-      for (const slug of deleted[kind] || []) out.push({ kind, slug });
-    }
-    for (const slug of deleted.wiki || []) {
-      if (String(slug).startsWith('skin-')) out.push({ kind: 'skin', slug });
-    }
-    return out;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftsVersion]);
-
   // Re-verify quietly when the tab regains focus (catches overnight logouts).
   useEffect(() => {
     function onFocus() {
@@ -1383,10 +1373,7 @@ export default function AdminHome() {
   }, [session?.user?.id]);
 
   async function saveValue() {
-    if (!valueAllowed || !selectedUnit) {
-      setMessage('Nothing selected — pick a unit in the list first, then save.');
-      return;
-    }
+    if (!valueAllowed || !selectedUnit) return;
     if (!session?.user?.id) {
       setMessage('Session expired. Please log in again.');
       return;
@@ -1433,7 +1420,7 @@ export default function AdminHome() {
         const filtered = prev.filter((r) => r.slug !== selectedUnit.slug);
         return [payload, ...filtered];
       });
-      justSavedSlugRef.current = selectedUnit.slug;
+      justSavedRef.current = true;
       logChange(selectedUnit.slug, 'value', `Value: ${next.baseValue}${next.baseValueMax ? '-' + next.baseValueMax : ''} | Gems: ${next.gems} | Coins: ${next.coins} | ${next.demand} / ${next.scarcity}`);
       setMessage(`✓ Saved! Value: ${next.baseValue}${next.baseValueMax ? '-' + next.baseValueMax : ''} | Gems: ${next.gems} | Coins: ${next.coins}`);
       setMessageAction(null);
@@ -1467,10 +1454,7 @@ export default function AdminHome() {
   }
 
   async function saveWiki() {
-    if (!wikiAllowed || !selectedUnit) {
-      setMessage('Nothing selected — pick a unit in the list first, then save.');
-      return;
-    }
+    if (!wikiAllowed || !selectedUnit) return;
     if (!session?.user?.id) {
       setMessage('Session expired. Please log in again.');
       return;
@@ -1478,25 +1462,16 @@ export default function AdminHome() {
     // Pre-flight credential check: fail BEFORE saving (drafts are preserved),
     // never after the editor already typed a full form.
     if (!(await verifySession())) return;
-        undoRedo.push({ kind: 'wiki', form: wiki, slug: selectedUnit.slug, at: Date.now() });
+        undoRedo.push({ kind: 'wiki', form: wikiForm, slug: selectedUnit.slug, at: Date.now() });
     setSaving(true);
     setMessage('');
     try {
       const minMaxStats = linesToObject(wikiForm.minMaxStatsText);
       const upgrades = (wikiForm.upgradeForms || []).map(formToUpgrade);
       const obtain = wikiForm.obtainText.split('\n').map((line) => line.trim()).filter(Boolean);
-      // A bad picture must not veto the record: encode it in its own try/catch,
-      // fall back to whatever URL is in the form, and tell the admin plainly.
-      // (It used to throw out of saveWiki entirely — the whole save failed and
-      // the only trace was a red banner nobody could act on.)
       let imageUrl = wikiForm.imageUrl || null;
-      let imageError = '';
       if (wikiImageFile) {
-        try {
-          imageUrl = await uploadUnitImage(wikiImageFile, selectedUnit.slug, session);
-        } catch (imageFailure) {
-          imageError = errorMessage(imageFailure);
-        }
+        imageUrl = await uploadUnitImage(wikiImageFile, selectedUnit.slug, session);
       }
       // SANDBOX→KV FLOW: local override (canonical draft) → publish bundle.
       const payload = {
@@ -1520,11 +1495,7 @@ export default function AdminHome() {
       setWikiImageFile(null);
       baseline('wiki', wikiRowToForm(payload, selectedUnit));
       if (imageUrl) saveCachedWikiImage(selectedUnit.slug, imageUrl);
-      setMessage(
-        imageError
-          ? `✓ Saved WIKI override — but the image was not applied (${imageError}). Pick a PNG/JPEG/WebP under ~5 MB, or paste an image URL.`
-          : '✓ Saved WIKI override! Auto-syncing Shiny variant…'
-      );
+      setMessage('✓ Saved WIKI override! Auto-syncing Shiny variant…');
       logChange(selectedUnit.slug, 'wiki', `Wiki updated: ${wikiForm.name || selectedUnit.name}`);
       // AUTO-SYNC: silently generate the Shiny variant with 1.5× damage
       try {
@@ -1554,10 +1525,7 @@ export default function AdminHome() {
   }
 
   async function saveContent() {
-    if (!wikiAllowed || !selectedContentItem) {
-      setMessage('Nothing selected — pick a map or crate in the list first, then save.');
-      return;
-    }
+    if (!wikiAllowed || !selectedContentItem) return;
     if (!session?.user?.id) {
       setMessage('Session expired. Please log in again.');
       return;
@@ -1569,15 +1537,7 @@ export default function AdminHome() {
     setSaving(true); setMessage('');
     try {
       const mapsMode = activeTool === 'maps';
-      let imageError = '';
-      let imageUrl = contentForm.imageUrl || null;
-      if (contentImageFile) {
-        try {
-          imageUrl = await uploadContentImage(contentImageFile, mapsMode ? 'maps' : 'crates', selectedContentItem.slug, session);
-        } catch (imageFailure) {
-          imageError = errorMessage(imageFailure);
-        }
-      }
+      const imageUrl = contentImageFile ? await uploadContentImage(contentImageFile, mapsMode ? 'maps' : 'crates', selectedContentItem.slug, session) : (contentForm.imageUrl || null);
       const payload = mapsMode ? { slug: selectedContentItem.slug, name: contentForm.name, description: contentForm.description || null, difficulty: contentForm.difficulty || null, unlock_requirement: contentForm.unlockRequirement || null, image_url: imageUrl, updated_by: session.user.email, updated_at: new Date().toISOString() } : { slug: selectedContentItem.slug, name: contentForm.name, description: contentForm.description || null, image_url: imageUrl, chances: contentForm.chances || {}, obtain: contentForm.obtain || null, effect: contentForm.effect || null, updated_by: session.user.email, updated_at: new Date().toISOString() };
 
       // SANDBOX→KV FLOW: write the local override, update the rows state,
@@ -1618,15 +1578,11 @@ export default function AdminHome() {
       setContentForm(savedContent);
       setContentImageFile(null);
       baseline('content', savedContent);
-      setMessage(
-        imageError
-          ? `✓ Saved ${mapsMode ? 'map' : 'crate'} override — but the image was not applied (${imageError}). Paste an image URL instead.`
-          : `✓ Saved ${mapsMode ? 'map' : 'crate'} override!`
-      );
+      setMessage(`✓ Saved ${mapsMode ? 'map' : 'crate'} override!`);
       clearFormDraft(activeTool === 'maps' ? 'maps' : 'crates');
       setDraftsVersion((v) => v + 1);
       logChange(selectedContentItem.slug, mapsMode ? 'map' : 'crate', `${mapsMode ? 'Map' : 'Crate'} updated: ${contentForm.name}`);
-      await pushEntryToKV(mapsMode ? 'map' : 'crate', selectedContentItem.slug).catch(() => {});
+      pushEntryToKV(mapsMode ? 'map' : 'crate', selectedContentItem.slug);
     } catch (error) { setMessage(`Content save failed: ${errorMessage(error)}`); }
     setSaving(false);
   }
@@ -1683,7 +1639,6 @@ export default function AdminHome() {
     setMessage(label);
     setMessageAction(null);
   }
-  const saveHotkeyRef = useRef(null);
   const undoHotkeyRef = useRef(null);
   undoHotkeyRef.current = () => {
     const snapshot = undoRedo.undo();
@@ -1693,19 +1648,6 @@ export default function AdminHome() {
   redoHotkeyRef.current = () => {
     const snapshot = undoRedo.redo();
     if (snapshot) applySnapshot(snapshot, `↪️ Redid ${snapshot.kind} change for ${snapshot.slug}.`);
-  };
-
-  // Ctrl+S / Cmd+S saves whatever editor is on screen. `handleCreateUnit`
-  // tells the admin to use it, but the ref this handler calls was never
-  // assigned — Ctrl+S only suppressed the browser dialog and did nothing.
-  // Assigned while rendering, exactly like the undo/redo refs below it: an
-  // effect with [] would capture the first render's closures and the hotkey
-  // would keep saving a stale unit after the selection changed.
-  saveHotkeyRef.current = () => {
-    if (activeView === 'wiki') saveWiki();
-    else if (activeView === 'values') saveValue();
-    else if (activeView === 'maps' || activeView === 'crates') saveContent();
-    else if (activeView === 'materials') saveMaterial();
   };
 
   useEffect(() => {
@@ -1727,8 +1669,65 @@ export default function AdminHome() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
+  function clearAllLocalOverrides() {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('apex-local-value-overrides-v1');
+      localStorage.removeItem('apex-local-wiki-overrides-v1');
+      localStorage.removeItem('apex-local-map-overrides-v1');
+      localStorage.removeItem('apex-local-crate-overrides-v1');
+      clearLocalDeletedOverrides();
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('apex-values-updated'));
+      window.dispatchEvent(new CustomEvent('apex-wiki-updated'));
+      window.dispatchEvent(new CustomEvent('apex-maps-updated'));
+      window.dispatchEvent(new CustomEvent('apex-crates-updated'));
+    }
+    setValueRows((prev) => [...prev]);
+    setWikiRows((prev) => [...prev]);
+    setMapRows((prev) => [...prev]);
+    setCrateRows((prev) => [...prev]);
+    try {
+      refreshAdminData({ logsOnly: true });
+    } catch {
+      // ignore
+    }
+    setMessage('🗑️ Cleared all local PRVW overrides (units, values, maps & crates) across the entire site! All items restored to clean live Cloudflare KV data.');
+  }
 
   if (authLoading) return <main className="admin-page"><div className="admin-editor card">Loading admin…</div></main>;
+
+  if (mustChangePassword && session) {
+    return (
+      <main className="admin-page">
+        <AuthPanel title="Set Your Own Password First" message={authMessage}>
+          <div className="admin-message" role="alert" style={{ marginBottom: 14 }}>
+            ⚠️ You are still using the <strong>default password</strong> — change it before you can edit the site. Pick something only you know.
+          </div>
+          <form className="admin-auth-form" onSubmit={updatePassword}>
+            <label>Your Email Address</label>
+            <input type="email" value={email || session.user.email} onChange={(e) => setEmail(e.target.value)} placeholder="editor@email.com" required />
+            <label>Current Password (the default one)</label>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Current Password…" required />
+            <label>New Password</label>
+            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New Password…" minLength={6} required aria-describedby="pass-strength-meter" />
+            {newPassword && (
+              <div id="pass-strength-meter" className={`pass-strength s-${scorePasscode(newPassword).score}`} aria-live="polite">
+                <div className="pass-bars" aria-hidden="true">
+                  {[0, 1, 2, 3, 4].map((i) => <span key={i} className={i < scorePasscode(newPassword).score ? 'on' : ''} />)}
+                </div>
+                <small>{scorePasscode(newPassword).label}</small>
+              </div>
+            )}
+            <label>Confirm New Password</label>
+            <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm New Password…" minLength={6} required />
+            <button type="submit" className="filled" disabled={resetSaving}>{resetSaving ? 'Saving…' : '🔐 Change Password & Continue'}</button>
+          </form>
+          <button type="button" className="ghost admin-logout-all" onClick={signOut} style={{ marginTop: 12 }}>Cancel & log out</button>
+        </AuthPanel>
+      </main>
+    );
+  }
 
   if (resetMode) {
     return (
@@ -1766,7 +1765,7 @@ export default function AdminHome() {
   if (!session) {
     return (
       <main className="admin-page">
-        <AuthPanel title="APEX Admin Login" message={authMessage}>
+        <AuthPanel title="Testing Admin Login" message={authMessage}>
           <form className="admin-auth-form" onSubmit={signIn}>
             <label>Email</label>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="editor@email.com" />
@@ -1792,12 +1791,48 @@ export default function AdminHome() {
     );
   }
 
+  const canManageSite = role === 'owner' || role === 'admin';
+
   return (
     <main className="admin-page">
+      {/* Maintenance notice — the admin exception page: the panel keeps
+          working while the public site shows the maintenance screen. */}
+      {maintenance?.on && (
+        <div
+          role="status"
+          style={{
+            display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap',
+            margin: '0 0 14px', padding: '12px 16px',
+            background: 'rgba(229, 72, 77, 0.12)',
+            border: '1px solid rgba(229, 72, 77, 0.45)',
+            borderRadius: '12px', color: '#ffb3b6', fontSize: '13.5px',
+          }}
+        >
+          <span style={{ fontSize: '18px' }}>🛠️</span>
+          <span style={{ flex: 1, minWidth: '220px' }}>
+            <strong>Maintenance mode is ON.</strong> Visitors are seeing the “We’re under maintenance” page — the admin panel stays open for the team.
+          </span>
+          {canManageSite && (
+            <button
+              type="button"
+              onClick={handleToggleMaintenance}
+              disabled={maintenance.loading}
+              style={{
+                padding: '7px 14px', borderRadius: '9px', cursor: 'pointer',
+                border: '1px solid rgba(229, 72, 77, 0.6)',
+                background: 'rgba(229, 72, 77, 0.25)', color: '#ffd6d8',
+                fontSize: '13px', fontWeight: 600,
+              }}
+            >
+              {maintenance.loading ? '…' : 'Turn maintenance OFF'}
+            </button>
+          )}
+        </div>
+      )}
       {/* Top Bar */}
       <div className="admin-topbar">
         <div className="admin-topbar-left">
-          <span className="admin-topbar-title">⚡ APEX ADMIN</span>
+          <span className="admin-topbar-title">⚡ TESTING ADMIN</span>
           <span className="admin-topbar-user">{getDisplayName(session?.user?.email, true)} {ROLE_EMOJI[role] || '🔧'} ({role})</span>
         </div>
         <div className="admin-topbar-actions">
@@ -1850,26 +1885,23 @@ export default function AdminHome() {
       </div>
 
       <div className="admin-layout-main">
-        {/* Section navigation — the SAME list renders as a sidebar on desktop
-            and as a sticky scrollable bar on touch screens. The panel used to
-            hide its only nav under 768px, so no sub-page was reachable. */}
-        <AdminShellNav items={nav.railItems} active={nav.railActive} onSelect={nav.selectView} />
+        {/* Sidebar */}
+        <nav className="admin-sidebar">
+          {SIDEBAR_ITEMS.map(item => {
+            if (item.id === 'bugs' && role !== 'owner' && role !== 'admin') return null;
+            if (item.id === 'announcements' && role !== 'owner' && role !== 'admin') return null;
+            if (item.id === 'create' && !wikiAllowed) return null;
+            return (
+              <button key={item.id} className={`admin-sidebar-item ${activeView === item.id ? 'active' : ''}`} onClick={() => { setActiveView(item.id); if (['values','wiki','maps','crates'].includes(item.id)) setActiveTool(item.id); }}>
+                <span className="admin-sidebar-icon">{item.icon}</span>
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
 
         {/* Content */}
         <div className="admin-content">
-
-      {/* The tab bar offers only what this role may open: the rail button for
-          this section is shown when ANY of its tabs is allowed (otherwise a
-          values-only admin would have no way back into the Values editor), so
-          filtering here is what keeps a locked screen unclickable. */}
-      {visibleTools && (
-        <AdminSubTabs
-          tabs={visibleTools}
-          active={activeTool}
-          onSelect={nav.selectTool}
-          label="Editor section"
-        />
-      )}
 
       {/* Dashboard View */}
       {activeView === 'dashboard' && (
@@ -1880,19 +1912,22 @@ export default function AdminHome() {
           edits24h={edits24h}
           role={role}
           wikiAllowed={wikiAllowed}
-          onCreateUnit={() => goto({ view: 'create', tab: 'unit' })}
-          onAnnounce={() => goto({ view: 'announcements' })}
-          onLogs={() => goto({ view: 'logs' })}
+          valueAllowed={valueAllowed}
+          maintenance={maintenance}
+          onToggleMaintenance={handleToggleMaintenance}
+          deletedCount={deletedUnitSlugs.length}
+          recentEdits={recentEdits}
+          onNavigate={(view) => { setActiveView(view); if (['values','wiki','maps','crates'].includes(view)) setActiveTool(view); }}
         />
       )}
-
 
       {/* Editor Views - only show when corresponding sidebar is active */}
       {activeView === 'bugs' && (role === 'owner' || role === 'admin') ? (
         <BugReportAdmin />
       ) : activeView === 'materials' ? (
         <section className="admin-content-layout">
-          <AdminPickerPane title="Materials" count={materialList.length} collapsible collapsed={!pickerOpen.materials} onToggle={() => togglePicker('materials')}>
+          <aside className="admin-unit-picker card">
+            <div className="admin-section-head"><h2>Materials</h2><span className="admin-count-badge">{materialList.length}</span></div>
             <input className="admin-search" value={materialQuery} onChange={(e) => setMaterialQuery(e.target.value)} placeholder="Search materials…" aria-label="Search materials" />
             <div className="admin-unit-list" data-lenis-prevent>
               {materialList.map((m) => (
@@ -1901,7 +1936,7 @@ export default function AdminHome() {
                 </button>
               ))}
             </div>
-          </AdminPickerPane>
+          </aside>
           <section className="admin-editor card">
             <p className="admin-kicker">Material</p>
             <h2>🧪 {selectedMaterial?.name || 'Material'}</h2>
@@ -1927,26 +1962,16 @@ export default function AdminHome() {
               <label className="admin-field full"><span>How to obtain (one per line)</span>
                 <textarea className="admin-textarea" rows={2} value={materialForm.obtainText} onChange={(e) => setMaterialForm((p) => ({ ...p, obtainText: e.target.value }))} />
               </label>
-              <div className="admin-field full admin-actions">
+              <div className="admin-field full">
                 <button type="button" className="filled" onClick={saveMaterial} disabled={saving}>{saving ? 'Saving…' : '💾 Save Material'}</button>
-                {(createdMaterials || []).some((m) => m.slug === selectedMaterial?.slug) && (
-                  <button type="button" onClick={() => deleteCreated('materials', selectedMaterial.slug, selectedMaterial.name)}>🗑 Delete Material</button>
-                )}
               </div>
             </div>
           </section>
         </section>
       ) : activeView === 'maps' || activeView === 'crates' ? (
-        <section className="admin-content-layout"><AdminPickerPane title={activeTool === 'maps' ? 'Maps' : 'Crates'} count={contentView.items.length} collapsible collapsed={!pickerOpen[activeTool]} onToggle={() => togglePicker(activeTool)}><input className="admin-search" value={contentQuery} onChange={(e) => setContentQuery(e.target.value)} placeholder={`Search ${activeTool}…`} aria-label={`Search ${activeTool}`} /><div className="admin-unit-list" data-lenis-prevent>{contentView.items.map((item) => <button type="button" key={item.slug} className={item.slug === selectedContentItem?.slug ? 'admin-unit active' : 'admin-unit'} onClick={() => setContentSlug(item.slug)}><span className="admin-unit-text"><strong>{item.name}</strong><small>{item.slug}</small></span></button>)}</div></AdminPickerPane><ContentEditor kind={activeTool} item={selectedContentItem} form={contentForm} setForm={setContentForm} imageFile={contentImageFile} setImageFile={setContentImageFile} onSave={saveContent} onReset={resetContent} onDelete={activeTool === 'maps' ? (item) => deleteCreated('map', item.slug, item.name) : (item) => deleteCreated('crate', item.slug, item.name)} saving={saving} dirty={contentDirty} /></section>
+        <section className="admin-content-layout"><aside className="admin-unit-picker card"><div className="admin-section-head"><h2>{activeTool === 'maps' ? 'Maps' : 'Crates'}</h2><span>{contentItems.length}</span></div><input className="admin-search" placeholder={`Search ${activeTool}…`} onChange={(e) => { const q = e.target.value.toLowerCase(); setContentSlug(contentItems.find((item) => item.name.toLowerCase().includes(q))?.slug || contentItems[0]?.slug); }} /><div className="admin-unit-list">{contentItems.map((item) => <button type="button" key={item.slug} className={item.slug === selectedContentItem?.slug ? 'admin-unit active' : 'admin-unit'} onClick={() => setContentSlug(item.slug)}><span className="admin-unit-text"><strong>{item.name}</strong><small>{item.slug}</small></span></button>)}</div></aside><ContentEditor kind={activeTool} item={selectedContentItem} form={contentForm} setForm={setContentForm} imageFile={contentImageFile} setImageFile={setContentImageFile} onSave={saveContent} onReset={resetContent} saving={saving} dirty={contentDirty} /></section>
       ) : (activeView === 'values' || activeView === 'wiki') && (
         <section className="admin-layout">
-          {hiddenSelection && (
-            <div className="admin-card" style={{ marginBottom: 12, borderColor: '#c9a227', padding: '10px 14px' }}>
-              ⚠️ <strong>{selectedSlug}</strong> is in the recycle bin, so it is hidden from the pickers —
-              nothing was edited yet. Restore it from <em>Logs &amp; Info → Recycle bin</em> (or create it again)
-              to edit that unit.
-            </div>
-          )}
           {activeTool === 'values' ? (
             <ValueEditor
               unit={selectedUnit} form={valueForm} tradeValue={tradeValue} selectedRow={selectedValueRow}
@@ -1969,9 +1994,6 @@ export default function AdminHome() {
             imageMap={adminImageMap}
             recentEdits={recentEdits}
             onSelectRecent={handleSelectRecent}
-            collapsible
-            collapsed={!pickerOpen[activeTool]}
-            onToggle={() => togglePicker(activeTool)}
           />
         </section>
       )}
@@ -1979,8 +2001,6 @@ export default function AdminHome() {
           {/* Create hub (WIKI editors): Units · Maps · Skins · Materials */}
       {activeView === 'create' && wikiAllowed && (
         <CreateHub
-          tab={nav.createTab}
-          onTabChange={nav.selectCreateTab}
           session={session}
           saving={saving}
           existingSlugs={existingSlugs}
@@ -1995,21 +2015,16 @@ export default function AdminHome() {
       )}
 
       {/* Announcements Studio (owner only) */}
-      {activeView === 'announcements' && role === 'owner' && (
+      {activeView === 'announcements' && (role === 'owner' || role === 'admin') && (
         <AnnouncementStudio onStatus={setMessage} />
       )}
 
       {/* Logs & Info */}
           {activeView === 'logs' && (
             <div>
+              <ChangeFeed />
               <AdminLog activeTool="values" valueLog={valueLog} wikiLog={wikiLog} role={role} valueLogs={valueLog} wikiLogs={wikiLog} localChangeLog={localChangeLog} onClearLogs={() => setLocalChangeLog([])} onRevert={revertChange} />
-            <DeletedUnitsPanel
-              units={[...deletedUnitSlugs]}
-              entries={recycleEntries}
-              onRestore={handleRestoreUnit}
-              onRestoreEntry={handleRestoreEntry}
-              restoring={restoringUnit}
-            />
+            <DeletedUnitsPanel units={[...deletedUnitSlugs]} onRestore={handleRestoreUnit} restoring={restoringUnit} />
               {(role === 'owner' || role === 'admin') && <MarketAnalytics valueRows={valueRows} units={units} />}
             </div>
           )}

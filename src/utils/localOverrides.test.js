@@ -7,8 +7,6 @@ import {
   saveLocalValueOverrides,
   loadLocalWikiOverrides,
   saveLocalWikiOverrides,
-  unmarkLocalOverrideDeleted,
-  saveLocalDeletedOverrides,
 } from './localOverrides';
 
 const localStorageMock = (() => {
@@ -38,7 +36,7 @@ describe('localOverrides tombstone queue and merge order', () => {
 
   it('handles loading deleted overrides with fallback when empty', () => {
     const deleted = loadLocalDeletedOverrides();
-    expect(deleted).toEqual({ value: [], wiki: [], map: [], crate: [], materials: [] });
+    expect(deleted).toEqual({ value: [], wiki: [], map: [], crate: [] });
   });
 
   it('deduplicates slugs added as deleted per kind', () => {
@@ -60,7 +58,7 @@ describe('localOverrides tombstone queue and merge order', () => {
     expect(loadLocalDeletedOverrides().value).toEqual(['slug-a']);
 
     clearLocalDeletedOverrides();
-    expect(loadLocalDeletedOverrides()).toEqual({ value: [], wiki: [], map: [], crate: [], materials: [] });
+    expect(loadLocalDeletedOverrides()).toEqual({ value: [], wiki: [], map: [], crate: [] });
   });
 
   it('implements merge order baked < liveKV < localDrafts with tombstone deletion', () => {
@@ -114,16 +112,5 @@ describe('localOverrides tombstone queue and merge order', () => {
 
     // 'unit-d' was in liveKVSection, not tombstoned -> kept
     expect(merged['unit-d']).toEqual({ base_value: 400 });
-  });
-
-  it('records and clears tombstones for materials, the section that used to be lost', () => {
-    markLocalOverrideDeleted('materials', 'molten-core');
-    expect(loadLocalDeletedOverrides().materials).toEqual(['molten-core']);
-    // A falsy write must not silently drop the materials key.
-    saveLocalDeletedOverrides(null);
-    expect(loadLocalDeletedOverrides()).toEqual({ value: [], wiki: [], map: [], crate: [], materials: [] });
-    markLocalOverrideDeleted('materials', 'molten-core');
-    unmarkLocalOverrideDeleted('materials', 'molten-core');
-    expect(loadLocalDeletedOverrides().materials).toEqual([]);
   });
 });

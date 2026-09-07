@@ -25,7 +25,7 @@ export default function WikiHome() {
 
   return (
     <PageShell sidebarTitle="WIKI" navTree={WIKI_NAV}>
-      <PageIntro eyebrow="APEX Database" title="WIKI">
+      <PageIntro eyebrow="Testing Database" title="WIKI">
         <p>
           Units database for Ball Tower Defense. Full stat sheets include cooldowns, range, damage,
           placement counts, passives, abilities, synergies, upgrade costs/DPS/cost-per-DPS, obtain

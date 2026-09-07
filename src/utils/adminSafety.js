@@ -1,11 +1,9 @@
-// ============================================================================
 // Admin safety & efficiency helpers (backlog batch utilities).
 // - fuzzyMatch: typo-tolerant search scoring for the unit picker
 // - compressImage: shrink uploads in-browser before they hit the database
 // - scorePasscode: strength meter for passcode changes
 // - form drafts: autosave/restore unsaved editor forms
 // - recent edits: "recently touched" quick-row memory
-// ============================================================================
 
 /** True when every word of `query` matches `text` as a subsequence
  *  (order-preserving, gaps allowed) — "shade d" matches "Shade Demon". */
@@ -79,7 +77,7 @@ export function scorePasscode(pw) {
   return { score, label: labels[score] };
 }
 
-// ---- Form draft autosave (one live draft per editor kind) -------------------
+// Form draft autosave (one live draft per editor kind)
 
 const draftKey = (kind) => `apex-formdraft-${kind}`;
 
@@ -103,19 +101,7 @@ export function clearFormDraft(kind) {
   try { localStorage.removeItem(draftKey(kind)); } catch { /* ignore */ }
 }
 
-// ---- Editor re-seed guard --------------------------------------------------
-// After a save we must NOT wipe the form the editor just submitted (the KV
-// echo can lag a beat), but that exemption belongs to the saved unit only.
-// A previous version used a plain "skip the next seed" boolean, which armed on
-// save and was then consumed by the NEXT unit the editor clicked — so the next
-// unit loaded with the values just typed for the previous one.
-export function shouldReseedEditor(justSavedSlug, selectedSlug) {
-  if (!justSavedSlug) return true;
-  if (justSavedSlug === selectedSlug) return false; // still showing the saved unit
-  return true;                                       // switched: always re-seed
-}
-
-// ---- Recently edited units (quick-row) ---------------------------------------
+// Recently edited units (quick-row)
 
 const RECENT_KEY = 'apex-recent-edits-v1';
 

@@ -7,7 +7,6 @@ import FanArtGallery from '../../components/fanart/FanArtGallery';
 import FanArtAdmin from '../../components/fanart/FanArtAdmin';
 import { APEX_KV_URL } from '../../utils/apexClient';
 import { useAdminStatus } from '../../hooks/useAdminStatus';
-import { canEditFanart } from '../../utils/adminForms';
 
 const POLL_MS = 120000;
 
@@ -18,7 +17,7 @@ export default function FanArt() {
   const [error, setError] = useState(null);
   const [showAdmin, setShowAdmin] = useState(false);
 
-  const canManageFanart = canEditFanart(role);
+  const canManageFanart = role === 'owner' || role === 'admin' || role === 'fanart_editor';
 
   const loadFanart = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setLoading(true);

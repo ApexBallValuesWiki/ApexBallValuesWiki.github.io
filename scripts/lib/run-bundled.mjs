@@ -1,13 +1,10 @@
-// ============================================================================
 // SCRIPT RUNNER
-// ----------------------------------------------------------------------------
 // The scripts in scripts/lib import the app's src/ data modules, which use
 // Vite-style extensionless imports ("./taxonomy") that plain Node cannot
 // resolve. esbuild ships with the project's toolchain, so each heavy script
 // is bundled to a temporary file (node_modules/.apex-scripts/) and then
 // executed — no extra dev dependencies, and the exact same data the app
 // renders is what gets pre-rendered.
-// ============================================================================
 
 import { build } from 'esbuild';
 import { mkdirSync } from 'node:fs';

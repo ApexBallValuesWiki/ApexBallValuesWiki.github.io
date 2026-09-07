@@ -5,19 +5,23 @@
   flex-direction: column;
   gap: 0;
   padding: 0;
-  background: var(--bg-card, #0a0a0e);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.16));
-  border-radius: var(--radius-lg, 20px);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 42%),
+    var(--bg-card, #0a0a0e);
+  border: 1px solid color-mix(in srgb, var(--border, rgba(255, 255, 255, 0.16)) 75%, transparent);
+  border-radius: var(--radius-lg, 16px);
   overflow: hidden;
-  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transition: border-color 0.22s ease, box-shadow 0.22s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.035);
   font-family: var(--font, 'Montserrat', system-ui, sans-serif);
 }
 
 .unit-card:hover {
-  transform: translateY(-4px);
-  border-color: color-mix(in srgb, var(--rarity-glow, #ffffff) 65%, var(--border-strong, #ffffff));
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
+  border-color: color-mix(in srgb, var(--rarity-glow, #ffffff) 55%, var(--border-strong, #ffffff));
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.6),
+    0 0 22px color-mix(in srgb, var(--rarity-glow, #ffffff) 14%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .unit-card:active {
@@ -123,12 +127,12 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 12px 12px;
-  background: var(--bg-elevated, #12121c);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.16));
-  border-radius: var(--radius-md, 14px) !important;
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.45);
+  gap: 11px;
+  padding: 12px 13px;
+  background: color-mix(in srgb, var(--bg-elevated, #12121c) 52%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border, rgba(255, 255, 255, 0.16)) 50%, transparent);
+  border-radius: 12px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
   margin: 0;
   box-sizing: border-box;
   font-family: var(--font, 'Montserrat', system-ui, sans-serif);
@@ -144,8 +148,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 7px 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--border, #1a1a1a) 80%, transparent);
+  padding: 7.5px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border, #1a1a1a) 55%, transparent);
   white-space: nowrap;
   gap: 8px;
 }
@@ -164,9 +168,9 @@
   align-items: center;
   gap: 6px;
   font-family: var(--font, 'Montserrat', system-ui, sans-serif);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-dim, #bfbfbf);
   white-space: nowrap;
@@ -179,7 +183,8 @@
 
 .uv-stat-amount {
   font-weight: 800;
-  font-size: 0.92rem;
+  font-size: 0.94rem;
+  font-variant-numeric: tabular-nums;
   color: var(--text, #ffffff);
   font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
   white-space: nowrap;
@@ -237,7 +242,7 @@
 }
 
 .uv-bar-track {
-  height: 8px;
+  height: 6px;
   border-radius: var(--radius-pill, 999px) !important;
   background: rgba(0, 0, 0, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -266,4 +271,25 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--text-faint);
+}
+
+/* Status strip — visually separated from the Value/Gems/Coins numbers */
+.uv-status-strip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  padding: 6px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.uv-status-word {
+  color: var(--text-dim, rgba(255, 255, 255, 0.55));
+  text-transform: uppercase;
+  font-size: 0.64rem;
 }

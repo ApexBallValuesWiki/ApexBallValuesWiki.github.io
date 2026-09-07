@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
 import './Credits.css';
-import { ROLE_ICONS, ROLE_LABELS, TEAM_MEMBERS } from '../utils/teamMembers';
 
 const fadeUp = {
   initial: { opacity: 0, y: 22 },
@@ -20,34 +19,29 @@ const cardVariants = {
   animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.42, ease: [0.22, 1, 0.36, 1] } },
 };
 
-// The credits list is derived from the team roster on purpose: this page used
-// to be a hand-kept copy of it and drifted (people left the team but stayed
-// credited, and roles shown here no longer matched what they can actually do).
-const ROLE_PRESENTATION = {
-  owner: { icon: 'crown', tier: 'owner' },
-  admin: { icon: 'hammer', tier: 'lead' },
-  editor: { icon: 'tube', tier: 'tester' },
-};
-
-const credits = Object.entries(TEAM_MEMBERS).map(([email, roleKey]) => {
-  const { icon, tier } = ROLE_PRESENTATION[roleKey] || ROLE_PRESENTATION.editor;
-  return {
-    name: email.split('@')[0],
-    role: ROLE_LABELS[roleKey] || 'Editor',
-    emoji: ROLE_ICONS[roleKey] || '👤',
-    icon,
-    tier,
-  };
-});
+const credits = [
+  { name: 'Gustavo', role: 'Owner', emoji: '👑', icon: 'crown', tier: 'owner' },
+  { name: 'Nemuiito', role: 'Admin+', emoji: '🎩', icon: 'hammer', tier: 'lead' },
+  { name: 'DancyBalls', role: 'Value Editor', emoji: '💵', icon: 'hammer', tier: 'lead' },
+  { name: 'Gloomy', role: 'Admin', emoji: '🔨', icon: 'hammer', tier: 'lead' },
+  { name: 'Kron3d', role: 'Lead WIKI Editor', emoji: '👑', icon: 'crown', tier: 'lead' },
+  { name: 'Nose', role: 'Value Editor', emoji: '💵', icon: 'tube', tier: 'tester' },
+  { name: 'Amethyst', role: 'WIKI Editor', emoji: '📃', icon: 'tube', tier: 'tester' },
+  { name: 'Nub', role: 'WIKI Editor', emoji: '📃', icon: 'tube', tier: 'tester' },
+  { name: 'Silly Goober', role: 'WIKI Editor', emoji: '📃', icon: 'tube', tier: 'tester' },
+  { name: 'Hungry', role: 'Value Editor', emoji: '💵', icon: 'tube', tier: 'tester' },
+  { name: 'Nooberto', role: 'WIKI Editor', emoji: '📃', icon: 'tube', tier: 'tester' },
+  { name: 'Hellfire', role: 'Value Editor', emoji: '💵', icon: 'tube', tier: 'tester' },
+];
 
 export default function Credits() {
   return (
     <main className="credits-page">
       <motion.section className="credits-hero" variants={fadeUp} initial="initial" animate="animate">
-        <p className="credits-kicker">APEX Values &amp; WIKI</p>
+        <p className="credits-kicker">Testing</p>
         <h1>Credits</h1>
         <p>
-          The people behind the testing, feedback, and chaos that helped build the APEX experience.
+          The people behind the testing, feedback, and chaos that helped build the Testing experience.
         </p>
       </motion.section>
 

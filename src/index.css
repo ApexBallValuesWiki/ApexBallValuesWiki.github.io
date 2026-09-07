@@ -343,7 +343,6 @@ button:active,
   }
 }
 
-
 .unit-card {
   position: relative;
   display: flex;
@@ -500,7 +499,7 @@ a:focus-visible {
   border-radius: 4px;
 }
 
-/* ================= Mobile calm mode: less clutter, softer visuals ================= */
+/* Mobile calm mode: less clutter, softer visuals */
 @media (max-width: 760px) {
   /* Floating-button diet: back-to-top is redundant with swipe scrolling. */
   .back-to-top { display: none !important; }
@@ -520,3 +519,83 @@ a:focus-visible {
 .admin-page button:not(:disabled):active,
 .mobile-bottom-nav .mbn-item:active { transform: scale(0.96); }
 .admin-page button:not(:disabled) { transition: transform 0.08s ease; }
+
+/* ============================================================================
+   Stat term tooltips ("? cursor" + small explanation) — used by StatMeta's
+   TermTip on value/gems/coins/demand/status/scarcity labels and wiki stats.
+   ========================================================================== */
+.term-tip {
+  position: relative;
+  cursor: help;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-bottom: 1px dotted color-mix(in srgb, currentColor 45%, transparent);
+  outline: none;
+}
+
+.term-tip .stat-icon {
+  opacity: 0.72;
+  transition: opacity 0.15s ease;
+}
+
+.term-tip:hover .stat-icon,
+.term-tip:focus-visible .stat-icon { opacity: 1; }
+
+.term-tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 9px);
+  left: 50%;
+  transform: translateX(-50%) translateY(3px);
+  width: max-content;
+  max-width: 230px;
+  padding: 7px 10px;
+  background: var(--bg-elevated, #16161f);
+  border: 1px solid var(--border-strong, rgba(255, 255, 255, 0.28));
+  border-radius: 9px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+  color: var(--text, #eee);
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: normal;
+  text-transform: none;
+  text-align: left;
+  white-space: normal;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.14s ease, transform 0.14s ease;
+  z-index: 80;
+}
+
+.term-tip::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%) translateY(3px);
+  border: 5px solid transparent;
+  border-top-color: var(--border-strong, rgba(255, 255, 255, 0.28));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.14s ease, transform 0.14s ease;
+  z-index: 81;
+}
+
+.term-tip:hover::after,
+.term-tip:focus-visible::after,
+.term-tip:hover::before,
+.term-tip:focus-visible::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Tooltips near the left/right viewport edge: clamp inside the screen. */
+.term-tip:first-child::after { left: 0; transform: translateX(0) translateY(3px); }
+.term-tip:first-child:hover::after { transform: translateX(0) translateY(0); }
+.term-tip:first-child::before { left: 12px; transform: translateX(0) translateY(3px); }
+.term-tip:first-child:hover::before { transform: translateX(0) translateY(0); }

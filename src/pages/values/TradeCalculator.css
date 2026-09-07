@@ -39,21 +39,63 @@
 .calc-share {
   min-height: 42px;
   padding: 10px 20px;
-  background: var(--bg-card);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--text) 6%, transparent), transparent 60%),
+    var(--bg-card);
   border: 1px solid var(--border);
   color: var(--text-dim);
   border-radius: var(--radius-pill);
-  font-weight: 600;
+  font-weight: 800;
   font-size: 0.78rem;
+  letter-spacing: 0.02em;
   white-space: nowrap;
-  transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 8px 20px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 0.16s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease,
+    background 0.16s ease;
 }
 
-.calc-swap:hover,
 .calc-share:hover {
-  border-color: var(--border-strong);
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border-strong));
   color: var(--text);
-  box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 18%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 12%, transparent), transparent 60%),
+    var(--bg-card);
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--accent) 20%, rgba(0, 0, 0, 0.4));
+}
+
+.calc-share:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.calc-swap {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 26%, transparent), color-mix(in srgb, var(--accent) 8%, transparent)),
+    var(--bg-card);
+  color: var(--text);
+}
+
+.calc-swap:hover {
+  transform: translateY(-1px);
+  color: var(--text);
+  border-color: var(--accent);
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--accent) 30%, rgba(0, 0, 0, 0.4));
+}
+
+.calc-swap:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.calc-swap:focus-visible,
+.calc-share:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 80%, white);
+  outline-offset: 2px;
 }
 
 /* ============================================================
@@ -156,14 +198,27 @@
   border-radius: var(--radius-pill);
   color: var(--text-faint);
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   touch-action: manipulation;
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .calc-clear:hover {
   color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 50%, var(--border));
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--danger) 16%, transparent);
+}
+
+.calc-clear:active {
+  transform: scale(0.95);
+}
+
+.calc-clear:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--danger) 70%, white);
+  outline-offset: 2px;
 }
 
 .calc-entries {
@@ -230,22 +285,36 @@
   height: 36px;
   border-radius: 50%;
   border: 1px solid var(--border);
-  background: none;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--text) 5%, transparent), transparent 65%);
   color: var(--text-dim);
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.14s ease, color 0.14s ease, box-shadow 0.14s ease, opacity 0.14s ease;
 }
 
 .calc-qty-btn:hover:not(:disabled) {
-  border-color: var(--border-strong);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border-strong));
   color: var(--text);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 18%, rgba(0, 0, 0, 0.35));
+}
+
+.calc-qty-btn:active:not(:disabled) {
+  transform: scale(0.9);
+}
+
+.calc-qty-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 80%, white);
+  outline-offset: 2px;
 }
 
 .calc-qty-btn:disabled {
   opacity: 0.3;
+  cursor: not-allowed;
 }
 
 .calc-qty-value {
@@ -288,16 +357,29 @@
   background: none;
   border: 1px solid var(--border);
   color: var(--text-faint);
-  border-radius: 8px;
+  border-radius: 10px;
   width: 36px;
   height: 36px;
   line-height: 1;
   flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.14s ease, color 0.14s ease, box-shadow 0.14s ease;
 }
 
 .calc-remove:hover {
-  border-color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 60%, var(--border));
   color: var(--danger);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--danger) 18%, rgba(0, 0, 0, 0.35));
+}
+
+.calc-remove:active {
+  transform: scale(0.9);
+}
+
+.calc-remove:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--danger) 70%, white);
+  outline-offset: 2px;
 }
 
 .calc-empty-side {
@@ -459,7 +541,6 @@
   }
 }
 
-
 .calc-quick-adds {
   position: relative;
   z-index: 2;
@@ -574,15 +655,28 @@
   padding: 7px 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
-  background: var(--bg-elevated);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--text) 5%, transparent), transparent 65%), var(--bg-elevated);
   color: var(--text-dim);
   font-size: 0.72rem;
   font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .calc-history-actions button:hover {
   color: var(--text);
-  border-color: var(--border-strong);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border-strong));
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 16%, rgba(0, 0, 0, 0.35));
+}
+
+.calc-history-actions button:active {
+  transform: scale(0.95);
+}
+
+.calc-history-actions button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 80%, white);
+  outline-offset: 2px;
 }
 
 .calc-verdict-badge.win,
@@ -596,7 +690,6 @@
   100% { transform: scale(1); }
 }
 .calc-qty-btn { min-width: 36px; min-height: 36px; padding: 0; aspect-ratio: 1; }
-
 
 /* ============================================================
    VISUAL FACELIFT — glass sides, glowing VS, animated bars
@@ -657,4 +750,355 @@
 .calc-entry:hover {
   transform: translateX(3px);
   border-color: var(--accent);
+}
+
+/* Currency inputs (gems / coins) + currency entry rows */
+.calc-currency-badge {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border-radius: 12px;
+  background: var(--bg-card, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+/* Wider qty input for currency rows (amounts have no cap). */
+.calc-qty-input-wide {
+  width: 128px;
+}
+
+/* Gems / Coins amount prompt */
+.cam-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.66);
+  backdrop-filter: blur(6px);
+}
+
+.cam-card {
+  width: min(440px, 100%);
+  background: rgba(8, 8, 8, 0.98);
+  border: 1px solid var(--border-strong, rgba(255, 255, 255, 0.2));
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.65);
+}
+
+.cam-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cam-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.cam-head-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.cam-head-text h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: var(--text, #fff);
+}
+
+.cam-head-text p {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-faint, #7a7a7a);
+}
+
+.cam-close {
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  background: none;
+  color: var(--text-dim, #bfbfbf);
+  border-radius: 9px;
+  width: 30px;
+  height: 30px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.cam-close:hover {
+  color: var(--text, #fff);
+  border-color: var(--border-strong, rgba(255, 255, 255, 0.25));
+}
+
+.cam-input {
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px 14px;
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: var(--text, #fff);
+  background: var(--bg-card, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.14));
+  border-radius: 12px;
+  outline: none;
+}
+
+.cam-input:focus {
+  border-color: var(--accent, #4d9dff);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #4d9dff) 22%, transparent);
+}
+
+.cam-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.cam-chip {
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.14));
+  background: var(--bg-card, rgba(255, 255, 255, 0.04));
+  color: var(--text-dim, #bfbfbf);
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 7px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.cam-chip:hover {
+  color: var(--text, #fff);
+  border-color: var(--accent, #4d9dff);
+}
+
+.cam-chip.on {
+  color: var(--text, #fff);
+  border-color: var(--accent, #4d9dff);
+  background: color-mix(in srgb, var(--accent, #4d9dff) 20%, transparent);
+}
+
+.cam-preview {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 34px;
+  justify-content: center;
+}
+
+.cam-preview-value {
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: var(--text, #fff);
+}
+
+.cam-preview-sub {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-faint, #7a7a7a);
+}
+
+.cam-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.cam-cancel {
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.14));
+  background: none;
+  color: var(--text-dim, #bfbfbf);
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 10px 16px;
+  border-radius: 11px;
+  cursor: pointer;
+}
+
+.cam-cancel:hover {
+  color: var(--text, #fff);
+}
+
+.cam-add {
+  border: 1px solid var(--accent, #4d9dff);
+  background: color-mix(in srgb, var(--accent, #4d9dff) 24%, transparent);
+  color: var(--text, #fff);
+  font-size: 0.82rem;
+  font-weight: 900;
+  padding: 10px 18px;
+  border-radius: 11px;
+  cursor: pointer;
+}
+
+.cam-add:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Close-the-gap top-up (verdict column) */
+.calc-balance-block {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 12px 10px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+.calc-balance-label {
+  text-align: center;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.calc-balance-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calc-balance-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 18%, transparent),
+    color-mix(in srgb, var(--accent) 6%, transparent)
+  );
+  color: var(--text);
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.calc-balance-btn img {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.calc-balance-amount {
+  font-size: 0.86rem;
+}
+
+.calc-balance-name {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.calc-balance-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--accent) 26%, rgba(0, 0, 0, 0.4));
+}
+
+.calc-balance-btn:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.calc-balance-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 80%, white);
+  outline-offset: 2px;
+}
+
+/* Modal buttons: same feel */
+.cam-close,
+.cam-cancel,
+.cam-chip,
+.cam-add {
+  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+}
+
+.cam-close:hover,
+.cam-cancel:hover {
+  transform: translateY(-1px);
+}
+
+.cam-close:active,
+.cam-cancel:active,
+.cam-chip:active,
+.cam-add:active {
+  transform: scale(0.95);
+}
+
+.cam-chip:hover,
+.cam-cancel:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+
+.cam-add {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.cam-add:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--accent);
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--accent) 28%, rgba(0, 0, 0, 0.4));
+}
+
+.cam-add:focus-visible,
+.cam-cancel:focus-visible,
+.cam-chip:focus-visible,
+.cam-close:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 80%, white);
+  outline-offset: 2px;
+}
+
+/* Motion-safe: no lifts/presses for reduced-motion users */
+@media (prefers-reduced-motion: reduce) {
+  .calc-swap,
+  .calc-share,
+  .calc-clear,
+  .calc-qty-btn,
+  .calc-remove,
+  .calc-history-actions button,
+  .calc-balance-btn,
+  .cam-close,
+  .cam-cancel,
+  .cam-chip,
+  .cam-add {
+    transition: none;
+  }
+
+  .calc-swap:hover,
+  .calc-share:hover,
+  .calc-clear:hover,
+  .calc-qty-btn:hover:not(:disabled),
+  .calc-remove:hover,
+  .calc-history-actions button:hover,
+  .calc-balance-btn:hover,
+  .cam-chip:hover,
+  .cam-cancel:hover,
+  .cam-close:hover,
+  .cam-add:hover:not(:disabled) {
+    transform: none;
+  }
 }

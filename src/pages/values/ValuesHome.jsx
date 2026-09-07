@@ -14,7 +14,7 @@ export default function ValuesHome() {
   return (
     <PageShell sidebarTitle="VALUES" navTree={VALUES_NAV}>
       <PageIntro
-        eyebrow="APEX Market"
+        eyebrow="Testing Market"
         title="Values"
         actions={(
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>

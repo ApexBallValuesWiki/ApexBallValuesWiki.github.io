@@ -5,11 +5,12 @@ import PageShell from '../../components/PageShell';
 import { VALUES_NAV } from '../../config/navigation';
 import { DEMAND, SCARCITY, getRarityGlow, isShinyRarity } from '../../data/taxonomy';
 import { useLiveValues } from '../../hooks/useLiveValues';
-import { evaluateTrade } from '../../utils/calculator';
+import { evaluateTrade, valueFromGems, valueFromCoins, gemsFromValue, coinsFromValue } from '../../utils/calculator';
 import { encodeState, decodeState, loadFromLocalStorage, saveToLocalStorage } from '../../utils/tradePersistence';
 import UnitIcon from '../../components/UnitIcon';
 import { getUnitIcon } from '../../data/unitIcons';
 import ValueEntryPicker from '../../components/ValueEntryPicker';
+import { CURRENCIES, CURRENCY_BY_SLUG, clampQuantity, isCurrencySlug } from '../../data/currency';
 import { formatCompactNumber, formatFullNumber } from '../../utils/formatNumber';
 import AdSlot from '../../components/AdSlot';
 import { incrementStat } from '../../utils/achievements';
@@ -23,8 +24,12 @@ const RECENT_KEY = 'apex-trade-recent-v1';
 const MAX_HISTORY = 12;
 const MAX_RECENT = 10;
 
-function clampQty(raw) {
-  return Math.min(8000, Math.max(1, Math.floor(Number(raw) || 1)));
+// Every row is LINKED to a real unit/item by slug — its baseValue/demand/
+// scarcity always come live from the shared values data (src/data/values.js).
+// Custom manual entries have been removed entirely per current design.
+// Quantity caps live in src/data/currency.js: units 9,999, currencies none.
+function makeLinkedEntry(slug, quantity = 1) {
+  return { id: nextId(), slug, quantity: clampQuantity(slug, quantity) };
 }
 
 function loadStoredList(key) {
@@ -45,16 +50,33 @@ function saveStoredList(key, value) {
   }
 }
 
-// Every row is LINKED to a real unit/item by slug — its baseValue/demand/
-// scarcity always come live from the shared values data (src/data/values.js).
-// Custom manual entries have been removed entirely per current design.
-function makeLinkedEntry(slug, quantity = 1) {
-  return { id: nextId(), slug, quantity: clampQty(quantity) };
-}
-
 function resolveEntry(entry, valueEntries) {
+  // Currency rows (gems / coins): picked from the top of the add-picker like
+  // any unit, amount entered via the quick-amount prompt. Converted with the
+  // market ratio curve, which scales by tier — cheap trades sit near 100
+  // coins per gem, omega trades near 50.
+  if (isCurrencySlug(entry.slug)) {
+    const meta = CURRENCY_BY_SLUG[entry.slug];
+    const isGems = meta.kind === 'gems';
+    const amount = Math.max(0, Number(entry.quantity) || 0);
+    return {
+      ...entry,
+      name: meta.name,
+      rarity: null,
+      kind: 'currency',
+      currencyIcon: meta.icon,
+      imageUrl: meta.icon,
+      image_url: meta.icon,
+      amount,
+      unitValue: amount ? (isGems ? valueFromGems(amount) : valueFromCoins(amount)) : 0,
+      tradeValue: amount ? (isGems ? valueFromGems(amount) : valueFromCoins(amount)) : 0,
+    };
+  }
   const source = valueEntries.find((valueEntry) => valueEntry.slug === entry.slug);
   if (!source) return { ...entry, missing: true, tradeValue: 0 };
+  if (source.specialValue) {
+    return { ...entry, name: source.name, rarity: source.rarity, kind: source.kind, imageUrl: source.imageUrl ?? null, image_url: source.imageUrl ?? null, unitValue: 0, tradeValue: 0, specialValue: source.specialValue };
+  }
   const unitValue = source.tradeValue ?? 0;
   return {
     ...entry,
@@ -78,7 +100,7 @@ function deserializeSide(data) {
   if (!Array.isArray(data)) return [];
   return data
     .filter((row) => Array.isArray(row) && row[0])
-    .map(([slug, quantity]) => makeLinkedEntry(slug, clampQty(quantity)));
+    .map(([slug, quantity]) => makeLinkedEntry(slug, quantity));
 }
 
 export default function TradeCalculator() {
@@ -89,6 +111,8 @@ export default function TradeCalculator() {
   const [imageCopied, setImageCopied] = useState(false);
   const [history, setHistory] = useState(() => loadStoredList(HISTORY_KEY));
   const [recentSlugs, setRecentSlugs] = useState(() => loadStoredList(RECENT_KEY));
+  // { side: 'A' | 'B', currency } while the gems/coins amount prompt is open
+  const [currencyModal, setCurrencyModal] = useState(null);
   const { allValueEntries, error: liveValuesError } = useLiveValues();
   const hydrated = useRef(false);
   const persistTimer = useRef(null);
@@ -146,6 +170,38 @@ export default function TradeCalculator() {
     setSideB(sideA);
   }
 
+  function addCurrencyAmount(side, currency, amount) {
+    const setter = side === 'A' ? setSideA : setSideB;
+    setter((prev) => {
+      const existing = prev.find((e) => e.slug === currency.slug);
+      if (existing) {
+        // A second pick of the same currency adds to the existing row.
+        return prev.map((e) => (e.slug === currency.slug
+          ? { ...e, quantity: clampQuantity(currency.slug, (Number(e.quantity) || 0) + amount) }
+          : e));
+      }
+      return [...prev, { id: nextId(), slug: currency.slug, quantity: clampQuantity(currency.slug, amount) }];
+    });
+  }
+
+  // "Close the gap": exact gems/coins that top up the lighter side, computed
+  // backwards through the market-ratio curve (see gemsFromValue/coinsFromValue).
+  const balanceAmounts = useMemo(() => {
+    const gap = Math.abs(result.diff);
+    if (!gap) return null;
+    return { gems: gemsFromValue(gap), coins: coinsFromValue(gap) };
+  }, [result.diff]);
+
+  function balanceWithCurrency(kind) {
+    const gap = Math.abs(result.diff);
+    if (!gap || !balanceAmounts) return;
+    const side = result.diff > 0 ? 'A' : 'B'; // diff>0: THEY side heavier -> top up YOU
+    const currency = CURRENCIES.find((c) => c.kind === kind);
+    const amount = kind === 'gems' ? balanceAmounts.gems : balanceAmounts.coins;
+    if (!currency || !amount) return;
+    addCurrencyAmount(side, currency, amount);
+  }
+
   function rememberRecent(valueEntry) {
     if (!valueEntry?.slug) return;
     setRecentSlugs((prev) => {
@@ -169,13 +225,6 @@ export default function TradeCalculator() {
       const next = [entry, ...prev].slice(0, MAX_HISTORY);
       saveStoredList(HISTORY_KEY, next);
       return next;
-    });
-  }
-
-  function saveCompareSnapshot() {
-    saveCurrentTrade();
-    requestAnimationFrame(() => {
-      document.querySelector('.calc-history')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   }
 
@@ -327,9 +376,6 @@ export default function TradeCalculator() {
           <button type="button" className="calc-swap" onClick={swapSides}>
             ⇄ Swap
           </button>
-          <button type="button" className="calc-share" onClick={saveCompareSnapshot}>
-            ⚖ Compare
-          </button>
           <button type="button" className="calc-share" onClick={saveCurrentTrade}>
             💾 Save
           </button>
@@ -352,9 +398,10 @@ export default function TradeCalculator() {
           valueEntries={allValueEntries}
           recentEntries={recentEntries}
           rememberRecent={rememberRecent}
+          onPickCurrency={(currency) => setCurrencyModal({ side: 'A', currency })}
         />
 
-        <VerdictColumn result={result} />
+        <VerdictColumn result={result} balanceAmounts={balanceAmounts} onBalance={balanceWithCurrency} />
 
         <TradeSide
           side="B"
@@ -365,11 +412,25 @@ export default function TradeCalculator() {
           valueEntries={allValueEntries}
           recentEntries={recentEntries}
           rememberRecent={rememberRecent}
+          onPickCurrency={(currency) => setCurrencyModal({ side: 'B', currency })}
         />
       </div>
 
       <TradeHistory history={history} onLoad={loadHistoryTrade} onDelete={deleteHistoryTrade} />
       <AdSlot slotId="2911497117" />
+
+      {currencyModal && (
+        <CurrencyAmountModal
+          sideLabel={currencyModal.side === 'A' ? 'YOU' : 'THEY'}
+          currency={currencyModal.currency}
+          existingAmount={(currencyModal.side === 'A' ? sideA : sideB).find((e) => e.slug === currencyModal.currency.slug)?.quantity || 0}
+          onClose={() => setCurrencyModal(null)}
+          onConfirm={(amount) => {
+            addCurrencyAmount(currencyModal.side, currencyModal.currency, amount);
+            setCurrencyModal(null);
+          }}
+        />
+      )}
     </PageShell>
   );
 }
@@ -483,7 +544,7 @@ function drawTradeCardHeader(ctx, theme, result) {
   ctx.shadowBlur = 34;
   ctx.fillStyle = theme.text;
   ctx.font = '900 72px Montserrat, Arial';
-  ctx.fillText('APEX', 88, 122);
+  ctx.fillText('TESTING', 88, 122);
   ctx.shadowBlur = 0;
   ctx.fillStyle = theme.dim;
   ctx.font = '900 30px Montserrat, Arial';
@@ -627,7 +688,7 @@ function drawTradeVerdict(ctx, canvas, theme, result) {
 function drawTradeFooter(ctx, canvas, theme) {
   ctx.fillStyle = theme.faint;
   ctx.font = '800 19px Montserrat, Arial';
-  ctx.fillText('Generated by APEX Values & WIKI', 88, canvas.height - 64);
+  ctx.fillText('Generated by Apex WIKI & Values', 88, canvas.height - 64);
   ctx.textAlign = 'right';
   ctx.fillText(new Date().toLocaleString(), canvas.width - 88, canvas.height - 64);
   ctx.textAlign = 'left';
@@ -643,7 +704,11 @@ function overpayLabel(result) {
   return 'No overpay — perfectly even';
 }
 
-function VerdictColumn({ result }) {
+function VerdictColumn({ result, balanceAmounts, onBalance }) {
+  const gemsMeta = CURRENCY_BY_SLUG['currency:gems'];
+  const coinsMeta = CURRENCY_BY_SLUG['currency:coins'];
+  // The top-up lands on the LIGHTER side (diff>0 means THEY give more).
+  const topUpSide = result.diff > 0 ? 'YOUR' : 'THEIR';
   return (
     <div className="calc-verdict-col">
       <div className="calc-vs-mark">VS</div>
@@ -665,6 +730,37 @@ function VerdictColumn({ result }) {
         <TotalBar label="YOU" total={result.totalA} max={Math.max(result.totalA, result.totalB, 1)} colorVar="--you-color" />
         <TotalBar label="THEY" total={result.totalB} max={Math.max(result.totalA, result.totalB, 1)} colorVar="--them-color" />
       </div>
+      {result.diff !== 0 && balanceAmounts && (
+        <div className="calc-balance-block">
+          <span className="calc-balance-label">Close the gap</span>
+          <div className="calc-balance-buttons">
+            {balanceAmounts.gems > 0 && (
+              <button
+                type="button"
+                className="calc-balance-btn"
+                onClick={() => onBalance('gems')}
+                title={`Adds ${formatFullNumber(balanceAmounts.gems)} gems to ${topUpSide} side`}
+              >
+                <img src={gemsMeta.icon} alt="" />
+                <span className="calc-balance-amount">+{formatCompactNumber(balanceAmounts.gems)}</span>
+                <span className="calc-balance-name">Gems</span>
+              </button>
+            )}
+            {balanceAmounts.coins > 0 && (
+              <button
+                type="button"
+                className="calc-balance-btn"
+                onClick={() => onBalance('coins')}
+                title={`Adds ${formatFullNumber(balanceAmounts.coins)} coins to ${topUpSide} side`}
+              >
+                <img src={coinsMeta.icon} alt="" />
+                <span className="calc-balance-amount">+{formatCompactNumber(balanceAmounts.coins)}</span>
+                <span className="calc-balance-name">Coins</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -742,12 +838,12 @@ function HistorySide({ label, rows }) {
   );
 }
 
-function TradeSide({ side, label, entries, setEntries, computed, valueEntries, recentEntries, rememberRecent }) {
+function TradeSide({ side, label, entries, setEntries, computed, valueEntries, recentEntries, rememberRecent, onPickCurrency }) {
   const total = computed.reduce((sum, e) => sum + (e.tradeValue || 0), 0);
   const sideClass = side === 'A' ? 'calc-side-you' : 'calc-side-them';
 
   const updateQuantity = (id, quantity) => {
-    setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, quantity: clampQty(quantity) } : e)));
+    setEntries((prev) => prev.map((e) => (e.id !== id ? e : { ...e, quantity: clampQuantity(e.slug, quantity) })));
   };
 
   const addLinked = (valueEntry) => {
@@ -755,7 +851,7 @@ function TradeSide({ side, label, entries, setEntries, computed, valueEntries, r
     setEntries((prev) => {
       const existing = prev.find((e) => e.slug === valueEntry.slug);
       if (existing) {
-        return prev.map((e) => (e.slug === valueEntry.slug ? { ...e, quantity: clampQty(e.quantity + 1) } : e));
+        return prev.map((e) => (e.slug === valueEntry.slug ? { ...e, quantity: clampQuantity(valueEntry.slug, e.quantity + 1) } : e));
       }
       return [...prev, makeLinkedEntry(valueEntry.slug, 1)];
     });
@@ -778,7 +874,13 @@ function TradeSide({ side, label, entries, setEntries, computed, valueEntries, r
         </div>
       </div>
 
-      <ValueEntryPicker onPick={addLinked} placeholder={`Add to ${label}'s side…`} entries={valueEntries} />
+      <ValueEntryPicker
+        onPick={addLinked}
+        onPickCurrency={onPickCurrency}
+        currencies={CURRENCIES}
+        placeholder={`Add units, gems or coins to ${label}'s side…`}
+        entries={valueEntries}
+      />
 
       {recentEntries?.length > 0 && (
         <div className="calc-quick-adds">
@@ -796,6 +898,7 @@ function TradeSide({ side, label, entries, setEntries, computed, valueEntries, r
           {entries.map((entry, idx) => {
             const resolved = computed[idx];
             if (!resolved) return null;
+            const isCurrency = resolved.kind === 'currency';
             const glow = getRarityGlow(resolved.rarity);
 
             return (
@@ -814,47 +917,60 @@ function TradeSide({ side, label, entries, setEntries, computed, valueEntries, r
                 }}
                 title="Drag sideways to remove"
               >
-                <UnitIcon
-                  slug={entry.slug}
-                  name={resolved.name}
-                  glowColor={glow}
-                  shiny={isShinyRarity(resolved.rarity)}
-                  size={44}
-                  imageUrl={resolved.imageUrl}
-                />
+                {isCurrency ? (
+                  <img className="calc-currency-badge" src={resolved.currencyIcon} alt="" aria-hidden="true" />
+                ) : (
+                  <UnitIcon
+                    slug={entry.slug}
+                    name={resolved.name}
+                    glowColor={glow}
+                    shiny={isShinyRarity(resolved.rarity)}
+                    size={44}
+                    imageUrl={resolved.imageUrl}
+                  />
+                )}
                 <div className="calc-entry-text">
                   <span className="calc-entry-name">{resolved.name}</span>
+                  {isCurrency ? (
+                    <span className="calc-entry-meta">
+                      {formatFullNumber(resolved.amount)} — converted at market ratio
+                    </span>
+                  ) : (
+                    <>
                   <span className="calc-entry-meta" style={{ color: glow }}>
-                    {resolved.rarity}
+                    {resolved.specialValue || resolved.rarity}
                   </span>
                   <span className="calc-entry-tiers">
                     {multiplierLabel(DEMAND, resolved.demand)} · {multiplierLabel(SCARCITY, resolved.scarcity)}
                   </span>
+                    </>
+                  )}
                 </div>
 
                 <div className="calc-qty-control">
                   <button
                     type="button"
                     className="calc-qty-btn"
-                    onClick={() => updateQuantity(entry.id, entry.quantity - 1)}
-                    disabled={entry.quantity <= 1}
+                    onClick={() => updateQuantity(entry.id, entry.quantity - (isCurrency ? 1000 : 1))}
+                    disabled={isCurrency ? entry.quantity <= 0 : entry.quantity <= 1}
                   >
                     −
                   </button>
                   <input
-                    className="calc-qty-input"
+                    className={isCurrency ? 'calc-qty-input calc-qty-input-wide' : 'calc-qty-input'}
                     type="number"
-                    min="1"
-                    max="8000"
+                    min={isCurrency ? 0 : 1}
+                    max={isCurrency ? undefined : 9999}
+                    step={isCurrency ? 1000 : 1}
                     value={entry.quantity}
                     onChange={(e) => updateQuantity(entry.id, e.target.value)}
-                    aria-label={`Quantity for ${resolved.name}`}
+                    aria-label={isCurrency ? `Amount for ${resolved.name}` : `Quantity for ${resolved.name}`}
                   />
                   <button
                     type="button"
                     className="calc-qty-btn"
-                    onClick={() => updateQuantity(entry.id, entry.quantity + 1)}
-                    disabled={entry.quantity >= 8000}
+                    onClick={() => updateQuantity(entry.id, entry.quantity + (isCurrency ? 1000 : 1))}
+                    disabled={!isCurrency && entry.quantity >= 9999}
                   >
                     +
                   </button>
@@ -878,8 +994,101 @@ function TradeSide({ side, label, entries, setEntries, computed, valueEntries, r
         </AnimatePresence>
 
         {entries.length === 0 && (
-          <div className="calc-empty-side">Search above to add units or items to {label}'s side.</div>
+          <div className="calc-empty-side">Use the search above to add units, items, gems or coins to {label}&apos;s side.</div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// Amount prompt for Gems / Coins — opens when a currency is picked from the
+// top of the add-picker. Free-typed amount plus quick-size buttons; live
+// market-ratio preview; Enter adds, Escape closes.
+function CurrencyAmountModal({ sideLabel, currency, existingAmount = 0, onClose, onConfirm }) {
+  const [raw, setRaw] = useState('');
+  const amount = Math.floor(Number(String(raw).replace(/[\s,_]/g, '')) || 0);
+  const preview = amount > 0
+    ? (currency.kind === 'gems' ? valueFromGems(amount) : valueFromCoins(amount))
+    : 0;
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => inputRef.current?.focus(), 30);
+    return () => clearTimeout(t);
+  }, []);
+
+  function submit() {
+    if (amount > 0) onConfirm(amount);
+  }
+
+  return (
+    <div
+      className="cam-overlay"
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Add ${currency.name} amount`}
+    >
+      <div className="cam-card">
+        <div className="cam-head">
+          <img className="cam-icon" src={currency.icon} alt="" />
+          <div className="cam-head-text">
+            <h3>Add {currency.name}</h3>
+            <p>to {sideLabel}&apos;s side</p>
+          </div>
+          <button type="button" className="cam-close" onClick={onClose} aria-label="Close">✕</button>
+        </div>
+
+        <input
+          ref={inputRef}
+          className="cam-input"
+          type="text"
+          inputMode="numeric"
+          placeholder={`Amount of ${currency.name}`}
+          value={raw}
+          onChange={(e) => setRaw(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') { e.preventDefault(); submit(); }
+            if (e.key === 'Escape') onClose();
+          }}
+          aria-label={`${currency.name} amount`}
+        />
+
+        <div className="cam-quick">
+          {currency.quickAmounts.map((value) => (
+            <button
+              type="button"
+              key={value}
+              className={amount === value && raw ? 'cam-chip on' : 'cam-chip'}
+              onClick={() => setRaw(String(value))}
+            >
+              {formatCompactNumber(value)}
+            </button>
+          ))}
+        </div>
+
+        <div className="cam-preview">
+          {amount > 0 ? (
+            <>
+              <span className="cam-preview-value">≈ {formatCompactNumber(preview)} value at market ratio</span>
+              {existingAmount > 0 && (
+                <span className="cam-preview-sub">adds to your {formatFullNumber(existingAmount)} — total {formatFullNumber(existingAmount + amount)}</span>
+              )}
+            </>
+          ) : (
+            <span className="cam-preview-sub">
+              Type an amount or tap a quick size
+              {existingAmount > 0 ? ` — you already have ${formatFullNumber(existingAmount)} ${currency.name} on this side` : ''}
+            </span>
+          )}
+        </div>
+
+        <div className="cam-actions">
+          <button type="button" className="cam-cancel" onClick={onClose}>Cancel</button>
+          <button type="button" className="cam-add" onClick={submit} disabled={amount <= 0}>
+            Add {currency.name}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -7,14 +7,18 @@ import { useData } from '../context/DataContext';
 import UnitValueCard from '../components/UnitValueCard';
 import UnitIcon from '../components/UnitIcon';
 import { formatCompactNumber, formatFullNumber } from '../utils/formatNumber';
-import { loadUXSettings, saveUXSettings, applyUXSettings, BG_PATTERNS, ANIM_SPEEDS, COLORBLIND_MODES, FONT_SIZES } from '../utils/uxSettings';
+import { loadUXSettings, saveUXSettings, applyUXSettings, BG_PATTERNS, COLORBLIND_MODES, FONT_SIZES } from '../utils/uxSettings';
 import { incrementStat } from '../utils/achievements';
+import { REWARD_MODES, getUnlockedRewards, isRewardAllowed, remainingFor } from '../utils/themeUnlocks';
 import './ThemeStudio.css';
 
 const ACCENT_SWATCHES = [
   '#4d9dff', '#00ff91', '#ffc94d', '#ff4d4d', '#c04dff',
   '#ff7ad9', '#00e5ff', '#7cff45', '#ff9d3b', '#ffffff',
 ];
+
+// Glyph options for particle reward themes (knowledge / APEX Team).
+const PARTICLE_GLYPHS = ['?', '❓', '🧠', '💡', '📚', '⭐', '💎', '🔥', '🎯', '👑'];
 
 const COLOR_FIELDS = [
   ['accent', 'Accent'],
@@ -33,12 +37,13 @@ const COLOR_FIELDS = [
   ['themColor', 'Calculator Them'],
 ];
 
+// NOTE: animation speed is NOT a theme effect anymore — one slider in
+// UX & Accessibility controls every animation site-wide.
 const EFFECT_FIELDS = [
   ['glow', 'Glow', 0, 0.75, 0.01],
   ['scanlines', 'Scanlines', 0, 0.35, 0.01],
   ['grid', 'Grid', 0, 0.22, 0.01],
   ['vfx', 'VFX Power', 0, 2, 0.05],
-  ['speed', 'Animation Speed', 0.5, 1.5, 0.05],
 ];
 
 function hsvToHex(h, s, v) {
@@ -67,6 +72,17 @@ export default function ThemeStudio() {
   const [importText, setImportText] = useState('');
   const [statusMsg, setStatusMsg] = useState('');
   const [uxSettings, setUXSettings] = useState(() => loadUXSettings());
+  const [rewardUnlocks, setRewardUnlocks] = useState(() => getUnlockedRewards());
+  const rewardRemaining = useMemo(
+    () => Object.fromEntries(REWARD_MODES.map((m) => [m.id, remainingFor(m.id)])),
+    [rewardUnlocks]
+  );
+
+  useEffect(() => {
+    const refresh = () => setRewardUnlocks(getUnlockedRewards());
+    window.addEventListener('apex-achievement-unlocked', refresh);
+    return () => window.removeEventListener('apex-achievement-unlocked', refresh);
+  }, []);
 
   const actualUnits = useMemo(() => {
     const mythic = unitValues.find((u) => u.rarity === 'Mythics' || u.rarity === 'Legendaries' || u.rarity === 'Mythic' || u.rarity === 'Legendary') || unitValues[0];
@@ -76,8 +92,8 @@ export default function ThemeStudio() {
   }, [unitValues]);
 
   useEffect(() => {
+    saveTheme(theme);   // save first: applyTheme's event must expose the new state
     applyTheme(theme);
-    saveTheme(theme);
   }, [theme]);
 
   useEffect(() => {
@@ -102,8 +118,15 @@ export default function ThemeStudio() {
   }
 
   function handleSelectPreset(preset) {
-    setTheme(preset);
-    showStatus(`Applied preset "${preset.name}"!`);
+    // Presets swap COLORS only. Effect sliders (glow, grid, VFX…) are the
+    // user's personal settings and must never reset when browsing themes —
+    // same for UX settings (animation speed, pattern…), which live separately.
+    setTheme((prev) => ({
+      ...preset,
+      effects: { ...prev.effects },
+      rewards: { ...prev.rewards },
+    }));
+    showStatus(`Applied "${preset.name}" — your effect sliders were kept.`);
   }
 
   function handleColorChange(key, hex) {
@@ -123,6 +146,19 @@ export default function ThemeStudio() {
       name: 'Custom Theme',
       effects: { ...prev.effects, [key]: Number(val) },
     }));
+  }
+
+  function handleRewardMode(mode) {
+    if (!isRewardAllowed(mode.id, rewardUnlocks)) {
+      showStatus(mode.adminOnly ? '🎩 APEX Team is for team admins.' : `🔒 Locked — ${mode.category} set incomplete.`);
+      return;
+    }
+    setTheme((prev) => ({ ...prev, rewards: { ...prev.rewards, mode: mode.id, color: mode.color || prev.rewards.color } }));
+    showStatus(mode.id === 'none' ? 'Reward theme off.' : `${mode.icon} ${mode.label} on — tweak it below.`);
+  }
+
+  function handleRewardChange(key, value) {
+    setTheme((prev) => ({ ...prev, rewards: { ...prev.rewards, [key]: value } }));
   }
 
   function showStatus(msg) {
@@ -206,7 +242,8 @@ export default function ThemeStudio() {
     const bgCardHex = hsvToHex(baseHue, 0.75, 0.07);
     const bgHex = hsvToHex(baseHue, 0.8, 0.03);
 
-    setTheme({
+    setTheme((prev) => ({
+      rewards: { ...prev.rewards },
       id: 'custom-harmony',
       name: 'Harmonic Random',
       colors: {
@@ -228,18 +265,20 @@ export default function ThemeStudio() {
         vfx: Number((0.9 + Math.random() * 0.4).toFixed(2)),
         speed: Number((0.8 + Math.random() * 0.4).toFixed(2)),
       },
-    });
+    }));
     showStatus('🎲 Generated harmonious theme!');
   }
 
   function handleResetDefault() {
-    setTheme(DEFAULT_THEME);
-    showStatus('✓ Reset to Apex Classic default.');
+    // Colors return to stock; personal effect sliders are kept (they are
+    // user settings, not part of the default theme's identity).
+    setTheme((prev) => ({ ...DEFAULT_THEME, effects: { ...prev.effects }, rewards: { ...prev.rewards } }));
+    showStatus('✓ Reset to Apex Classic default — your sliders were kept.');
   }
 
   return (
     <PageShell sidebarTitle="THEME STUDIO" navTree={[]}>
-      <PageIntro eyebrow="CUSTOMIZE APEX" title="Theme Studio">
+      <PageIntro eyebrow="CUSTOMIZE TESTING" title="Theme Studio">
         <p>
           Design your personal holographic experience. Every color, glow intensity, and visual
           effect transforms live across all tables, unit cards, and trade tools.
@@ -263,7 +302,8 @@ export default function ThemeStudio() {
           <div className="theme-studio-controls">
             {/* PRESETS */}
             <div className="theme-section-card">
-              <h2>Preset Catalog</h2>
+              <h2>🎨 Preset Catalog</h2>
+              <p className="theme-card-hint">Tap a theme to recolor the whole site. Your effect sliders and accessibility settings are never touched.</p>
               <div className="theme-presets-grid">
                 {THEME_PRESETS.map((p) => {
                   const isActive = theme.id === p.id;
@@ -284,7 +324,8 @@ export default function ThemeStudio() {
 
             {/* COLOR HARMONY RANDOMIZER & ACTIONS */}
             <div className="theme-section-card">
-              <h2>Harmonic Generator & Actions</h2>
+              <h2>🎲 Generator &amp; Sharing</h2>
+              <p className="theme-card-hint">Roll a harmonious palette or export your theme to share.</p>
               <div className="theme-actions-bar">
                 <button type="button" className="theme-btn primary" onClick={handleRandomHarmony}>
                   🎲 Color Harmony Randomizer
@@ -313,7 +354,8 @@ export default function ThemeStudio() {
 
             {/* VFX SLIDERS */}
             <div className="theme-section-card">
-              <h2>Holographic VFX Sliders</h2>
+              <h2>✨ Holographic VFX</h2>
+              <p className="theme-card-hint">Dial in how strong the background effects feel. Live everywhere on the site.</p>
               <div className="theme-sliders-list">
                 {EFFECT_FIELDS.map(([key, label, min, max, step]) => (
                   <div key={key} className="theme-slider-item">
@@ -334,9 +376,109 @@ export default function ThemeStudio() {
               </div>
             </div>
 
+            {/* REWARD THEMES */}
+            <div className="theme-section-card">
+              <h2>🏆 Reward Themes</h2>
+              <p className="theme-card-hint">Special looks earned by completing achievement sets — still fully customizable. Team admins unlock everything.</p>
+              <div className="theme-presets-grid">
+                {REWARD_MODES.map((mode) => {
+                  const allowed = isRewardAllowed(mode.id, rewardUnlocks);
+                  const active = theme.rewards.mode === mode.id;
+                  const remaining = allowed ? 0 : (rewardRemaining[mode.id] || 0);
+                  return (
+                    <button
+                      type="button"
+                      key={mode.id}
+                      className={active ? 'preset-chip active' : 'preset-chip'}
+                      onClick={() => handleRewardMode(mode)}
+                      title={allowed ? mode.desc : mode.adminOnly ? 'Team admins only' : `Complete every ${mode.category} achievement (${remaining} to go)`}
+                    >
+                      <span>{mode.icon}</span>
+                      <span>{mode.label}</span>
+                      {!allowed && mode.id !== 'none' && (
+                        <span className="reward-lock">{mode.adminOnly ? '🎩' : `🔒${remaining}`}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {(() => {
+                const mode = REWARD_MODES.find((m) => m.id === theme.rewards.mode);
+                if (!mode || mode.id === 'none') return null;
+                return (
+                  <div className="theme-sliders-list" style={{ marginTop: 12 }}>
+                    <p className="theme-card-hint" style={{ marginBottom: 8 }}>{mode.desc}</p>
+                    <div className="theme-slider-item">
+                      <div className="theme-slider-head"><span>Reward Color</span></div>
+                      <input
+                        type="color"
+                        value={/^#[0-9a-fA-F]{6}$/.test(theme.rewards.color) ? theme.rewards.color : '#7cff45'}
+                        onChange={(e) => handleRewardChange('color', e.target.value)}
+                        style={{ width: 52, height: 32, padding: 0, border: '1px solid var(--border)', borderRadius: 8, background: 'none', cursor: 'pointer' }}
+                      />
+                    </div>
+                    <div className="theme-slider-item">
+                      <div className="theme-slider-head">
+                        <span>{mode.id === 'ballonomics' ? 'Texture Size' : 'Density'}</span>
+                        <strong>{Math.round(theme.rewards.density * 100)}%</strong>
+                      </div>
+                      <input type="range" min={0} max={1} step={0.05} value={theme.rewards.density} onChange={(e) => handleRewardChange('density', Number(e.target.value))} />
+                    </div>
+                    <div className="theme-slider-item">
+                      <div className="theme-slider-head">
+                        <span>Intensity</span>
+                        <strong>{Math.round(theme.rewards.intensity * 100)}%</strong>
+                      </div>
+                      <input type="range" min={0} max={1} step={0.05} value={theme.rewards.intensity} onChange={(e) => handleRewardChange('intensity', Number(e.target.value))} />
+                    </div>
+                    {mode.particles && (
+                      <div className="theme-slider-item">
+                        <div className="theme-slider-head"><span>Particle Glyph</span></div>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                          {PARTICLE_GLYPHS.map((g) => {
+                            const effective = theme.rewards.glyph || (mode.id === 'admin' ? '👑' : '?');
+                            return (
+                              <button
+                                type="button"
+                                key={g}
+                                className={effective === g ? 'preset-chip active' : 'preset-chip'}
+                                onClick={() => handleRewardChange('glyph', g)}
+                                style={{ fontSize: '1rem', padding: '4px 9px' }}
+                              >
+                                {g}
+                              </button>
+                            );
+                          })}
+                          <input
+                            type="text"
+                            value={theme.rewards.glyph}
+                            placeholder="custom…"
+                            maxLength={8}
+                            onChange={(e) => handleRewardChange('glyph', e.target.value)}
+                            style={{ width: 90, padding: '5px 9px', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-elevated)', color: 'var(--text)', fontSize: '0.85rem' }}
+                          />
+                        </div>
+                        <p className="theme-card-hint" style={{ margin: '6px 0 0' }}>Pick or type any emoji — particles get painted in your Reward Color.</p>
+                      </div>
+                    )}
+                    {mode.id === 'retro' && (
+                      <div className="theme-slider-item">
+                        <div className="theme-slider-head"><span>Retro Font</span></div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button type="button" className={theme.rewards.pixelFont ? 'preset-chip active' : 'preset-chip'} onClick={() => handleRewardChange('pixelFont', true)}>On</button>
+                          <button type="button" className={!theme.rewards.pixelFont ? 'preset-chip active' : 'preset-chip'} onClick={() => handleRewardChange('pixelFont', false)}>Off</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+
             {/* UX SETTINGS */}
             <div className="theme-section-card">
-              <h2>UX & Accessibility</h2>
+              <h2>🧩 UX &amp; Accessibility</h2>
+              <p className="theme-card-hint">Personal settings — they apply to every theme and never reset.</p>
               <div className="theme-sliders-list">
                 <div className="theme-slider-item">
                   <div className="theme-slider-head"><span>Background Pattern</span></div>
@@ -358,12 +500,19 @@ export default function ThemeStudio() {
                   )}
                 </div>
                 <div className="theme-slider-item">
-                  <div className="theme-slider-head"><span>Animation Speed</span></div>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    {ANIM_SPEEDS.map(s => (
-                      <button key={s.value} type="button" className={uxSettings.animSpeed === s.value ? 'preset-chip active' : 'preset-chip'} onClick={() => updateUX('animSpeed', s.value)}>{s.label}</button>
-                    ))}
+                  <div className="theme-slider-head">
+                    <span>Animation Speed</span>
+                    <strong>{Number(uxSettings.animSpeed) <= 0 ? 'Off' : `${Number(uxSettings.animSpeed).toFixed(2)}×`}</strong>
                   </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1.5}
+                    step={0.05}
+                    value={Number(uxSettings.animSpeed) || 0}
+                    onChange={(e) => updateUX('animSpeed', Number(e.target.value))}
+                  />
+                  <div className="theme-slider-ticks"><span>Off</span><span>0.75×</span><span>1.5×</span></div>
                 </div>
                 <div className="theme-slider-item">
                   <div className="theme-slider-head"><span>Font Size</span></div>
@@ -390,7 +539,8 @@ export default function ThemeStudio() {
 
             {/* GRANULAR COLOR PICKERS */}
             <div className="theme-section-card">
-              <h2>Granular Color Palette</h2>
+              <h2>🌈 Granular Color Palette</h2>
+              <p className="theme-card-hint">Fine-tune any single color. Typing a hex works too.</p>
               <div className="theme-quick-row">
                 <span className="theme-quick-label">Quick Accent</span>
                 <div className="accent-swatches">
@@ -435,7 +585,8 @@ export default function ThemeStudio() {
           {/* RIGHT: LIVE PREVIEW SANDBOX */}
           <div className="theme-studio-preview">
             <div className="theme-section-card">
-              <h2>Live Component Preview Sandbox</h2>
+              <h2>👀 Live Preview</h2>
+              <p className="theme-card-hint">Real components with your theme applied — updates as you tweak.</p>
               <div className="live-preview-box">
                 {/* Sample Alert Banner */}
                 <div style={{ background: 'var(--accent)', color: 'var(--accent-inverse)', padding: '10px 16px', borderRadius: 'var(--radius-pill)', fontWeight: 800, fontSize: '0.82rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

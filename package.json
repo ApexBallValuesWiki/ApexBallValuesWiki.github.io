@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/bake-data.mjs && vite build && node scripts/prerender.mjs",
+    "build": "node scripts/bake-data.mjs && node scripts/generate-social-cards.mjs && vite build && node scripts/prerender.mjs",
     "build:spa-only": "vite build",
     "cards": "node scripts/generate-social-cards.mjs",
     "lint": "oxlint",

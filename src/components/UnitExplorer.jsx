@@ -66,7 +66,7 @@ export default function UnitExplorer({ section = 'wiki' }) {
       <div className="ue-header">
         <div className="ue-status">
           <span className="ue-dot" />
-          <span className="ue-title">APEX {scope.toUpperCase()} · {pool.length} UNITS</span>
+          <span className="ue-title">TESTING {scope.toUpperCase()} · {pool.length} UNITS</span>
         </div>
         <span className="ue-auto">{paused ? '⏸ PAUSED' : '🔄 AUTO'}</span>
       </div>
@@ -142,7 +142,7 @@ export default function UnitExplorer({ section = 'wiki' }) {
           <>
             <Link to="/values/units/search" className="ue-link">🔍 Search</Link>
             <Link to="/values/calculator" className="ue-link">🧮 Calculator</Link>
-            <Link to="/ball-knowledge" className="ue-link">🧠 Knowledge</Link>
+            <Link to="/minigames" className="ue-link">🧠 Knowledge</Link>
           </>
         )}
       </div>

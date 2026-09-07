@@ -1,3 +1,11 @@
+.global-announcement-stack {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  position: relative;
+  z-index: 60;
+}
+
 .global-announcement {
   position: relative;
   display: flex;

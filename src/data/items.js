@@ -2,11 +2,9 @@ import { ITEM_CONSUMABLES, ITEM_MATERIALS, ITEM_CURRENCIES, ITEM_CRATES } from '
 import { buildStub, mergeOverrides } from './placeholders';
 import { slugify } from '../utils/slug';
 
-// ============================================================================
 // ITEMS DATABASE — Consumables, Materials, Currencies, Crates
 // Same override pattern as units.js: fill ITEM_OVERRIDES keyed by slug(name).
 // ITEM SCHEMA: slug, name, group, description, obtain, effect, baseValue
-// ============================================================================
 
 export const ITEM_OVERRIDES = {
   // 'frost-key': {

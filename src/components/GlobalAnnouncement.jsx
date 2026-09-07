@@ -1,30 +1,28 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchActiveAnnouncement, clearActiveAnnouncement } from '../utils/apexClient';
+import { fetchActiveAnnouncements, deleteAnnouncement } from '../utils/apexClient';
 import { useAdminStatus } from '../hooks/useAdminStatus';
 import './GlobalAnnouncement.css';
 
-// ============================================================================
-// GLOBAL ANNOUNCEMENT — the ONE announcement banner. Modern look, server
-// data: it polls the KV worker (every 30s) so a broadcast from the admin
-// Announcement Studio appears for EVERY visitor, not just the sender's
-// browser. (The old localStorage version and the legacy gradient
-// "BROADCAST" banner were merged into this component.)
-// ============================================================================
+// GLOBAL ANNOUNCEMENTS — stacked banners at the top of the site. Multiple can
+// be live at once (each with its own type and expiry). They poll the KV
+// worker (every 30s) so a broadcast from the admin Announcement Studio
+// appears for EVERY visitor, not just the sender's browser.
 
 const DISMISSED_KEY = 'apex-dismissed-announcements';
 const POLL_MS = 30000;
+const MAX_DISMISSED = 20;
 
-export function useGlobalAnnouncement() {
-  const [announcement, setAnnouncement] = useState(null);
+export function useGlobalAnnouncements() {
+  const [announcements, setAnnouncements] = useState([]);
 
   useEffect(() => {
     let alive = true;
 
     async function refresh() {
-      const item = await fetchActiveAnnouncement();
+      const list = await fetchActiveAnnouncements();
       if (!alive) return;
-      setAnnouncement(item && item.message ? item : null);
+      setAnnouncements(Array.isArray(list) ? list : []);
     }
 
     refresh();
@@ -43,11 +41,11 @@ export function useGlobalAnnouncement() {
       alive = false;
       window.clearInterval(pollId);
       window.removeEventListener('apex-announcements-updated', onUpdated);
-      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('visibilitychange', onVisible);
     };
   }, []);
 
-  return announcement;
+  return announcements;
 }
 
 // Identity of an announcement: id + sentAt + the message itself. Even if a
@@ -57,36 +55,50 @@ function announcementKey(a) {
   return `${a?.id ?? 'x'}|${a?.sentAt ?? 'x'}|${a?.message ?? ''}`;
 }
 
-export default function GlobalAnnouncement() {
-  const announcement = useGlobalAnnouncement();
-  const bannerRef = useRef(null);
-  const [dismissedKey, setDismissedKey] = useState(null);
-  const { isAdmin } = useAdminStatus();
-  const [deleting, setDeleting] = useState(false);
+function loadDismissed() {
+  try {
+    const raw = localStorage.getItem(DISMISSED_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
 
-  async function handleDelete() {
-    if (deleting) return;
-    setDeleting(true);
-    const ok = await clearActiveAnnouncement();
-    setDeleting(false);
+export default function GlobalAnnouncement() {
+  const announcements = useGlobalAnnouncements();
+  const stackRef = useRef(null);
+  const [dismissed, setDismissed] = useState([]);
+  const { isAdmin } = useAdminStatus();
+  const [deletingId, setDeletingId] = useState(null);
+
+  useEffect(() => {
+    setDismissed(loadDismissed());
+  }, [announcements.map(announcementKey).join('||')]);
+
+  function dismiss(key) {
+    const next = [...new Set([...loadDismissed(), key])].slice(-MAX_DISMISSED);
+    try { localStorage.setItem(DISMISSED_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+    setDismissed(next);
+  }
+
+  async function handleDelete(id) {
+    if (deletingId) return;
+    setDeletingId(id);
+    const ok = await deleteAnnouncement(id);
+    setDeletingId(null);
     if (ok) window.dispatchEvent(new CustomEvent('apex-announcements-updated'));
   }
 
-  // Dismissal is per-announcement: a NEW broadcast always shows again.
-  const currentKey = announcementKey(announcement);
-  useEffect(() => {
-    try {
-      setDismissedKey(localStorage.getItem(DISMISSED_KEY) || null);
-    } catch { /* ignore */ }
-  }, [currentKey]);
+  const visible = announcements.filter((a) => !dismissed.includes(announcementKey(a)));
 
-  // Keep the sticky-header offset in sync with the real banner height.
+  // Keep the sticky-header offset in sync with the real stack height.
   useLayoutEffect(() => {
-    if (!announcement || dismissedKey === currentKey || !bannerRef.current) {
+    if (!visible.length || !stackRef.current) {
       document.documentElement.style.setProperty('--announcement-height', '0px');
       return undefined;
     }
-    const node = bannerRef.current;
+    const node = stackRef.current;
     const measure = () => {
       if (!node) return;
       document.documentElement.style.setProperty('--announcement-height', `${Math.round(node.getBoundingClientRect().height)}px`);
@@ -98,9 +110,9 @@ export default function GlobalAnnouncement() {
       observer.disconnect();
       document.documentElement.style.setProperty('--announcement-height', '0px');
     };
-  }, [announcement, dismissedKey, currentKey]);
+  }, [visible.length]);
 
-  if (!announcement || dismissedKey === currentKey) return null;
+  if (!visible.length) return null;
 
   const colors = {
     info: { bg: 'rgba(77, 157, 255, 0.1)', border: 'var(--c-info)', text: 'var(--c-info)' },
@@ -108,41 +120,46 @@ export default function GlobalAnnouncement() {
     success: { bg: 'rgba(0, 255, 145, 0.1)', border: 'var(--c-success)', text: 'var(--c-success)' },
     error: { bg: 'rgba(255, 77, 77, 0.1)', border: 'var(--c-danger)', text: 'var(--c-danger)' },
   };
-  const c = colors[announcement.type] || colors.info;
   const icons = { info: '📢', warning: '⚠️', success: '✅', error: '🚨' };
 
-  function handleDismiss() {
-    try { localStorage.setItem(DISMISSED_KEY, currentKey); } catch { /* ignore */ }
-    setDismissedKey(currentKey);
-  }
-
   return (
-    <AnimatePresence>
-      <motion.div
-        ref={bannerRef}
-        className="global-announcement"
-        style={{ background: c.bg, borderColor: c.border, color: c.text }}
-        role="status"
-        aria-live="polite"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.3 }}
-      >
-        <span className="ga-icon">{icons[announcement.type] || '📢'}</span>
-        <span className="ga-message">{announcement.message}</span>
-        {isAdmin && (
-          <button
-            type="button"
-            className="ga-trash"
-            onClick={handleDelete}
-            disabled={deleting}
-            title={deleting ? 'Deleting…' : 'Delete this announcement for everyone'}
-            aria-label="Delete announcement for everyone"
-          >🗑️</button>
-        )}
-        <button type="button" className="ga-dismiss" onClick={handleDismiss} aria-label="Dismiss announcement">✕</button>
-      </motion.div>
-    </AnimatePresence>
+    <div ref={stackRef} className="global-announcement-stack">
+      <AnimatePresence>
+        {visible.map((a) => {
+          const key = announcementKey(a);
+          const c = colors[a.type] || colors.info;
+          return (
+            <motion.div
+              key={key}
+              className="global-announcement"
+              style={{ background: c.bg, borderColor: c.border, color: c.text }}
+              role="status"
+              aria-live="polite"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <span className="ga-icon">{icons[a.type] || '📢'}</span>
+              <span className="ga-message">
+                {a.title ? <strong>{a.title}: </strong> : null}
+                {a.message}
+              </span>
+              {isAdmin && (
+                <button
+                  type="button"
+                  className="ga-trash"
+                  onClick={() => handleDelete(a.id)}
+                  disabled={deletingId === a.id}
+                  title={deletingId === a.id ? 'Deleting…' : 'Delete this announcement for everyone'}
+                  aria-label="Delete announcement for everyone"
+                >🗑️</button>
+              )}
+              <button type="button" className="ga-dismiss" onClick={() => dismiss(key)} aria-label="Dismiss announcement">✕</button>
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
+    </div>
   );
 }

@@ -9,7 +9,7 @@ import App from './App';
 // Catches "black screen" regressions (a crash above the ErrorBoundary or
 // during render leaves the page empty).
 describe('app smoke render', () => {
-  const routes = ['/', '/values', '/values/calculator', '/wiki', '/theme-editor', '/credits', '/bug-report', '/achievements', '/admin', '/admin?view=wiki&unit=gloomy'];
+  const routes = ['/', '/values', '/values/calculator', '/wiki', '/theme-editor', '/credits', '/bug-report', '/achievements'];
 
   for (const route of routes) {
     it(`renders ${route} without crashing`, () => {

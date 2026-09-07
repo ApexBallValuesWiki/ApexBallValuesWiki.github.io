@@ -1,0 +1,149 @@
+/* ============================================================================
+   REWARD VFX — layers for the achievement-unlocked reward themes.
+   All layers sit behind page content (z-index -1, above HoloBackground's
+   own -1 stacking order by DOM order) and never intercept input.
+   ========================================================================== */
+
+.reward-float-canvas,
+.reward-rain-canvas,
+.reward-money-canvas,
+.reward-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* --- Knowledge: rising glyphs + sparkles ---------------------------------- */
+.reward-float-canvas,
+.reward-rain-canvas {
+  width: 100vw;
+  height: 100vh;
+}
+
+/* --- Money Grid (Ballonomics) -----------------------------------------------
+   A canvas lattice locked to the site grid: same 140px cell, same drift
+   (translate 0 -> 140,140 over 30s / theme-speed) as HoloBackground's
+   .holo-grid, so the coins + gems feel baked into the grid itself.
+   The canvas is oversized by one cell and inset -140px so the drift never
+   reveals an empty edge. No images — everything is drawn + tinted. */
+.reward-money-canvas {
+  inset: -140px;
+  width: calc(100vw + 140px);
+  height: calc(100vh + 140px);
+  opacity: calc(0.28 + var(--reward-intensity, 0.5) * 0.55);
+  animation: reward-money-drift calc(30s / var(--theme-speed, 1)) linear infinite;
+}
+
+@keyframes reward-money-drift {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(140px, 140px); }
+}
+
+/* --- Premium Aura / APEX Team ---------------------------------------------- */
+.reward-aurora {
+  background:
+    radial-gradient(60% 45% at 15% 8%, color-mix(in srgb, var(--reward-color, #ffd76a) 16%, transparent), transparent 70%),
+    radial-gradient(55% 40% at 85% 15%, color-mix(in srgb, var(--accent, #4d9dff) 13%, transparent), transparent 70%),
+    radial-gradient(70% 55% at 50% 100%, color-mix(in srgb, var(--reward-color, #ffd76a) 10%, transparent), transparent 75%);
+  animation: reward-aurora-shift calc(18s / var(--theme-speed, 1)) ease-in-out infinite alternate;
+}
+
+.reward-aurora.admin {
+  background:
+    radial-gradient(60% 45% at 12% 6%, color-mix(in srgb, var(--reward-color, #ffd76a) 20%, transparent), transparent 70%),
+    radial-gradient(50% 40% at 88% 18%, color-mix(in srgb, #ff4d5e 10%, transparent), transparent 70%),
+    radial-gradient(75% 60% at 50% 105%, color-mix(in srgb, var(--reward-color, #ffd76a) 14%, transparent), transparent 78%);
+}
+
+@keyframes reward-aurora-shift {
+  0% { filter: hue-rotate(0deg) saturate(1); transform: translateY(0); }
+  50% { filter: hue-rotate(14deg) saturate(1.08); }
+  100% { filter: hue-rotate(-10deg) saturate(1); transform: translateY(-12px); }
+}
+
+/* --- Gilded cards for premium/admin (the wiki's real card surfaces) -------- */
+html[data-reward='premium'] .card,
+html[data-reward='premium'] .home-card,
+html[data-reward='premium'] .unit-card,
+html[data-reward='premium'] .theme-section-card,
+html[data-reward='premium'] .ach-card,
+html[data-reward='admin'] .card,
+html[data-reward='admin'] .home-card,
+html[data-reward='admin'] .unit-card,
+html[data-reward='admin'] .theme-section-card,
+html[data-reward='admin'] .ach-card {
+  box-shadow:
+    0 0 30px color-mix(in srgb, var(--reward-color, #ffd76a) calc(var(--reward-intensity, 0.5) * 16%), transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--reward-color, #ffd76a) 22%, transparent);
+}
+
+html[data-reward='premium'] h1,
+html[data-reward='admin'] h1 {
+  /* NB: the hero h1 runs a glitch-flicker animation that pins text-shadow
+     to none (animations beat inline styles), so glow via filter instead. */
+  filter: drop-shadow(0 0 22px var(--reward-glow, rgba(255, 215, 106, 0.45)));
+}
+
+/* --- Retro Ball (Balling) ---------------------------------------------------
+   Blocky UI: zero radii, chunky borders with hard offset shadows, and the
+   classic arcade font Press Start 2P (opt-in via the font toggle). */
+html[data-reward='retro'] *,
+html[data-reward='retro'] *::before,
+html[data-reward='retro'] *::after {
+  border-radius: 0 !important;
+}
+
+html[data-reward='retro'] .card,
+html[data-reward='retro'] .home-card,
+html[data-reward='retro'] .unit-card,
+html[data-reward='retro'] .theme-section-card,
+html[data-reward='retro'] .ach-card,
+html[data-reward='retro'] button,
+html[data-reward='retro'] input,
+html[data-reward='retro'] select,
+html[data-reward='retro'] textarea {
+  border-width: 2px;
+  box-shadow: 3px 3px 0 0 color-mix(in srgb, var(--text) 14%, transparent) !important;
+}
+
+html[data-reward='retro'] img,
+html[data-reward='retro'] canvas {
+  image-rendering: pixelated;
+}
+
+html[data-reward='retro'][data-retro-font='on'] body,
+html[data-reward='retro'][data-retro-font='on'] button,
+html[data-reward='retro'][data-retro-font='on'] input,
+html[data-reward='retro'][data-retro-font='on'] select,
+html[data-reward='retro'][data-retro-font='on'] .card,
+html[data-reward='retro'][data-retro-font='on'] .home-card,
+html[data-reward='retro'][data-retro-font='on'] .unit-card,
+html[data-reward='retro'][data-retro-font='on'] .theme-section-card,
+html[data-reward='retro'][data-retro-font='on'] .ach-card {
+  font-family: 'Press Start 2P', 'Courier New', 'Lucida Console', monospace;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+/* Press Start 2P runs ~2x wider than Montserrat — soften sizes a touch so
+   opt-in retro text stays on the card instead of overflowing it. */
+html[data-reward='retro'][data-retro-font='on'] body {
+  font-size: 0.88em;
+  line-height: 1.65;
+}
+html[data-reward='retro'][data-retro-font='on'] .unit-card-stat-label,
+html[data-reward='retro'][data-retro-font='on'] .uv-stat-label,
+html[data-reward='retro'][data-retro-font='on'] .home-card-desc,
+html[data-reward='retro'][data-retro-font='on'] .home-card-note,
+html[data-reward='retro'][data-retro-font='on'] .ach-desc {
+  font-size: 0.62rem;
+}
+
+/* --- Motion safety --------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .reward-money-canvas,
+  .reward-aurora {
+    animation: none;
+  }
+}

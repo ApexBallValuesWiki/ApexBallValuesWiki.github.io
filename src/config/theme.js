@@ -27,6 +27,15 @@ export const DEFAULT_THEME = {
     vfx: 1,
     speed: 1,
   },
+  // Reward themes (achievement unlocks, see utils/themeUnlocks.js). The
+  // chosen mode only applies when unlocked — gating happens in RewardVfx.
+  rewards: {
+    mode: 'none',
+    color: '#7cff45',
+    density: 0.5,
+    intensity: 0.5,
+    pixelFont: true,
+  },
 };
 
 export const THEME_PRESETS = [
@@ -455,12 +464,31 @@ function sanitizeHexColor(value, fallback) {
   return /^#[0-9a-fA-F]{6}$/.test(cleaned) ? cleaned : fallback;
 }
 
+const REWARD_MODE_IDS = ['none', 'knowledge', 'ballonomics', 'retro', 'premium', 'admin'];
+
+function sanitizeRewards(rewards) {
+  const r = { ...DEFAULT_THEME.rewards, ...(rewards || {}) };
+  r.mode = REWARD_MODE_IDS.includes(r.mode) ? r.mode : 'none';
+  r.color = sanitizeHexColor(r.color, DEFAULT_THEME.rewards.color);
+  const clamp01 = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : 0.5;
+  };
+  r.density = clamp01(r.density);
+  r.intensity = clamp01(r.intensity);
+  r.pixelFont = Boolean(r.pixelFont);
+  // Particle glyph: short string (emoji/text), max 3 code points.
+  r.glyph = typeof r.glyph === 'string' ? [...r.glyph.trim()].slice(0, 3).join('') : '';
+  return r;
+}
+
 function sanitizeTheme(theme) {
   const merged = {
     ...DEFAULT_THEME,
     ...theme,
     colors: { ...DEFAULT_THEME.colors, ...(theme?.colors || {}) },
     effects: { ...DEFAULT_THEME.effects, ...(theme?.effects || {}) },
+    rewards: sanitizeRewards(theme?.rewards),
   };
 
   Object.keys(DEFAULT_THEME.colors).forEach((key) => {
@@ -501,6 +529,9 @@ export function applyTheme(theme) {
   const merged = mergeTheme(theme);
   const root = document.documentElement;
   const { colors, effects } = merged;
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('apex-theme-updated', { detail: merged }));
+  }
 
   root.style.setProperty('--bg', colors.bg);
   root.style.setProperty('--bg-elevated', colors.bgElevated);
