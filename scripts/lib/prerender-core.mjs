@@ -72,6 +72,7 @@ addRoute('/minigames/ball-knowledge', { title: 'Ball Knowledge — daily reset t
 addRoute('/minigames/ballonomics', { title: 'Ballonomics — higher or lower values game', priority: '0.5' });
 addRoute('/minigames/balling', { title: 'Balling — pixel reveal guessing game', priority: '0.5' });
 addRoute('/credits', { title: 'Credits', priority: '0.3' });
+addRoute('/privacy', { title: 'Privacy Policy', priority: '0.3' });
 addRoute('/wiki', { title: 'WIKI — Ball Tower Defense database', priority: '0.9' });
 addRoute('/wiki/compare', { title: 'Compare Units', priority: '0.5' });
 addRoute('/wiki/leaderboards', { title: 'Unit Leaderboards', priority: '0.5' });

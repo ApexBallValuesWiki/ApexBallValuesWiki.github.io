@@ -149,6 +149,16 @@ export default function App() {
       <ErrorBoundary>
         <AppRoutes />
       </ErrorBoundary>
+      <footer className="site-footer">
+        <span>
+          Apex WIKI &amp; Values — fan-made companion for Ball Tower Defense. Not affiliated with Cash Grab Studios.
+        </span>
+        <span className="site-footer-links">
+          <a href="/privacy">Privacy Policy</a>
+          <span aria-hidden="true">·</span>
+          <a href="/credits">Credits</a>
+        </span>
+      </footer>
     </SmoothScroll>
   );
 }
