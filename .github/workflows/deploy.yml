@@ -23,13 +23,28 @@ jobs:
         with:
           node-version: 22
       - run: npm ci
+      # User/org pages repos (OWNER.github.io) serve from the site ROOT, so the
+      # build base must be "/" there; project repos serve from /<repo>/.
+      - name: Compute Pages base path + site URL
+        id: pages
+        run: |
+          OWNER="${{ github.event.repository.owner.login }}"
+          REPO="${{ github.event.repository.name }}"
+          if [ "$REPO" = "$OWNER.github.io" ]; then
+            echo "base=/" >> "$GITHUB_OUTPUT"
+            echo "site=https://$OWNER.github.io" >> "$GITHUB_OUTPUT"
+          else
+            echo "base=/$REPO/" >> "$GITHUB_OUTPUT"
+            echo "site=https://$OWNER.github.io/$REPO" >> "$GITHUB_OUTPUT"
+          fi
       # Social cards stay gitignored (regenerable artifacts) — build them in
       # CI so every deploy ships og:image previews without committing ~30 MB
       # of PNGs to the repo.
       - run: npm run cards
       - run: npm run build
         env:
-          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_BASE_PATH: ${{ steps.pages.outputs.base }}
+          VITE_SITE_URL: ${{ steps.pages.outputs.site }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
