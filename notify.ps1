@@ -1,9 +1,17 @@
 # =============================================================================
-# notify.ps1 - posts a "new version" announcement to the APEX Discord webhook.
-# Called automatically by push.cmd, or run it on its own:
+# notify.ps1 - posts an "Apex WIKI & Values updated" announcement to Discord.
+#
+# THE WEBHOOK URL IS NO LONGER IN THIS FILE (it was exposed once - never again).
+# It is read from, in order:
+#   1. the -Webhook parameter
+#   2. the APEX_DISCORD_WEBHOOK environment variable
+#   3. webhook.txt sitting next to this script  <-- recommended
+#
+# Create the webhook: Discord server -> Server Settings -> Integrations ->
+# Webhooks -> New Webhook -> Copy URL, then paste it into webhook.txt.
+# webhook.txt is gitignored - push.cmd can never commit it.
 #
 #   powershell -NoProfile -ExecutionPolicy Bypass -File notify.ps1
-#   powershell -NoProfile -ExecutionPolicy Bypass -File notify.ps1 -Message "New units added" -Title "Values update"
 #   powershell -NoProfile -ExecutionPolicy Bypass -File notify.ps1 -DryRun
 #       (prints the payload, sends nothing - safe to test)
 # =============================================================================
@@ -11,11 +19,24 @@
 param(
   [string]$Title   = "Apex WIKI & Values updated",
   [string]$Message = "",
-  [string]$Webhook = "https://discord.com/api/webhooks/1530560657848533163/fSAs2a2OGZW-b1uTA0RYbrllFbJZ7FcFQ7Jf_6JWT6nj5gUlVdaIuuSN3515I_3a4Q-a",
+  [string]$Webhook = "",
   [switch]$DryRun
 )
 
 $ErrorActionPreference = "Stop"
+
+# --- resolve the webhook (env var -> webhook.txt) -----------------------------
+if (-not $Webhook) { $Webhook = $env:APEX_DISCORD_WEBHOOK }
+if (-not $Webhook) {
+  $txt = Join-Path $PSScriptRoot "webhook.txt"
+  if (Test-Path $txt) { $Webhook = (Get-Content $txt -Raw).Trim() }
+}
+if (-not $Webhook -or $Webhook -notmatch "^https://") {
+  Write-Output "No webhook configured - announce skipped."
+  Write-Output "To enable: create webhook.txt next to notify.ps1 with your Discord"
+  Write-Output "webhook URL (Discord -> Server Settings -> Integrations -> Webhooks)."
+  exit 1
+}
 
 # --- helpers ------------------------------------------------------------------
 

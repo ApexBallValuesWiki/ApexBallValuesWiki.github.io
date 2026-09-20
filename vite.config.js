@@ -15,6 +15,11 @@ export default defineConfig({
   preview: {
     allowedHosts: true,
   },
+  server: {
+    // Dev-only: allow testing with the production hostname mapped locally
+    // (e.g. --host-resolver-rules) — never used in production builds.
+    allowedHosts: ['apexballvalueswiki.github.io'],
+  },
   build: {
     // Split large third-party libraries into their own chunks so the main
     // app bundle stays small and vendor code (which rarely changes) can be

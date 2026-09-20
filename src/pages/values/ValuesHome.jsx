@@ -48,7 +48,7 @@ export default function ValuesHome() {
         <UnitExplorer section="values" />
       </div>
 
-      <AdSlot slotId="2911497117" />
+      <AdSlot slotId="2911497117" ready={!loading} />
     </PageShell>
   );
 }

@@ -25,3 +25,6 @@ dist-ssr
 
 # Generated social-card PNGs are recreated by npm run cards
 /public/social/
+
+# Discord webhook for notify.ps1 - NEVER commit this file
+webhook.txt

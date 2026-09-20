@@ -14,6 +14,7 @@ import RouteEffects from './components/RouteEffects';
 import FirstTimeTutorial from './components/FirstTimeTutorial';
 import AchievementPopup from './components/AchievementPopup';
 import AppRoutes from './AppRoutes';
+import { setAdsEnabled } from './utils/ads';
 import AccessGate, { MaintenancePage } from './components/SiteGate';
 import ErrorBoundary from './components/ErrorBoundary';
 import { fetchMaintenanceStatus } from './utils/apexClient';
@@ -43,7 +44,11 @@ export default function App() {
     let alive = true;
     const refresh = async () => {
       const state = await fetchMaintenanceStatus();
-      if (alive) setMaintenance({ on: !!state.on, message: state.message || '', loading: false });
+      if (alive) {
+        setMaintenance({ on: !!state.on, message: state.message || '', loading: false });
+        // AdSense policy: ads only when maintenance is confirmed OFF.
+        setAdsEnabled(!state.on);
+      }
     };
     refresh();
     const pollId = window.setInterval(refresh, 30000);

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-07T23:23:33.743Z",
+  "timestamp": "2026-09-20T10:02:58.696Z",
   "valueOverrides": {
     "urchinball": {
       "baseValue": 35,
@@ -110,28 +110,28 @@
       "updated_at": "2026-07-23T21:05:23.467Z"
     },
     "shiny-queenofhearts": {
-      "baseValue": 211500000,
+      "baseValue": "O/C",
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
-      "demand": "Above Average",
+      "demand": "High",
       "scarcity": "Rare",
       "trend": "stable",
-      "gems": 180700000,
-      "coins": 8150000000,
-      "updated_at": "2026-07-23T21:11:57.739Z"
+      "gems": "O/C",
+      "coins": "O/C",
+      "updated_at": "2026-09-11T15:27:59.468Z"
     },
     "shiny-mechaball": {
-      "baseValue": 108400000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
+      "baseValue": 115000000,
+      "baseValueMax": 125000000,
+      "gemsMax": 115000000,
+      "coinsMax": 6250000000,
       "demand": "Very High",
       "scarcity": "Rare",
       "trend": "stable",
-      "gems": 103700000,
-      "coins": 5700000000,
-      "updated_at": "2026-07-22T10:45:20.309+00:00"
+      "gems": 105000000,
+      "coins": 5750000000,
+      "updated_at": "2026-09-11T15:20:16.935Z"
     },
     "shiny-fireball": {
       "baseValue": 10,
@@ -458,40 +458,40 @@
       "updated_at": "2026-07-20T21:01:51.389+00:00"
     },
     "nightmareball": {
-      "baseValue": 29700000,
-      "baseValueMax": 32700000,
-      "gemsMax": 26200000,
-      "coinsMax": 1900000000,
-      "demand": "Slightly Below Average",
-      "scarcity": "Rare",
+      "baseValue": 13000000,
+      "baseValueMax": 15500000,
+      "gemsMax": 15000000,
+      "coinsMax": 130000000,
+      "demand": "Below Average",
+      "scarcity": "Common",
       "trend": "falling",
-      "gems": 21800000,
-      "coins": 1700000000,
-      "updated_at": "2026-08-31T17:24:15.670Z"
+      "gems": 12600000,
+      "coins": 125000000,
+      "updated_at": "2026-09-18T21:18:47.276Z"
     },
     "shiny-nemisisball": {
-      "baseValue": 224700000,
+      "baseValue": "O/C",
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
-      "demand": "Very Low",
+      "demand": "Abysmal",
       "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 196600000,
-      "coins": 12800000000,
-      "updated_at": "2026-07-23T21:21:50.502Z"
+      "trend": "fluctuating",
+      "gems": "O/C",
+      "coins": "O/C",
+      "updated_at": "2026-09-08T23:35:36.204Z"
     },
     "kingofhearts": {
-      "baseValue": 2200000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Very Low",
+      "baseValue": 1400000,
+      "baseValueMax": 1600000,
+      "gemsMax": 1400000,
+      "coinsMax": 75000000,
+      "demand": "Low",
       "scarcity": "Limited",
-      "trend": "stable",
-      "gems": 1800000,
-      "coins": 110000000,
-      "updated_at": "2026-07-29T05:08:20.472Z"
+      "trend": "fluctuating",
+      "gems": 1200000,
+      "coins": 65000000,
+      "updated_at": "2026-09-08T00:58:35.277Z"
     },
     "shiny-iceball": {
       "baseValue": 10,
@@ -686,28 +686,28 @@
       "updated_at": "2026-07-23T20:53:46.600Z"
     },
     "shadowprince": {
-      "baseValue": 3800000,
-      "baseValueMax": 4200000,
-      "gemsMax": 4000000,
-      "coinsMax": 240000000,
-      "demand": "Low",
+      "baseValue": 2100000,
+      "baseValueMax": 2300000,
+      "gemsMax": 2200000,
+      "coinsMax": 115000000,
+      "demand": "Below Average",
       "scarcity": "Standard",
-      "trend": "stable",
-      "gems": 3600000,
-      "coins": 225000000,
-      "updated_at": "2026-08-29T23:34:26.976Z"
+      "trend": "fluctuating",
+      "gems": 2000000,
+      "coins": 105000000,
+      "updated_at": "2026-09-18T08:54:12.764Z"
     },
     "mechaball": {
-      "baseValue": 2600000,
-      "baseValueMax": 2900000,
-      "gemsMax": 2600000,
-      "coinsMax": 145000000,
-      "demand": "Normal",
+      "baseValue": 1300000,
+      "baseValueMax": 1400000,
+      "gemsMax": 1300000,
+      "coinsMax": 70000000,
+      "demand": "Below Average",
       "scarcity": "Common",
-      "trend": "stable",
-      "gems": 2300000,
-      "coins": 130000000,
-      "updated_at": "2026-09-04T16:57:40.416Z"
+      "trend": "fluctuating",
+      "gems": 1200000,
+      "coins": 65000000,
+      "updated_at": "2026-09-18T21:12:30.409Z"
     },
     "backpacker": {
       "baseValue": 10,
@@ -734,8 +734,8 @@
       "updated_at": "2026-07-20T14:04:14.472+00:00"
     },
     "shiny-laserminigunner-lmg": {
-      "baseValue": 11000000,
-      "baseValueMax": null,
+      "baseValue": 10500000,
+      "baseValueMax": 11000000,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Normal",
@@ -743,7 +743,7 @@
       "trend": "stable",
       "gems": 10000000,
       "coins": 500000000,
-      "updated_at": "2026-07-22T02:38:08.425+00:00"
+      "updated_at": "2026-09-07T23:28:04.039Z"
     },
     "tangoball": {
       "baseValue": 70000,
@@ -866,16 +866,16 @@
       "updated_at": "2026-07-22T16:37:32.382+00:00"
     },
     "forestball": {
-      "baseValue": 3750000,
-      "baseValueMax": 4000000,
-      "gemsMax": 3700000,
-      "coinsMax": 225000000,
-      "demand": "Slightly Above Average",
+      "baseValue": 2500000,
+      "baseValueMax": 2600000,
+      "gemsMax": 2400000,
+      "coinsMax": 130000000,
+      "demand": "Normal",
       "scarcity": "Common",
-      "trend": "stable",
-      "gems": 3400000,
-      "coins": 210000000,
-      "updated_at": "2026-09-07T20:16:13.836Z"
+      "trend": "fluctuating",
+      "gems": 2300000,
+      "coins": 125000000,
+      "updated_at": "2026-09-15T21:11:29.353Z"
     },
     "heartwormball": {
       "baseValue": 400000,
@@ -890,40 +890,40 @@
       "updated_at": "2026-07-14T21:13:42.386+00:00"
     },
     "overclockedoverlord-oco": {
-      "baseValue": 10000000,
-      "baseValueMax": 10500000,
-      "gemsMax": 10000000,
-      "coinsMax": 650000000,
-      "demand": "Slightly Below Average",
-      "scarcity": "Limited",
-      "trend": "stable",
-      "gems": 9500000,
-      "coins": 600000000,
-      "updated_at": "2026-09-04T17:01:45.217Z"
+      "baseValue": 6900000,
+      "baseValueMax": 7100000,
+      "gemsMax": 7000000,
+      "coinsMax": 355000000,
+      "demand": "Below Average",
+      "scarcity": "Common",
+      "trend": "fluctuating",
+      "gems": 6800000,
+      "coins": 345000000,
+      "updated_at": "2026-09-18T21:16:48.047Z"
     },
     "omegaknight-omk": {
-      "baseValue": 3200000,
-      "baseValueMax": 3400000,
-      "gemsMax": 3100000,
-      "coinsMax": 185000000,
-      "demand": "Normal",
-      "scarcity": "Standard",
-      "trend": "stable",
-      "gems": 2800000,
-      "coins": 165000000,
-      "updated_at": "2026-08-31T17:21:46.848Z"
+      "baseValue": 2200000,
+      "baseValueMax": 2300000,
+      "gemsMax": 2200000,
+      "coinsMax": 115000000,
+      "demand": "Below Average",
+      "scarcity": "Common",
+      "trend": "fluctuating",
+      "gems": 2100000,
+      "coins": 110000000,
+      "updated_at": "2026-09-18T21:13:21.898Z"
     },
     "drillerball": {
-      "baseValue": 800000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
+      "baseValue": 570000,
+      "baseValueMax": 625000,
+      "gemsMax": 595000,
+      "coinsMax": 27000000,
       "demand": "Below Average",
       "scarcity": "Standard",
-      "trend": "stable",
-      "gems": 750000,
-      "coins": 65000000,
-      "updated_at": "2026-07-26T14:40:09.341Z"
+      "trend": "falling",
+      "gems": 535000,
+      "coins": 24000000,
+      "updated_at": "2026-09-11T15:56:50.526Z"
     },
     "shiny-heartwormball": {
       "baseValue": 1000000,
@@ -962,28 +962,28 @@
       "updated_at": "2026-07-22T20:45:22.43+00:00"
     },
     "droneball": {
-      "baseValue": 400000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Low",
-      "scarcity": "Common",
-      "trend": "stable",
-      "gems": 360000,
+      "baseValue": 300000,
+      "baseValueMax": 325000,
+      "gemsMax": 300000,
+      "coinsMax": 22500000,
+      "demand": "Below Average",
+      "scarcity": "Standard",
+      "trend": "fluctuating",
+      "gems": 280000,
       "coins": 20000000,
-      "updated_at": "2026-07-23T21:00:28.942Z"
+      "updated_at": "2026-09-08T00:45:12.161Z"
     },
     "jesterball": {
-      "baseValue": 800000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
+      "baseValue": 550000,
+      "baseValueMax": 600000,
+      "gemsMax": 575000,
+      "coinsMax": 27000000,
       "demand": "Normal",
       "scarcity": "Common",
-      "trend": "stable",
-      "gems": 675000,
-      "coins": 50500000,
-      "updated_at": "2026-07-23T21:17:54.279Z"
+      "trend": "falling",
+      "gems": 515000,
+      "coins": 24000000,
+      "updated_at": "2026-09-11T15:57:41.372Z"
     },
     "poseidonball": {
       "baseValue": 1400000,
@@ -998,40 +998,40 @@
       "updated_at": "2026-07-25T02:01:38.179Z"
     },
     "laserminigunner-lmg": {
-      "baseValue": 210000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Above Average",
+      "baseValue": 200000,
+      "baseValueMax": 225000,
+      "gemsMax": 210000,
+      "coinsMax": 13500000,
+      "demand": "Normal",
       "scarcity": "Common",
       "trend": "stable",
-      "gems": 200000,
-      "coins": 15000000,
-      "updated_at": "2026-07-23T21:01:05.593Z"
+      "gems": 190000,
+      "coins": 11500000,
+      "updated_at": "2026-09-08T00:46:15.859Z"
     },
     "mothball": {
-      "baseValue": 1750000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Very Low",
-      "scarcity": "Limited",
+      "baseValue": 875000,
+      "baseValueMax": 1250000,
+      "gemsMax": 1150000,
+      "coinsMax": 53500000,
+      "demand": "Low",
+      "scarcity": "Standard",
       "trend": "falling",
-      "gems": 1300000,
-      "coins": 70000000,
-      "updated_at": "2026-07-23T21:01:58.861Z"
+      "gems": 850000,
+      "coins": 48750000,
+      "updated_at": "2026-09-08T00:50:04.557Z"
     },
     "robosanta": {
-      "baseValue": 500000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Normal",
-      "scarcity": "Standard",
-      "trend": "stable",
-      "gems": 430000,
-      "coins": 27500000,
-      "updated_at": "2026-07-29T05:08:36.238Z"
+      "baseValue": 420000,
+      "baseValueMax": 465000,
+      "gemsMax": 420000,
+      "coinsMax": 27000000,
+      "demand": "Below Average",
+      "scarcity": "Common",
+      "trend": "falling",
+      "gems": 395000,
+      "coins": 24000000,
+      "updated_at": "2026-09-11T15:56:16.139Z"
     },
     "babyball": {
       "baseValue": 5,
@@ -1070,16 +1070,16 @@
       "updated_at": "2026-07-22T16:41:20.714+00:00"
     },
     "shiny-droneball": {
-      "baseValue": 42500000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
+      "baseValue": 35000000,
+      "baseValueMax": 37500000,
+      "gemsMax": 34500000,
+      "coinsMax": 1875000000,
       "demand": "Slightly Below Average",
       "scarcity": "Rare",
       "trend": "stable",
-      "gems": 39100000,
-      "coins": 2500000000,
-      "updated_at": "2026-07-23T21:15:36.763Z"
+      "gems": 32000000,
+      "coins": 1750000000,
+      "updated_at": "2026-09-11T15:46:46.215Z"
     },
     "slinger": {
       "baseValue": 6250,
@@ -1202,28 +1202,28 @@
       "updated_at": "2026-07-15T13:37:24.601+00:00"
     },
     "shiny-mothball": {
-      "baseValue": 4600000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Very Low",
+      "baseValue": 2200000,
+      "baseValueMax": 2550000,
+      "gemsMax": 2300000,
+      "coinsMax": 127500000,
+      "demand": "Low",
       "scarcity": "Standard",
-      "trend": "falling",
-      "gems": 4300000,
-      "coins": 325000000,
-      "updated_at": "2026-07-23T21:15:16.041Z"
+      "trend": "stable",
+      "gems": 1950000,
+      "coins": 110000000,
+      "updated_at": "2026-09-11T15:42:34.061Z"
     },
     "shiny-jesterball": {
-      "baseValue": 26000000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
+      "baseValue": 25000000,
+      "baseValueMax": 26500000,
+      "gemsMax": 23500000,
+      "coinsMax": 1325000000,
       "demand": "Slightly Above Average",
       "scarcity": "Limited",
       "trend": "stable",
-      "gems": 25500000,
-      "coins": 1550000000,
-      "updated_at": "2026-07-26T15:09:26.406Z"
+      "gems": 22000000,
+      "coins": 1250000000,
+      "updated_at": "2026-09-11T15:38:22.370Z"
     },
     "reaper": {
       "baseValue": 100000,
@@ -1286,20 +1286,20 @@
       "updated_at": "2026-07-23T20:55:14.550Z"
     },
     "meteor": {
-      "baseValue": 270000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Slightly Below Average",
-      "scarcity": "Flooded",
-      "trend": "stable",
-      "gems": 230000,
-      "coins": 17500000,
-      "updated_at": "2026-07-29T05:08:46.689Z"
+      "baseValue": 200000,
+      "baseValueMax": 210000,
+      "gemsMax": 190000,
+      "coinsMax": 10500000,
+      "demand": "Normal",
+      "scarcity": "Common",
+      "trend": "falling",
+      "gems": 180000,
+      "coins": 10000000,
+      "updated_at": "2026-09-11T16:01:55.692Z"
     },
     "ball": {
       "baseValue": 1,
-      "baseValueMax": 1,
+      "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
@@ -1307,7 +1307,7 @@
       "trend": "stable",
       "gems": 1,
       "coins": 1,
-      "updated_at": "2026-09-01T21:43:08.487Z"
+      "updated_at": "2026-07-27T10:39:15.284Z"
     },
     "shiny-fancyball": {
       "baseValue": 50000,
@@ -1382,16 +1382,16 @@
       "updated_at": "2026-07-19T14:43:58.227+00:00"
     },
     "zeusball": {
-      "baseValue": 10000000,
-      "baseValueMax": 10500000,
-      "gemsMax": 10200000,
-      "coinsMax": 650000000,
-      "demand": "Slightly Below Average",
-      "scarcity": "Limited",
-      "trend": "stable",
-      "gems": 9650000,
-      "coins": 600000000,
-      "updated_at": "2026-09-04T17:02:13.781Z"
+      "baseValue": 6400000,
+      "baseValueMax": 6700000,
+      "gemsMax": 6600000,
+      "coinsMax": 335000000,
+      "demand": "Below Average",
+      "scarcity": "Common",
+      "trend": "fluctuating",
+      "gems": 6200000,
+      "coins": 320000000,
+      "updated_at": "2026-09-18T21:15:58.270Z"
     },
     "snowmanbuilder": {
       "baseValue": 45000,
@@ -1418,28 +1418,28 @@
       "updated_at": "2026-07-19T14:47:01.002+00:00"
     },
     "shiny-poseidonball": {
-      "baseValue": 93100000,
+      "baseValue": "N/A",
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
-      "demand": "Normal",
+      "demand": "High",
       "scarcity": "Rare",
-      "trend": "rising",
-      "gems": 83300000,
-      "coins": 4370000000,
-      "updated_at": "2026-07-23T21:15:06.660Z"
+      "trend": "stable",
+      "gems": "N/A",
+      "coins": "N/A",
+      "updated_at": "2026-09-11T15:29:56.848Z"
     },
     "shiny-krampusball": {
-      "baseValue": 126000000,
+      "baseValue": "N/A",
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
-      "demand": "Godly",
+      "demand": "High",
       "scarcity": "Rare",
-      "trend": "rising",
-      "gems": 126000000,
-      "coins": 6260000000,
-      "updated_at": "2026-07-23T21:10:48.480Z"
+      "trend": "stable",
+      "gems": "N/A",
+      "coins": "N/A",
+      "updated_at": "2026-09-11T15:30:02.273Z"
     },
     "natureball": {
       "baseValue": 5000,
@@ -1478,16 +1478,16 @@
       "updated_at": "2026-07-19T14:49:28.616+00:00"
     },
     "shiny-robosanta": {
-      "baseValue": 17600000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Slightly Below Average",
+      "baseValue": 13500000,
+      "baseValueMax": 14500000,
+      "gemsMax": 14000000,
+      "coinsMax": 725000000,
+      "demand": "Very Low",
       "scarcity": "Limited",
-      "trend": "stable",
-      "gems": 16500000,
-      "coins": 900000000,
-      "updated_at": "2026-07-19T14:50:35.12+00:00"
+      "trend": "falling",
+      "gems": 13000000,
+      "coins": 675000000,
+      "updated_at": "2026-09-11T15:34:17.676Z"
     },
     "kingball": {
       "baseValue": 8000,
@@ -1514,16 +1514,16 @@
       "updated_at": "2026-07-19T14:51:53.409+00:00"
     },
     "shiny-drillerball": {
-      "baseValue": 50000000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Slightly Below Average",
-      "scarcity": "Rare",
+      "baseValue": 45000000,
+      "baseValueMax": 52500000,
+      "gemsMax": 46500000,
+      "coinsMax": 2625000000,
+      "demand": "Below Average",
+      "scarcity": "Limited",
       "trend": "stable",
-      "gems": 50000000,
-      "coins": 25000000000,
-      "updated_at": "2026-07-19T14:52:10.471+00:00"
+      "gems": 40000000,
+      "coins": 2250000000,
+      "updated_at": "2026-09-11T15:36:55.533Z"
     },
     "geodeball": {
       "baseValue": 12500,
@@ -1538,16 +1538,16 @@
       "updated_at": "2026-07-23T20:54:25.961Z"
     },
     "shiny-meteor": {
-      "baseValue": 3200000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Slightly Below Average",
-      "scarcity": "Limited",
+      "baseValue": 2000000,
+      "baseValueMax": 2350000,
+      "gemsMax": 2100000,
+      "coinsMax": 117500000,
+      "demand": "Low",
+      "scarcity": "Standard",
       "trend": "stable",
-      "gems": 3000000,
-      "coins": 190000000,
-      "updated_at": "2026-07-23T21:13:48.398Z"
+      "gems": 1950000,
+      "coins": 100000000,
+      "updated_at": "2026-09-11T15:42:53.780Z"
     },
     "shiny-brainball": {
       "baseValue": 180000,
@@ -1670,124 +1670,124 @@
       "updated_at": "2026-07-19T15:10:04.064+00:00"
     },
     "wukongball": {
-      "baseValue": 2800000,
-      "baseValueMax": 3000000,
-      "gemsMax": 2800000,
-      "coinsMax": 159800000,
+      "baseValue": 1400000,
+      "baseValueMax": 1500000,
+      "gemsMax": 1400000,
+      "coinsMax": 75000000,
       "demand": "Below Average",
       "scarcity": "Common",
-      "trend": "falling",
-      "gems": 2600000,
-      "coins": 139100000,
-      "updated_at": "2026-08-31T17:19:55.311Z"
+      "trend": "fluctuating",
+      "gems": 1300000,
+      "coins": 70000000,
+      "updated_at": "2026-09-18T21:12:53.089Z"
     },
     "golemball": {
-      "baseValue": 4250000,
-      "baseValueMax": 4500000,
-      "gemsMax": 4000000,
-      "coinsMax": 280000000,
-      "demand": "Normal",
-      "scarcity": "Standard",
-      "trend": "stable",
-      "gems": 3800000,
-      "coins": 250000000,
-      "updated_at": "2026-09-03T22:18:25.619Z"
+      "baseValue": 2500000,
+      "baseValueMax": 2600000,
+      "gemsMax": 2500000,
+      "coinsMax": 130000000,
+      "demand": "Below Average",
+      "scarcity": "Common",
+      "trend": "fluctuating",
+      "gems": 2400000,
+      "coins": 125000000,
+      "updated_at": "2026-09-18T21:17:35.631Z"
     },
     "templeball": {
-      "baseValue": 19500000,
-      "baseValueMax": 21000000,
-      "gemsMax": 19000000,
-      "coinsMax": 1350000000,
-      "demand": "Slightly Above Average",
-      "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 18000000,
-      "coins": 1200000000,
-      "updated_at": "2026-09-07T17:08:39.891Z"
-    },
-    "thefrozenone-tfo": {
-      "baseValue": 2700000,
-      "baseValueMax": 3000000,
-      "gemsMax": 2500000,
-      "coinsMax": 153100000,
-      "demand": "Below Average",
-      "scarcity": "Standard",
-      "trend": "stable",
-      "gems": 2300000,
-      "coins": 142900000,
-      "updated_at": "2026-08-31T17:20:25.844Z"
-    },
-    "voidball": {
-      "baseValue": 3900000,
-      "baseValueMax": 4250000,
-      "gemsMax": 3800000,
-      "coinsMax": 198100000,
-      "demand": "Above Average",
-      "scarcity": "Common",
-      "trend": "stable",
-      "gems": 3400000,
-      "coins": 178300000,
-      "updated_at": "2026-08-31T17:20:57.565Z"
-    },
-    "shiny-golemball": {
-      "baseValue": 256800000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Extremely High",
-      "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 252100000,
-      "coins": 12600000000,
-      "updated_at": "2026-07-22T02:12:30.861+00:00"
-    },
-    "shiny-mummyball": {
-      "baseValue": 36000000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
+      "baseValue": 17500000,
+      "baseValueMax": 18500000,
+      "gemsMax": 17750000,
+      "coinsMax": 925000000,
       "demand": "Slightly Below Average",
       "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 35000000,
-      "coins": 2300000000,
-      "updated_at": "2026-07-26T15:08:38.601Z"
+      "trend": "fluctuating",
+      "gems": 16500000,
+      "coins": 875000000,
+      "updated_at": "2026-09-18T21:23:46.165Z"
     },
-    "shiny-zeusball": {
-      "baseValue": 208100000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Godly",
-      "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 180400000,
-      "coins": 11100000000,
-      "updated_at": "2026-07-22T10:50:59.229+00:00"
+    "thefrozenone-tfo": {
+      "baseValue": 1800000,
+      "baseValueMax": 2000000,
+      "gemsMax": 1900000,
+      "coinsMax": 100000000,
+      "demand": "Below Average",
+      "scarcity": "Common",
+      "trend": "fluctuating",
+      "gems": 1700000,
+      "coins": 90000000,
+      "updated_at": "2026-09-18T21:11:46.043Z"
     },
-    "shiny-wukongball": {
-      "baseValue": 210100000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Extremely High",
-      "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 172700000,
-      "coins": 11650000000,
-      "updated_at": "2026-07-22T02:00:33.852+00:00"
+    "voidball": {
+      "baseValue": 2200000,
+      "baseValueMax": 2400000,
+      "gemsMax": 2300000,
+      "coinsMax": 120000000,
+      "demand": "High",
+      "scarcity": "Standard",
+      "trend": "fluctuating",
+      "gems": 2100000,
+      "coins": 110000000,
+      "updated_at": "2026-09-18T08:53:41.965Z"
     },
-    "shiny-voidball": {
-      "baseValue": 103700000,
+    "shiny-golemball": {
+      "baseValue": "O/C",
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Very High",
       "scarcity": "Rare",
+      "trend": "fluctuating",
+      "gems": "O/C",
+      "coins": "O/C",
+      "updated_at": "2026-09-08T23:37:16.886Z"
+    },
+    "shiny-mummyball": {
+      "baseValue": 36500000,
+      "baseValueMax": 39000000,
+      "gemsMax": 35750000,
+      "coinsMax": 1950000000,
+      "demand": "Below Average",
+      "scarcity": "Rare",
       "trend": "stable",
-      "gems": 99000000,
-      "coins": 5200000000,
-      "updated_at": "2026-07-22T02:18:34.614+00:00"
+      "gems": 34250000,
+      "coins": 1825000000,
+      "updated_at": "2026-09-11T15:52:01.206Z"
+    },
+    "shiny-zeusball": {
+      "baseValue": "N/A",
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
+      "demand": "Godly",
+      "scarcity": "Rare",
+      "trend": "fluctuating",
+      "gems": "N/A",
+      "coins": "N/A",
+      "updated_at": "2026-09-11T15:18:03.616Z"
+    },
+    "shiny-wukongball": {
+      "baseValue": "O/C",
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
+      "demand": "High",
+      "scarcity": "Rare",
+      "trend": "stable",
+      "gems": "O/C",
+      "coins": "O/C",
+      "updated_at": "2026-09-11T15:21:29.716Z"
+    },
+    "shiny-voidball": {
+      "baseValue": 105000000,
+      "baseValueMax": 115000000,
+      "gemsMax": 110000000,
+      "coinsMax": 5750000000,
+      "demand": "Very High",
+      "scarcity": "Rare",
+      "trend": "stable",
+      "gems": 100000000,
+      "coins": 5250000000,
+      "updated_at": "2026-09-11T15:25:05.367Z"
     },
     "shiny-omegaknight-omk": {
       "baseValue": 175700008,
@@ -1802,76 +1802,76 @@
       "updated_at": "2026-07-22T02:21:03.603+00:00"
     },
     "shiny-forestball": {
-      "baseValue": 256800000,
+      "baseValue": "O/C",
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Extremely High",
       "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 252100000,
-      "coins": 12600000000,
-      "updated_at": "2026-07-22T02:28:09.098+00:00"
+      "trend": "fluctuating",
+      "gems": "O/C",
+      "coins": "O/C",
+      "updated_at": "2026-09-08T23:37:11.028Z"
     },
     "shiny-showmanball": {
-      "baseValue": 39000000,
+      "baseValue": "O/C",
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
+      "demand": "High",
+      "scarcity": "Rare",
+      "trend": "stable",
+      "gems": "O/C",
+      "coins": "O/C",
+      "updated_at": "2026-09-11T15:30:19.836Z"
+    },
+    "shiny-tabletmonkey": {
+      "baseValue": 12000000,
+      "baseValueMax": 12750000,
+      "gemsMax": 12000000,
+      "coinsMax": 637500000,
+      "demand": "Low",
+      "scarcity": "Rare",
+      "trend": "stable",
+      "gems": 11500000,
+      "coins": 600000000,
+      "updated_at": "2026-09-11T15:54:55.245Z"
+    },
+    "shiny-blizzardball": {
+      "baseValue": 38000000,
+      "baseValueMax": 40500000,
+      "gemsMax": 37000000,
+      "coinsMax": 2025000000,
+      "demand": "Normal",
+      "scarcity": "Limited",
+      "trend": "stable",
+      "gems": 33000000,
+      "coins": 1900000000,
+      "updated_at": "2026-09-11T15:49:22.375Z"
+    },
+    "shiny-plasmaball": {
+      "baseValue": 4500000,
+      "baseValueMax": 5200000,
+      "gemsMax": 4800000,
+      "coinsMax": 260000000,
+      "demand": "Very Low",
+      "scarcity": "Rare",
+      "trend": "stable",
+      "gems": 4200000,
+      "coins": 225000000,
+      "updated_at": "2026-09-11T15:44:38.759Z"
+    },
+    "shiny-thefrozenone-tfo": {
+      "baseValue": "N/A",
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Above Average",
       "scarcity": "Rare",
       "trend": "stable",
-      "gems": 40000000,
-      "coins": 2000000000,
-      "updated_at": "2026-07-23T21:15:27.393Z"
-    },
-    "shiny-tabletmonkey": {
-      "baseValue": 17000000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Below Average",
-      "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 16000000,
-      "coins": 950000000,
-      "updated_at": "2026-07-23T21:15:22.907Z"
-    },
-    "shiny-blizzardball": {
-      "baseValue": 48000000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Below Average",
-      "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 45000000,
-      "coins": 2400000000,
-      "updated_at": "2026-07-26T15:09:43.083Z"
-    },
-    "shiny-plasmaball": {
-      "baseValue": 5500000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Below Average",
-      "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 5000000,
-      "coins": 420000000,
-      "updated_at": "2026-07-23T21:16:17.057Z"
-    },
-    "shiny-thefrozenone-tfo": {
-      "baseValue": 127300000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Very High",
-      "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 118000000,
-      "coins": 6170000000,
-      "updated_at": "2026-07-27T16:32:46.413Z"
+      "gems": "N/A",
+      "coins": "N/A",
+      "updated_at": "2026-09-11T15:21:02.344Z"
     },
     "shiny-ball": {
       "baseValue": 10,
@@ -2402,16 +2402,16 @@
       "updated_at": "2026-07-19T16:04:00.503+00:00"
     },
     "frutigerball": {
-      "baseValue": 400000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Low",
+      "baseValue": 250000,
+      "baseValueMax": 300000,
+      "gemsMax": 275000,
+      "coinsMax": 17500000,
+      "demand": "Below Average",
       "scarcity": "Standard",
-      "trend": "falling",
-      "gems": 350000,
-      "coins": 25000000,
-      "updated_at": "2026-07-29T05:08:25.589Z"
+      "trend": "fluctuating",
+      "gems": 225000,
+      "coins": 15000000,
+      "updated_at": "2026-09-08T00:59:41.786Z"
     },
     "shiny-laserball": {
       "baseValue": 3000,
@@ -2474,16 +2474,16 @@
       "updated_at": "2026-07-23T20:53:19.616Z"
     },
     "shiny-overclockedoverlord-oco": {
-      "baseValue": 205400000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Extremely High",
+      "baseValue": 220000000,
+      "baseValueMax": 230000000,
+      "gemsMax": 220000000,
+      "coinsMax": 11500000000,
+      "demand": "High",
       "scarcity": "Rare",
       "trend": "stable",
-      "gems": 172700000,
-      "coins": 10310000000,
-      "updated_at": "2026-07-22T10:50:14.049+00:00"
+      "gems": 210000000,
+      "coins": 11000000000,
+      "updated_at": "2026-09-11T15:26:33.652Z"
     },
     "ball-2-0": {
       "baseValue": 5,
@@ -2510,28 +2510,28 @@
       "updated_at": "2026-07-22T10:52:54.101+00:00"
     },
     "shiny-templeball": {
-      "baseValue": 416200000,
+      "baseValue": "O/C",
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Godly",
       "scarcity": "Rare",
       "trend": "stable",
-      "gems": 346800000,
-      "coins": 20800000000,
-      "updated_at": "2026-07-22T10:51:44.657+00:00"
+      "gems": "O/C",
+      "coins": "O/C",
+      "updated_at": "2026-09-11T15:21:34.155Z"
     },
     "plasmaball": {
-      "baseValue": 200000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Extremely Low",
-      "scarcity": "Standard",
+      "baseValue": 125000,
+      "baseValueMax": 175000,
+      "gemsMax": 150000,
+      "coinsMax": 11750000,
+      "demand": "Low",
+      "scarcity": "Common",
       "trend": "stable",
-      "gems": 180000,
-      "coins": 10000000,
-      "updated_at": "2026-07-29T05:08:54.888Z"
+      "gems": 100000,
+      "coins": 9000000,
+      "updated_at": "2026-09-08T00:44:03.883Z"
     },
     "tabletmonkey": {
       "baseValue": 200000,
@@ -2582,16 +2582,16 @@
       "updated_at": "2026-07-19T21:36:23.401+00:00"
     },
     "fabledsurfer": {
-      "baseValue": 2500000,
-      "baseValueMax": 2700000,
-      "gemsMax": 2500000,
-      "coinsMax": 139100000,
+      "baseValue": 1200000,
+      "baseValueMax": 1300000,
+      "gemsMax": 1200000,
+      "coinsMax": 65000000,
       "demand": "Below Average",
       "scarcity": "Common",
-      "trend": "stable",
-      "gems": 2300000,
-      "coins": 128800000,
-      "updated_at": "2026-08-30T16:43:04.390Z"
+      "trend": "fluctuating",
+      "gems": 1100000,
+      "coins": 60000000,
+      "updated_at": "2026-09-18T21:19:29.160Z"
     },
     "scarecrowball": {
       "baseValue": 20000,
@@ -2630,40 +2630,40 @@
       "updated_at": "2026-07-23T21:05:17.757Z"
     },
     "shiny-kingofhearts": {
-      "baseValue": 7000000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
+      "baseValue": 5500000,
+      "baseValueMax": 6250000,
+      "gemsMax": 6000000,
+      "coinsMax": 312500000,
       "demand": "Below Average",
       "scarcity": "Rare",
       "trend": "stable",
-      "gems": 6500000,
-      "coins": 350000000,
-      "updated_at": "2026-07-21T20:17:54.007+00:00"
+      "gems": 5250000,
+      "coins": 275000000,
+      "updated_at": "2026-09-11T15:31:57.638Z"
     },
     "shiny-cube": {
-      "baseValue": 232500000,
+      "baseValue": "O/C",
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
-      "demand": "Low",
+      "demand": "Abysmal",
       "scarcity": "Rare",
       "trend": "stable",
-      "gems": 197100000,
-      "coins": 10100000000,
-      "updated_at": "2026-07-23T21:21:17.179Z"
+      "gems": "O/C",
+      "coins": "O/C",
+      "updated_at": "2026-09-08T23:23:02.268Z"
     },
     "shiny-fabledsurfer": {
-      "baseValue": 162000000,
-      "baseValueMax": 185000000,
+      "baseValue": "O/C",
+      "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
-      "demand": "Godly",
+      "demand": "Very High",
       "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 130000000,
-      "coins": 6500000000,
-      "updated_at": "2026-08-30T08:42:09.682Z"
+      "trend": "fluctuating",
+      "gems": "O/C",
+      "coins": "O/C",
+      "updated_at": "2026-09-08T23:37:32.014Z"
     },
     "shiny-poisonball": {
       "baseValue": 50,
@@ -2786,16 +2786,16 @@
       "updated_at": "2026-07-29T05:09:16.189Z"
     },
     "krampusball": {
-      "baseValue": 6500000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Below Average",
+      "baseValue": 4500000,
+      "baseValueMax": 5250000,
+      "gemsMax": 5000000,
+      "coinsMax": 270000000,
+      "demand": "Low",
       "scarcity": "Limited",
-      "trend": "stable",
-      "gems": 6000000,
-      "coins": 325000000,
-      "updated_at": "2026-07-29T05:08:32.223Z"
+      "trend": "falling",
+      "gems": 4250000,
+      "coins": 245000000,
+      "updated_at": "2026-09-08T00:39:41.806Z"
     },
     "adball": {
       "baseValue": 35,
@@ -3722,16 +3722,16 @@
       "updated_at": "2026-07-23T21:10:02.614Z"
     },
     "shiny-frutigerball": {
-      "baseValue": 93100000,
+      "baseValue": "N/A",
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
-      "demand": "Normal",
+      "demand": "Very High",
       "scarcity": "Rare",
       "trend": "stable",
-      "gems": 83300000,
-      "coins": 4370000000,
-      "updated_at": "2026-07-23T21:13:01.993Z"
+      "gems": "N/A",
+      "coins": "N/A",
+      "updated_at": "2026-09-11T15:27:46.804Z"
     },
     "nemesis": {
       "baseValue": 0,
@@ -3794,172 +3794,172 @@
       "updated_at": "2026-08-28T20:20:52.031Z"
     },
     "shiny-nightmareball": {
-      "baseValue": 280000000,
+      "baseValue": "N/A",
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Godly",
       "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 260000000,
-      "coins": 14760000000,
-      "updated_at": "2026-07-24T16:11:45.515Z"
+      "trend": "fluctuating",
+      "gems": "N/A",
+      "coins": "N/A",
+      "updated_at": "2026-09-08T23:37:47.938Z"
     },
     "shiny-parrotball": {
-      "baseValue": 20000,
-      "baseValueMax": 22500,
-      "gemsMax": 17500,
-      "coinsMax": 2150000,
-      "demand": "Abysmal",
-      "scarcity": "Limited",
-      "trend": "falling",
-      "gems": 15000,
-      "coins": 1950000,
-      "updated_at": "2026-08-31T22:58:37.041Z"
+      "baseValue": 1,
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
+      "demand": "Normal",
+      "scarcity": "Standard",
+      "trend": "stable",
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-08-31T17:52:54.948Z"
     },
     "appletreeball": {
-      "baseValue": 2500000,
-      "baseValueMax": 3500000,
-      "gemsMax": 2875000,
-      "coinsMax": 195000000,
-      "demand": "Below Average",
-      "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 2000000,
-      "coins": 115000000,
-      "updated_at": "2026-09-01T17:24:24.215Z"
-    },
-    "moonlightball": {
-      "baseValue": 2000000,
+      "baseValue": 2400000,
       "baseValueMax": 2750000,
-      "gemsMax": 2450000,
-      "coinsMax": 137500000,
+      "gemsMax": 2500000,
+      "coinsMax": 140000000,
       "demand": "Very Low",
       "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 1750000,
-      "coins": 85000000,
-      "updated_at": "2026-09-01T17:25:55.661Z"
+      "trend": "falling",
+      "gems": 2150000,
+      "coins": 125000000,
+      "updated_at": "2026-09-08T01:02:48.683Z"
+    },
+    "moonlightball": {
+      "baseValue": 2400000,
+      "baseValueMax": 2750000,
+      "gemsMax": 2500000,
+      "coinsMax": 140000000,
+      "demand": "Very Low",
+      "scarcity": "Rare",
+      "trend": "falling",
+      "gems": 2150000,
+      "coins": 125000000,
+      "updated_at": "2026-09-08T01:02:44.874Z"
     },
     "islandball": {
       "baseValue": 300000,
-      "baseValueMax": 500000,
-      "gemsMax": 425000,
-      "coinsMax": 29500000,
-      "demand": "Slightly Above Average",
-      "scarcity": "Common",
-      "trend": "stable",
+      "baseValueMax": 325000,
+      "gemsMax": 300000,
+      "coinsMax": 22500000,
+      "demand": "Slightly Below Average",
+      "scarcity": "Standard",
+      "trend": "falling",
       "gems": 275000,
-      "coins": 22500000,
-      "updated_at": "2026-09-01T17:27:32.157Z"
+      "coins": 20000000,
+      "updated_at": "2026-09-08T01:00:46.119Z"
     },
     "flyingdutchmanball": {
       "baseValue": 300000,
-      "baseValueMax": 500000,
-      "gemsMax": 425000,
-      "coinsMax": 29500000,
-      "demand": "Slightly Above Average",
-      "scarcity": "Common",
-      "trend": "stable",
+      "baseValueMax": 325000,
+      "gemsMax": 300000,
+      "coinsMax": 22500000,
+      "demand": "Slightly Below Average",
+      "scarcity": "Standard",
+      "trend": "falling",
       "gems": 275000,
-      "coins": 22500000,
-      "updated_at": "2026-09-01T17:27:42.859Z"
+      "coins": 20000000,
+      "updated_at": "2026-09-08T01:00:42.241Z"
     },
     "shiny-appletreeball": {
-      "baseValue": 86500000,
-      "baseValueMax": 105000000,
-      "gemsMax": 89500000,
-      "coinsMax": 4250000000,
-      "demand": "Godly",
-      "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 78500000,
-      "coins": 3850000000,
-      "updated_at": "2026-09-01T17:29:35.620Z"
-    },
-    "shiny-moonlightball": {
-      "baseValue": 86500000,
-      "baseValueMax": 105000000,
-      "gemsMax": 89500000,
-      "coinsMax": 4250000000,
-      "demand": "Godly",
-      "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 78500000,
-      "coins": 3850000000,
-      "updated_at": "2026-09-01T17:35:51.789Z"
-    },
-    "shiny-flyingdutchmanball": {
-      "baseValue": 46500000,
-      "baseValueMax": 55000000,
-      "gemsMax": 42500000,
-      "coinsMax": 2250000000,
-      "demand": "Godly",
-      "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 38500000,
-      "coins": 1850000000,
-      "updated_at": "2026-09-01T17:30:59.702Z"
-    },
-    "shiny-islandball": {
-      "baseValue": 52500000,
-      "baseValueMax": 55000000,
-      "gemsMax": 49500000,
-      "coinsMax": 2450000000,
-      "demand": "Above Average",
-      "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 46500000,
-      "coins": 2150000000,
-      "updated_at": "2026-09-01T17:31:54.555Z"
-    },
-    "voodooball": {
-      "baseValue": 2650000,
-      "baseValueMax": 3250000,
-      "gemsMax": 2950000,
-      "coinsMax": 150000000,
-      "demand": "Low",
-      "scarcity": "Limited",
-      "trend": "stable",
-      "gems": 2350000,
-      "coins": 135000000,
-      "updated_at": "2026-09-01T17:35:14.222Z"
-    },
-    "shiny-voodooball": {
-      "baseValue": 76500000,
-      "baseValueMax": 85000000,
-      "gemsMax": 73500000,
-      "coinsMax": 3650000000,
-      "demand": "Godly",
-      "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 68500000,
-      "coins": 2950000000,
-      "updated_at": "2026-09-01T17:36:36.354Z"
-    },
-    "corruptmalware": {
-      "baseValue": 22500000,
-      "baseValueMax": 27500000,
-      "gemsMax": 24500000,
-      "coinsMax": 1550000000,
-      "demand": "Slightly Above Average",
-      "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 19750000,
-      "coins": 1400000000,
-      "updated_at": "2026-09-01T17:38:28.928Z"
-    },
-    "shiny-corruptmalware": {
-      "baseValue": "O/C",
+      "baseValue": "N/A",
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
-      "demand": "Abysmal",
-      "scarcity": "Flooded",
+      "demand": "High",
+      "scarcity": "Rare",
       "trend": "stable",
-      "gems": "O/C",
-      "coins": "O/C",
-      "updated_at": "2026-09-01T22:34:51.986Z"
+      "gems": "N/A",
+      "coins": "N/A",
+      "updated_at": "2026-09-11T15:27:24.728Z"
+    },
+    "shiny-moonlightball": {
+      "baseValue": "N/A",
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
+      "demand": "High",
+      "scarcity": "Rare",
+      "trend": "stable",
+      "gems": "N/A",
+      "coins": "N/A",
+      "updated_at": "2026-09-11T15:27:20.509Z"
+    },
+    "shiny-flyingdutchmanball": {
+      "baseValue": "N/A",
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
+      "demand": "Very High",
+      "scarcity": "Rare",
+      "trend": "stable",
+      "gems": "N/A",
+      "coins": "N/A",
+      "updated_at": "2026-09-11T15:28:15.761Z"
+    },
+    "shiny-islandball": {
+      "baseValue": 65000000,
+      "baseValueMax": 72000000,
+      "gemsMax": 64000000,
+      "coinsMax": 3600500000,
+      "demand": "Below Average",
+      "scarcity": "Rare",
+      "trend": "stable",
+      "gems": 55000000,
+      "coins": 3250000000,
+      "updated_at": "2026-09-11T15:33:01.960Z"
+    },
+    "voodooball": {
+      "baseValue": 2200000,
+      "baseValueMax": 2500000,
+      "gemsMax": 2300000,
+      "coinsMax": 115000000,
+      "demand": "Low",
+      "scarcity": "Limited",
+      "trend": "stable",
+      "gems": 2100000,
+      "coins": 105000000,
+      "updated_at": "2026-09-08T01:03:44.804Z"
+    },
+    "shiny-voodooball": {
+      "baseValue": "N/A",
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
+      "demand": "Above Average",
+      "scarcity": "Rare",
+      "trend": "stable",
+      "gems": "N/A",
+      "coins": "N/A",
+      "updated_at": "2026-09-11T15:30:52.102Z"
+    },
+    "corruptmalware": {
+      "baseValue": 12000000,
+      "baseValueMax": 13000000,
+      "gemsMax": 12000000,
+      "coinsMax": 650000000,
+      "demand": "Below Average",
+      "scarcity": "Common",
+      "trend": "falling",
+      "gems": 11000000,
+      "coins": 600000000,
+      "updated_at": "2026-09-18T21:19:47.469Z"
+    },
+    "shiny-corruptmalware": {
+      "baseValue": "N/A",
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
+      "demand": "Godly",
+      "scarcity": "Rare",
+      "trend": "fluctuating",
+      "gems": "N/A",
+      "coins": "N/A",
+      "updated_at": "2026-09-08T23:37:44.244Z"
     },
     "shiny-popdropball": {
       "baseValue": "N/A",
@@ -3984,6 +3984,90 @@
       "gems": "N/A",
       "coins": "N/A",
       "updated_at": "2026-09-07T20:56:30.882Z"
+    },
+    "cube": {
+      "baseValue": "N/A",
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
+      "demand": "Extremely Low",
+      "scarcity": "Rare",
+      "trend": "stable",
+      "gems": "N/A",
+      "coins": "N/A",
+      "updated_at": "2026-09-08T23:26:15.833Z"
+    },
+    "spawnpointball": {
+      "baseValue": 260000000,
+      "baseValueMax": 261000000,
+      "gemsMax": 227000000,
+      "coinsMax": null,
+      "demand": "Abysmal",
+      "scarcity": "Rare",
+      "trend": "stable",
+      "gems": 220000000,
+      "coins": 11150000000,
+      "updated_at": "2026-09-08T23:32:35.467Z"
+    },
+    "shiny-spawnpointball": {
+      "baseValue": "O/C",
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
+      "demand": "Abysmal",
+      "scarcity": "Rare",
+      "trend": "stable",
+      "gems": "O/C",
+      "coins": "O/C",
+      "updated_at": "2026-09-08T23:32:50.780Z"
+    },
+    "fakeopgrassman": {
+      "baseValue": "N/A",
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
+      "demand": "Abysmal",
+      "scarcity": "Rare",
+      "trend": "stable",
+      "gems": "N/A",
+      "coins": "N/A",
+      "updated_at": "2026-09-08T23:34:14.350Z"
+    },
+    "shiny-fakeopgrassman": {
+      "baseValue": "N/A",
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
+      "demand": "Abysmal",
+      "scarcity": "Rare",
+      "trend": "stable",
+      "gems": "N/A",
+      "coins": "N/A",
+      "updated_at": "2026-09-08T23:34:22.714Z"
+    },
+    "opgrassman": {
+      "baseValue": "N/A",
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
+      "demand": "Abysmal",
+      "scarcity": "Rare",
+      "trend": "stable",
+      "gems": "N/A",
+      "coins": "N/A",
+      "updated_at": "2026-09-08T23:34:45.726Z"
+    },
+    "shiny-opgrassman": {
+      "baseValue": "N/A",
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
+      "demand": "Abysmal",
+      "scarcity": "Rare",
+      "trend": "stable",
+      "gems": "N/A",
+      "coins": "N/A",
+      "updated_at": "2026-09-08T23:34:53.664Z"
     }
   },
   "wikiOverrides": {
@@ -22929,7 +23013,7 @@
     },
     "shiny-cube": {
       "name": "Shiny Cube",
-      "image_url": "data:image/webp;base64,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",
+      "image_url": "data:image/webp;base64,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",
       "description": "",
       "type": "DPS",
       "raw_type": "Unit",
@@ -22942,7 +23026,7 @@
       "synergy": "",
       "min_max_stats": {},
       "upgrades": [],
-      "updated_at": "2026-07-23T21:23:06.569Z"
+      "updated_at": "2026-09-08T23:22:44.961Z"
     },
     "shiny-nemisisball": {
       "name": "Shiny NemisisBall",
@@ -42588,22 +42672,20 @@
       "updated_at": "2026-07-21T13:51:23.352+00:00"
     },
     "shiny-wukongball": {
-      "name": null,
-      "rarity": null,
-      "image_url": "data:image/webp;base64,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",
-      "description": null,
+      "name": "Shiny WukongBall",
+      "image_url": "data:image/webp;base64,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",
+      "description": "",
       "type": "Summoner",
       "raw_type": "AoE + AoE + Cloning",
       "category": "Standard",
       "placement_limit": "1",
       "total_cost": "12.9175M$",
-      "custom_unit": false,
       "obtain": [
         "Monkey Crate"
       ],
-      "passive": null,
-      "ability": null,
-      "synergy": null,
+      "passive": "",
+      "ability": "",
+      "synergy": "",
       "min_max_stats": {
         "Aoe": "375K → 4.88M",
         "Range": "15 → 25",
@@ -42612,237 +42694,297 @@
       },
       "upgrades": [
         {
+          "level": 1,
+          "label": "Placement",
+          "isMax": false,
+          "cost": 7500,
+          "costRaw": "7.5K$",
+          "description": null,
+          "cooldown": "1.2",
+          "range": "15",
+          "stats": {},
+          "attacks": [
+            {
+              "name": "Aoe",
+              "stats": {
+                "Damage": "375K"
+              }
+            },
+            {
+              "name": "Aoe (2)",
+              "stats": {
+                "Damage": "225K"
+              }
+            }
+          ],
           "dps": {
             "DPS": "500K"
           },
-          "cost": 7500,
-          "isMax": false,
-          "label": "Placement",
-          "level": 1,
-          "range": "15",
-          "stats": {},
-          "attacks": {
-            "Aoe": {
-              "Damage": "375K"
-            },
-            "Aoe (2)": {
-              "Damage": "225K"
-            }
-          },
-          "costRaw": "7.5K$",
-          "cooldown": "1.2",
-          "costPerDps": "0.01$",
-          "description": null
+          "costPerDps": "0.01$"
         },
         {
+          "level": 2,
+          "label": "Upgrade 1",
+          "isMax": false,
+          "cost": 27500,
+          "costRaw": "27.5K$",
+          "description": "Wukong!",
+          "cooldown": "1.2 → 1.3",
+          "range": "15 → 15",
+          "stats": {},
+          "attacks": [
+            {
+              "name": "Aoe",
+              "stats": {
+                "Damage": "375K → 427.5K"
+              }
+            },
+            {
+              "name": "Aoe (2)",
+              "stats": {
+                "Damage": "225K → 262.5K"
+              }
+            }
+          ],
           "dps": {
             "DPS": "500K → 530.77K"
           },
-          "cost": 27500,
-          "isMax": false,
-          "label": "Upgrade 1",
-          "level": 2,
-          "range": "15 → 15",
-          "stats": {},
-          "attacks": {
-            "Aoe": {
-              "Damage": "375K → 427.5K"
-            },
-            "Aoe (2)": {
-              "Damage": "225K → 262.5K"
-            }
-          },
-          "costRaw": "27.5K$",
-          "cooldown": "1.2 → 1.3",
-          "costPerDps": "0.07$",
-          "description": "Wukong!"
+          "costPerDps": "0.07$"
         },
         {
+          "level": 3,
+          "label": "Upgrade 2",
+          "isMax": false,
+          "cost": 75000,
+          "costRaw": "75K$",
+          "description": "Wukong!",
+          "cooldown": "1.3 → 1.3",
+          "range": "15 → 15",
+          "stats": {},
+          "attacks": [
+            {
+              "name": "Aoe",
+              "stats": {
+                "Damage": "427.5K → 562.5K"
+              }
+            },
+            {
+              "name": "Aoe (2)",
+              "stats": {
+                "Damage": "262.5K → 337.5K"
+              }
+            }
+          ],
           "dps": {
             "DPS": "530.77K → 692.31K"
           },
-          "cost": 75000,
-          "isMax": false,
-          "label": "Upgrade 2",
-          "level": 3,
-          "range": "15 → 15",
-          "stats": {},
-          "attacks": {
-            "Aoe": {
-              "Damage": "427.5K → 562.5K"
-            },
-            "Aoe (2)": {
-              "Damage": "262.5K → 337.5K"
-            }
-          },
-          "costRaw": "75K$",
-          "cooldown": "1.3 → 1.3",
-          "costPerDps": "0.16$",
-          "description": "Wukong!"
+          "costPerDps": "0.16$"
         },
         {
+          "level": 4,
+          "label": "Upgrade 3",
+          "isMax": false,
+          "cost": 225000,
+          "costRaw": "225K$",
+          "description": "Wukong!",
+          "cooldown": "1.3 → 1.3",
+          "range": "15 → 15",
+          "stats": {},
+          "attacks": [
+            {
+              "name": "Aoe",
+              "stats": {
+                "Damage": "562.5K → 600K"
+              }
+            },
+            {
+              "name": "Aoe (2)",
+              "stats": {
+                "Damage": "337.5K → 525K"
+              }
+            }
+          ],
           "dps": {
             "DPS": "692.31K → 865.38K"
           },
-          "cost": 225000,
-          "isMax": false,
-          "label": "Upgrade 3",
-          "level": 4,
-          "range": "15 → 15",
-          "stats": {},
-          "attacks": {
-            "Aoe": {
-              "Damage": "562.5K → 600K"
-            },
-            "Aoe (2)": {
-              "Damage": "337.5K → 525K"
-            }
-          },
-          "costRaw": "225K$",
-          "cooldown": "1.3 → 1.3",
-          "costPerDps": "0.39$",
-          "description": "Wukong!"
+          "costPerDps": "0.39$"
         },
         {
+          "level": 5,
+          "label": "Upgrade 4",
+          "isMax": false,
+          "cost": 440000,
+          "costRaw": "440K$",
+          "description": "Wukong!",
+          "cooldown": "1.3 → 1.3",
+          "range": "15 → 15",
+          "stats": {},
+          "attacks": [
+            {
+              "name": "Aoe",
+              "stats": {
+                "Damage": "600K → 937.5K"
+              }
+            },
+            {
+              "name": "Aoe (2)",
+              "stats": {
+                "Damage": "525K → 637.5K"
+              }
+            }
+          ],
           "dps": {
             "DPS": "865.38K → 1.21M"
           },
-          "cost": 440000,
-          "isMax": false,
-          "label": "Upgrade 4",
-          "level": 5,
-          "range": "15 → 15",
-          "stats": {},
-          "attacks": {
-            "Aoe": {
-              "Damage": "600K → 937.5K"
-            },
-            "Aoe (2)": {
-              "Damage": "525K → 637.5K"
-            }
-          },
-          "costRaw": "440K$",
-          "cooldown": "1.3 → 1.3",
-          "costPerDps": "0.63$",
-          "description": "Wukong!"
+          "costPerDps": "0.63$"
         },
         {
+          "level": 6,
+          "label": "Upgrade 5",
+          "isMax": false,
+          "cost": 650000,
+          "costRaw": "650K$",
+          "description": "Wukong!",
+          "cooldown": "1.3 → 1.3",
+          "range": "15 → 15",
+          "stats": {},
+          "attacks": [
+            {
+              "name": "Aoe",
+              "stats": {
+                "Damage": "937.5K → 1237.5K"
+              }
+            },
+            {
+              "name": "Aoe (2)",
+              "stats": {
+                "Damage": "637.5K → 937.5K"
+              }
+            }
+          ],
           "dps": {
             "DPS": "1.21M → 1.67M"
           },
-          "cost": 650000,
-          "isMax": false,
-          "label": "Upgrade 5",
-          "level": 6,
-          "range": "15 → 15",
-          "stats": {},
-          "attacks": {
-            "Aoe": {
-              "Damage": "937.5K → 1237.5K"
-            },
-            "Aoe (2)": {
-              "Damage": "637.5K → 937.5K"
-            }
-          },
-          "costRaw": "650K$",
-          "cooldown": "1.3 → 1.3",
-          "costPerDps": "0.85$",
-          "description": "Wukong!"
+          "costPerDps": "0.85$"
         },
         {
+          "level": 7,
+          "label": "Upgrade 6",
+          "isMax": false,
+          "cost": 1000000,
+          "costRaw": "1M$",
+          "description": "Wukong!",
+          "cooldown": "1.3 → 1.3",
+          "range": "15 → 15",
+          "stats": {},
+          "attacks": [
+            {
+              "name": "Aoe",
+              "stats": {
+                "Damage": "1237.5K → 1.88M"
+              }
+            },
+            {
+              "name": "Aoe (2)",
+              "stats": {
+                "Damage": "937.5K → 1275K"
+              }
+            }
+          ],
           "dps": {
             "DPS": "1.67M → 2.42M"
           },
-          "cost": 1000000,
-          "isMax": false,
-          "label": "Upgrade 6",
-          "level": 7,
-          "range": "15 → 15",
-          "stats": {},
-          "attacks": {
-            "Aoe": {
-              "Damage": "1237.5K → 1.88M"
-            },
-            "Aoe (2)": {
-              "Damage": "937.5K → 1275K"
-            }
-          },
-          "costRaw": "1M$",
-          "cooldown": "1.3 → 1.3",
-          "costPerDps": "1$",
-          "description": "Wukong!"
+          "costPerDps": "1$"
         },
         {
+          "level": 8,
+          "label": "Upgrade 7",
+          "isMax": false,
+          "cost": 1750000,
+          "costRaw": "1.75M$",
+          "description": "Wukong!",
+          "cooldown": "1.3 → 1.3",
+          "range": "15 → 15",
+          "stats": {},
+          "attacks": [
+            {
+              "name": "Aoe",
+              "stats": {
+                "Damage": "1.88M → 2.77M"
+              }
+            },
+            {
+              "name": "Aoe (2)",
+              "stats": {
+                "Damage": "1275K → 1.88M"
+              }
+            }
+          ],
           "dps": {
             "DPS": "2.42M → 3.58M"
           },
-          "cost": 1750000,
-          "isMax": false,
-          "label": "Upgrade 7",
-          "level": 8,
-          "range": "15 → 15",
-          "stats": {},
-          "attacks": {
-            "Aoe": {
-              "Damage": "1.88M → 2.77M"
-            },
-            "Aoe (2)": {
-              "Damage": "1275K → 1.88M"
-            }
-          },
-          "costRaw": "1.75M$",
-          "cooldown": "1.3 → 1.3",
-          "costPerDps": "1.17$",
-          "description": "Wukong!"
+          "costPerDps": "1.17$"
         },
         {
+          "level": 9,
+          "label": "Upgrade 8",
+          "isMax": false,
+          "cost": 3250000,
+          "costRaw": "3.25M$",
+          "description": "Wukong!",
+          "cooldown": "1.3 → 1.3",
+          "range": "15 → 18",
+          "stats": {},
+          "attacks": [
+            {
+              "name": "Aoe",
+              "stats": {
+                "Damage": "2.77M → 3.3M"
+              }
+            },
+            {
+              "name": "Aoe (2)",
+              "stats": {
+                "Damage": "1.88M → 2.33M"
+              }
+            }
+          ],
           "dps": {
             "DPS": "3.58M → 4.33M"
           },
-          "cost": 3250000,
-          "isMax": false,
-          "label": "Upgrade 8",
-          "level": 9,
-          "range": "15 → 18",
-          "stats": {},
-          "attacks": {
-            "Aoe": {
-              "Damage": "2.77M → 3.3M"
-            },
-            "Aoe (2)": {
-              "Damage": "1.88M → 2.33M"
-            }
-          },
-          "costRaw": "3.25M$",
-          "cooldown": "1.3 → 1.3",
-          "costPerDps": "1.71$",
-          "description": "Wukong!"
+          "costPerDps": "1.71$"
         },
         {
+          "level": 10,
+          "label": "Upgrade 9(MAX)",
+          "isMax": true,
+          "cost": 5500000,
+          "costRaw": "5.5M$",
+          "description": "Wukong!",
+          "cooldown": "1.3 → 1.3",
+          "range": "18 → 25",
+          "stats": {},
+          "attacks": [
+            {
+              "name": "Aoe",
+              "stats": {
+                "Damage": "3.3M → 4.88M"
+              }
+            },
+            {
+              "name": "Aoe (2)",
+              "stats": {
+                "Damage": "2.33M → 3.38M"
+              }
+            }
+          ],
           "dps": {
             "DPS": "4.33M → 6.35M"
           },
-          "cost": 5500000,
-          "isMax": true,
-          "label": "Upgrade 9(MAX)",
-          "level": 10,
-          "range": "18 → 25",
-          "stats": {},
-          "attacks": {
-            "Aoe": {
-              "Damage": "3.3M → 4.88M"
-            },
-            "Aoe (2)": {
-              "Damage": "2.33M → 3.38M"
-            }
-          },
-          "costRaw": "5.5M$",
-          "cooldown": "1.3 → 1.3",
-          "costPerDps": "2.03$",
-          "description": "Wukong!"
+          "costPerDps": "2.03$"
         }
       ],
-      "updated_at": "2026-07-14T23:48:17.7+00:00"
+      "updated_at": "2026-09-08T23:27:00.114Z"
     },
     "shiny-peasantball": {
       "name": null,
@@ -63576,7 +63718,7 @@
       "synergy": null,
       "min_max_stats": {},
       "upgrades": [],
-      "updated_at": "2026-08-31T22:33:10.230Z"
+      "updated_at": "2026-08-31T00:09:24.413Z"
     },
     "shiny-nightmareball": {
       "name": "Shiny NightmareBall",
@@ -64570,6 +64712,70 @@
       "min_max_stats": {},
       "upgrades": [],
       "updated_at": "2026-09-07T20:56:07.130Z"
+    },
+    "cube": {
+      "name": "Cube",
+      "rarity": "???",
+      "image_url": "data:image/webp;base64,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",
+      "description": "",
+      "type": "DPS",
+      "raw_type": "DPS",
+      "category": "Unobtainable",
+      "obtain": [],
+      "passive": null,
+      "ability": null,
+      "synergy": null,
+      "min_max_stats": {},
+      "upgrades": [],
+      "updated_at": "2026-09-08T23:22:32.903Z"
+    },
+    "spawnpointball": {
+      "name": "SpawnpointBall",
+      "rarity": "???",
+      "image_url": "data:image/webp;base64,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",
+      "description": "",
+      "type": "Summoner",
+      "raw_type": "Summoner",
+      "category": "Unobtainable",
+      "obtain": [],
+      "passive": null,
+      "ability": null,
+      "synergy": null,
+      "min_max_stats": {},
+      "upgrades": [],
+      "updated_at": "2026-09-08T23:30:35.752Z"
+    },
+    "fakeopgrassman": {
+      "name": "FakeOPGrassman",
+      "rarity": "???",
+      "image_url": "data:image/webp;base64,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",
+      "description": "",
+      "type": "DPS",
+      "raw_type": "DPS",
+      "category": "Unobtainable",
+      "obtain": [],
+      "passive": null,
+      "ability": null,
+      "synergy": null,
+      "min_max_stats": {},
+      "upgrades": [],
+      "updated_at": "2026-09-08T23:34:03.110Z"
+    },
+    "opgrassman": {
+      "name": "OPGrassMan",
+      "rarity": "???",
+      "image_url": "data:image/webp;base64,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",
+      "description": "",
+      "type": "DPS",
+      "raw_type": "DPS",
+      "category": "Unobtainable",
+      "obtain": [],
+      "passive": null,
+      "ability": null,
+      "synergy": null,
+      "min_max_stats": {},
+      "upgrades": [],
+      "updated_at": "2026-09-08T23:34:39.867Z"
     }
   },
   "mapOverrides": {

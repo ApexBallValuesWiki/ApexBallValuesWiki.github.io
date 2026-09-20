@@ -1,19 +1,27 @@
 import { useEffect, useState } from 'react';
-import { isAdsAllowedHost, ensureAdSenseScript } from '../utils/ads';
+import { areAdsAllowed, ensureAdSenseScript } from '../utils/ads';
 
 // Ad container for Google AdSense. Renders NOTHING unless:
 //  - the site is the production host (never the Test Realm / localhost), and
 //  - the AdSense loader is available.
 // See src/utils/ads.js — this guard exists to comply with the AdSense
 // "no ads on screens without publisher content" policy.
-export default function AdSlot({ slotId }) {
+export default function AdSlot({ slotId, ready = true }) {
   const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
-    if (!isAdsAllowedHost()) return; // staging, gates, 404, SSG: no ads at all
-    ensureAdSenseScript();
-    setAllowed(true);
-  }, []);
+    // AdSense policy: only after maintenance is confirmed off AND the host is
+    // production AND the parent page says its content is on screen.
+    if (!areAdsAllowed() || !ready) return undefined;
+    // Small settle delay: never race the first paint of page content.
+    const t = window.setTimeout(() => {
+      ensureAdSenseScript();
+      setAllowed(true);
+    }, 1200);
+    const onState = () => { if (!areAdsAllowed()) setAllowed(false); };
+    window.addEventListener('apex-ads-state', onState);
+    return () => { window.clearTimeout(t); window.removeEventListener('apex-ads-state', onState); };
+  }, [ready]);
 
   useEffect(() => {
     if (!allowed || !slotId) return;

@@ -7,10 +7,32 @@ const ALLOWED_HOSTS = ['apexballvalueswiki.github.io'];
 
 let injected = false;
 
+// Ads stay OFF until the app confirms maintenance mode is OFF (AdSense policy:
+// "no ads on screens without publisher content" — the maintenance screen, the
+// first paint before the check resolves, and empty states must never show ads).
+let adsEnabled = false;
+
 /** True only on the production host (never staging, localhost, or SSG). */
 export function isAdsAllowedHost() {
   if (typeof window === 'undefined') return false; // prerender/SSG: no ads in static HTML
   return ALLOWED_HOSTS.includes(window.location.hostname);
+}
+
+/**
+ * Called by App when the maintenance state resolves. Ads only ever run when
+ * this is explicitly set to true (maintenance confirmed OFF). Default: off.
+ */
+export function setAdsEnabled(on) {
+  if (typeof window === 'undefined') return;
+  const next = !!on;
+  if (next === adsEnabled) return;
+  adsEnabled = next;
+  window.dispatchEvent(new CustomEvent('apex-ads-state'));
+}
+
+/** True only when: production host AND maintenance confirmed off. */
+export function areAdsAllowed() {
+  return isAdsAllowedHost() && adsEnabled;
 }
 
 /** Inject the AdSense loader once (production only). Safe to call often. */
