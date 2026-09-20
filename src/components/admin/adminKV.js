@@ -9,12 +9,19 @@ import {
   loadLocalDeletedOverrides,
 } from '../../utils/localOverrides';
 
+let bakedCache = null;
+let kvCache = null;
+let kvCacheAt = 0;
+const KV_CACHE_TTL = 20000;
+
 export async function fetchBakedBackupBundle() {
+  if (bakedCache) return bakedCache;
   try {
     const baseUrl = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
     const response = await fetch(`${baseUrl}/overrides/staticOverrides.json`);
     if (response.ok) {
-      return await response.json();
+      bakedCache = await response.json();
+      return bakedCache;
     }
   } catch (e) {
     console.error('[APEX] Failed to fetch baked backup bundle:', e);
@@ -23,15 +30,22 @@ export async function fetchBakedBackupBundle() {
 }
 
 /** Merge baked + live KV + local drafts (+ local deletions) into one bundle. */
-export async function buildFullPublishBundle() {
+export async function buildFullPublishBundle({ freshKV = false } = {}) {
   let kvData = null;
-  try {
-    const res = await fetch(`${APEX_KV_URL}/overrides?_=${Date.now()}`).catch(() => null);
-    if (res && res.ok) {
-      kvData = await res.json();
+  const cacheOK = !freshKV && kvCache && Date.now() - kvCacheAt < KV_CACHE_TTL;
+  if (cacheOK) {
+    kvData = kvCache;
+  } else {
+    try {
+      const res = await fetch(`${APEX_KV_URL}/overrides?_=${Date.now()}`).catch(() => null);
+      if (res && res.ok) {
+        kvData = await res.json();
+        kvCache = kvData;
+        kvCacheAt = Date.now();
+      }
+    } catch (e) {
+      console.warn('[APEX] Failed to fetch current KV bundle:', e);
     }
-  } catch (e) {
-    console.warn('[APEX] Failed to fetch current KV bundle:', e);
   }
 
   const bakedData = await fetchBakedBackupBundle() || {};

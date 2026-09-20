@@ -7,12 +7,15 @@ import { formatCompactNumber, formatFullNumber } from '../../utils/formatNumber'
 import { fetchGlobalTimeMs } from '../../utils/globalTime';
 import { getDailyKey, nextResetMs, formatDuration } from '../../utils/ballKnowledgeTime';
 import { getUserSeed, rngFromSeed, randInt } from '../../utils/minigameRandom';
+import { normalizeDifficulty } from '../../utils/ballonomics';
+import { hintBalance, spendHint, grantHint, HINTS_EVENT } from '../../utils/hints';
 import {
   eligiblePool,
   buildChain,
   correctCall,
   endlessBand,
   nextEndlessPair,
+  BONOMICS_DIFFICULTIES,
   loadStats,
   saveStats,
   loadProgress,
@@ -55,6 +58,15 @@ export default function Ballonomics() {
   // Progressive: the next unit is drawn from a value band that tightens as
   // the chain grows (endlessBand) — calls get harder the longer you survive.
   const [endlessSeed, setEndlessSeed] = useState(null);
+  const [difficulty, setDifficulty] = useState(() => normalizeDifficulty(localStorage.getItem('apex-ballonomics-difficulty')));
+  const [hints, setHints] = useState(() => hintBalance());
+  useEffect(() => {
+    const onHints = () => setHints(hintBalance());
+    window.addEventListener(HINTS_EVENT, onHints);
+    return () => window.removeEventListener(HINTS_EVENT, onHints);
+  }, []);
+  const [hintUsed, setHintUsed] = useState(false);
+  const [hintNote, setHintNote] = useState('');
   const [endless, setEndless] = useState({ calls: [], current: null, next: null, done: false, lost: false });
 
   const [stats, setStats] = useState(() => loadStats(STATS_KEY));
@@ -116,7 +128,10 @@ export default function Ballonomics() {
       saveStats(STATS_KEY, next);
       return next;
     });
-    if (correct === CHAIN_LENGTH - 1) incrementStat('bono_daily_perfect', 1);
+    if (correct === CHAIN_LENGTH - 1) {
+      incrementStat('bono_daily_perfect', 1);
+      grantHint(1); // perfect daily run earns a hint
+    }
   }
 
   function makeCall(call) {
@@ -141,9 +156,9 @@ export default function Ballonomics() {
       } else if (good) {
         const streak = nextCalls.filter(Boolean).length;
         const current = endless.next;
-        const next = nextEndlessPair(pool, endlessSeed, streak, current);
+        const next = nextEndlessPair(pool, endlessSeed, streak, current, difficulty);
         setEndless({ calls: nextCalls, current, next, done: !next, lost: false });
-        if (streak === 10) incrementStat('bono_endless_streak_10', 1);
+        if (streak === 10) { incrementStat('bono_endless_streak_10', 1); grantHint(1); }
       } else {
         const streak = nextCalls.filter(Boolean).length;
         setEndless((prev) => ({ ...prev, calls: nextCalls, lost: true }));
@@ -162,7 +177,8 @@ export default function Ballonomics() {
     setEndlessSeed(seed);
     const rng = rngFromSeed(seed);
     const current = pool[randInt(rng, pool.length)];
-    setEndless({ calls: [], current, next: nextEndlessPair(pool, seed, 0, current), done: false, lost: false });
+    setEndless({ calls: [], current, next: nextEndlessPair(pool, seed, 0, current, difficulty), done: false, lost: false });
+    setHintUsed(false);
     setReveal(null);
     setShareMessage('');
   }
@@ -225,6 +241,35 @@ export default function Ballonomics() {
           ♾️ Endless
         </button>
       </section>
+
+      {mode === 'endless' && (
+        <section className="mg-mode-bar" style={{ gap: 8 }}>
+          <span className="bono-diff-label">Difficulty:</span>
+          {BONOMICS_DIFFICULTIES.map((d) => (
+            <button
+              key={d.id}
+              type="button"
+              className={difficulty === d.id ? 'mg-mode active' : 'mg-mode'}
+              onClick={() => { setDifficulty(d.id); localStorage.setItem('apex-ballonomics-difficulty', d.id); }}
+            >
+              {d.icon} {d.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            className="mg-mode bono-hint-btn"
+            disabled={hintUsed || !endless.current || reveal}
+            title="Spend 1 hint to reveal both units' demand and scarcity"
+            onClick={() => {
+              if (spendHint()) { setHintUsed(true); setHints(hintBalance()); setHintNote(''); }
+              else setHintNote('No hints left — win dailies to earn more.');
+            }}
+          >
+            💡 Hint ({hints})
+          </button>
+          {hintNote && <span className="bono-hint-info">{hintNote}</span>}
+        </section>
+      )}
 
       <section className="mg-stats-strip">
         <div className="mg-stat-tile"><strong>{isDaily ? `${correctCount}/${CHAIN_LENGTH - 1}` : correctCount}</strong><span>{isDaily ? 'Today' : 'Run'}</span></div>
@@ -305,6 +350,9 @@ export default function Ballonomics() {
                 <span className="bono-card-value" title={`${formatFullNumber(left.tradeValue)} exact`}>
                   {formatCompactNumber(left.tradeValue)}
                 </span>
+                {mode === 'endless' && hintUsed && (left.demand || left.scarcity) && (
+                  <span className="bono-hint-info">Demand: {left.demand || '—'} · Scarcity: {left.scarcity || '—'}</span>
+                )}
               </div>
 
               <span className="bono-card-vs">VS</span>
@@ -330,6 +378,9 @@ export default function Ballonomics() {
                 >
                   {reveal ? formatCompactNumber(right.tradeValue) : '?'}
                 </span>
+                {mode === 'endless' && hintUsed && !reveal && (right.demand || right.scarcity) && (
+                  <span className="bono-hint-info">Demand: {right.demand || '—'} · Scarcity: {right.scarcity || '—'}</span>
+                )}
               </div>
             </div>
 

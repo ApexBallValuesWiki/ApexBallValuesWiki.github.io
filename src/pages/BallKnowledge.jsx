@@ -14,6 +14,7 @@ import { incrementStat, setStat } from '../utils/achievements';
 import { endlessConfig, pickEndlessPuzzle, loadBestLevel, saveBestLevel } from '../utils/bkEndless';
 import { buildCandidates } from '../utils/bkCandidates';
 import './BallKnowledge.css';
+import { hintBalance, spendHint, grantHint, HINTS_EVENT } from '../utils/hints';
 
 const STORAGE_PREFIX = 'apex-ball-knowledge';
 const STATS_KEY = 'apex-ball-knowledge-stats-v1';
@@ -217,6 +218,7 @@ function previousDayKeyFromKey(dayKey) {
 }
 
 function recordWin(stats, dayKey, guessCount) {
+  try { grantHint(1); } catch { /* storage blocked */ } // daily win earns a hint
   if (!dayKey || stats.lastSolvedDay === dayKey) return stats;
   const previousDay = previousDayKeyFromKey(dayKey);
   const currentStreak = stats.lastSolvedDay === previousDay ? stats.currentStreak + 1 : 1;
@@ -369,11 +371,26 @@ export default function BallKnowledge() {
     return availableUnits.filter((unit) => normalizeGuess(unit.name).includes(q) || unit.slug.includes(q.replace(/\s+/g, '-'))).slice(0, 32);
   }, [guess, progress.guesses, units, mode, endlessRound.guesses]);
 
+  const [hintWallet, setHintWallet] = useState(() => hintBalance());
+  const [usedHints, setUsedHints] = useState({});
+  useEffect(() => {
+    const onHints = () => setHintWallet(hintBalance());
+    window.addEventListener(HINTS_EVENT, onHints);
+    return () => window.removeEventListener(HINTS_EVENT, onHints);
+  }, []);
+  const activePuzzle = mode === 'endless' ? endlessPuzzle : puzzle;
+  useEffect(() => { setUsedHints({}); }, [activePuzzle?.unit?.slug]);
+  function useHint(kind) {
+    if (!activePuzzle || usedHints[kind]) return;
+    if (!spendHint()) { setMessage('No hints left — win dailies to earn more.'); return; }
+    setHintWallet(hintBalance());
+    setUsedHints((prev) => ({ ...prev, [kind]: true }));
+  }
   const wrongGuesses = progress.guesses.filter((g) => !g.correct).length;
   const showDamage = modeConfig.startingDamage || wrongGuesses >= modeConfig.reveal.damage || progress.won || progress.lost;
   const showRange = wrongGuesses >= modeConfig.reveal.range || progress.won || progress.lost;
   const showCooldown = wrongGuesses >= modeConfig.reveal.cooldown || progress.won || progress.lost;
-  const showRarity = wrongGuesses >= modeConfig.reveal.rarity || progress.won || progress.lost;
+  const showRarity = usedHints.rarity || wrongGuesses >= modeConfig.reveal.rarity || progress.won || progress.lost;
   const guessesLeft = modeConfig.maxGuesses ? Math.max(0, modeConfig.maxGuesses - progress.guesses.length) : null;
   const maxUnlockableGuesses = modeConfig.maxGuesses || Infinity;
   const renderDamage = modeConfig.reveal.damage <= maxUnlockableGuesses || showDamage;
@@ -711,6 +728,18 @@ export default function BallKnowledge() {
           </div>
         ) : (
           <form className="bk-guess-form" onSubmit={submitGuess}>
+            <div className="bk-hints-row">
+              <button type="button" className="bk-hint-btn" disabled={usedHints.letter || !activePuzzle} onClick={() => useHint('letter')} title="Spend 1 hint: first letter + name length">
+                💡 Letter{usedHints.letter ? `: ${activePuzzle?.unit?.name?.[0] ?? '?'}… ${activePuzzle?.unit?.name?.length ?? '?'} chars` : ''}
+              </button>
+              <button type="button" className="bk-hint-btn" disabled={usedHints.rarity || !activePuzzle} onClick={() => useHint('rarity')} title="Spend 1 hint: reveal the rarity">
+                💡 Rarity{usedHints.rarity ? `: ${activePuzzle?.unit?.rarity ?? ''}` : ''}
+              </button>
+              <button type="button" className="bk-hint-btn" disabled={usedHints.type || !activePuzzle} onClick={() => useHint('type')} title="Spend 1 hint: reveal the unit type">
+                💡 Type{usedHints.type ? `: ${activePuzzle?.unit?.type ?? '—'}` : ''}
+              </button>
+              <span className="bk-hints-wallet">💡 {hintWallet}</span>
+            </div>
             <label htmlFor="bk-guess">Your guess</label>
             <div className="bk-guess-row">
               <div className="bk-combobox">

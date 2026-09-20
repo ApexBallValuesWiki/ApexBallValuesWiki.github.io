@@ -1,17 +1,17 @@
 {
-  "timestamp": "2026-09-20T10:02:58.696Z",
+  "timestamp": "2026-09-20T19:27:19.241Z",
   "valueOverrides": {
     "urchinball": {
-      "baseValue": 35,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 35,
-      "coins": 3500,
-      "updated_at": "2026-07-23T20:45:58.782Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T19:25:22.525Z"
     },
     "shiny-skateboarder": {
       "baseValue": 3000,
@@ -62,52 +62,52 @@
       "updated_at": "2026-07-20T13:23:40.639+00:00"
     },
     "policeball": {
-      "baseValue": 5,
-      "baseValueMax": 10,
-      "gemsMax": 10,
-      "coinsMax": 1000,
-      "demand": "Abysmal",
-      "scarcity": "Flooded",
-      "trend": "stable",
-      "gems": 5,
-      "coins": 500,
-      "updated_at": "2026-09-01T20:33:35.357Z"
-    },
-    "oldball": {
-      "baseValue": 5,
-      "baseValueMax": 10,
-      "gemsMax": 10,
-      "coinsMax": 1000,
-      "demand": "Abysmal",
-      "scarcity": "Flooded",
-      "trend": "stable",
-      "gems": 5,
-      "coins": 500,
-      "updated_at": "2026-09-01T20:35:42.523Z"
-    },
-    "beachball": {
-      "baseValue": 5,
-      "baseValueMax": 10,
-      "gemsMax": 10,
-      "coinsMax": 1000,
-      "demand": "Abysmal",
-      "scarcity": "Flooded",
-      "trend": "stable",
-      "gems": 5,
-      "coins": 500,
-      "updated_at": "2026-09-01T20:35:50.768Z"
-    },
-    "shiny-boxerball": {
-      "baseValue": 500,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
-      "scarcity": "Common",
+      "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 500,
-      "coins": 50000,
-      "updated_at": "2026-07-23T21:05:23.467Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T12:29:03.323Z"
+    },
+    "oldball": {
+      "baseValue": 0,
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
+      "demand": "Abysmal",
+      "scarcity": "Flooded",
+      "trend": "stable",
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T12:29:18.490Z"
+    },
+    "beachball": {
+      "baseValue": 0,
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
+      "demand": "Abysmal",
+      "scarcity": "Flooded",
+      "trend": "stable",
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T12:29:25.254Z"
+    },
+    "shiny-boxerball": {
+      "baseValue": 0,
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
+      "demand": "Abysmal",
+      "scarcity": "Flooded",
+      "trend": "stable",
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T18:35:08.793Z"
     },
     "shiny-queenofhearts": {
       "baseValue": "O/C",
@@ -134,76 +134,76 @@
       "updated_at": "2026-09-11T15:20:16.935Z"
     },
     "shiny-fireball": {
-      "baseValue": 10,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 10,
-      "coins": 1000,
-      "updated_at": "2026-07-22T16:32:29.042+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T12:27:55.326Z"
     },
     "shiny-oldball": {
-      "baseValue": 25,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
-      "scarcity": "Common",
+      "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 25,
-      "coins": 2500,
-      "updated_at": "2026-07-22T16:37:34.982+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T14:59:55.612Z"
     },
     "shiny-ball-2-0": {
-      "baseValue": 25,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
-      "scarcity": "Common",
+      "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 25,
-      "coins": 2500,
-      "updated_at": "2026-07-22T16:38:06.61+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T14:59:10.061Z"
     },
     "buildersclubball": {
-      "baseValue": 10,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 10,
-      "coins": 1000,
-      "updated_at": "2026-07-22T16:40:39.238+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T15:10:56.134Z"
     },
     "coalball": {
-      "baseValue": 2500,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
+      "baseValue": 1500,
+      "baseValueMax": 3000,
+      "gemsMax": 2500,
+      "coinsMax": 125000,
       "demand": "Extremely Low",
-      "scarcity": "Common",
+      "scarcity": "Standard",
       "trend": "stable",
-      "gems": 2500,
-      "coins": 250000,
-      "updated_at": "2026-07-22T16:41:34.694+00:00"
+      "gems": 1000,
+      "coins": 50000,
+      "updated_at": "2026-09-20T18:30:11.579Z"
     },
     "peasantball": {
-      "baseValue": 25,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 25,
-      "coins": 2500,
-      "updated_at": "2026-07-22T20:45:27.622+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T15:13:04.029Z"
     },
     "shiny-powerarmorball": {
       "baseValue": 1000,
@@ -278,16 +278,16 @@
       "updated_at": "2026-07-19T16:04:37.029+00:00"
     },
     "shiny-buildersclubball": {
-      "baseValue": 12000,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
-      "demand": "Very Low",
-      "scarcity": "Common",
+      "demand": "Abysmal",
+      "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 12000,
-      "coins": 1200000,
-      "updated_at": "2026-07-19T16:05:38.603+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T18:35:16.453Z"
     },
     "shiny-presentball": {
       "baseValue": 5000,
@@ -362,28 +362,28 @@
       "updated_at": "2026-07-19T21:12:15.994+00:00"
     },
     "rockball": {
-      "baseValue": 25,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 25,
-      "coins": 2500,
-      "updated_at": "2026-07-22T20:45:34.286+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T15:13:14.895Z"
     },
     "sniperball": {
-      "baseValue": 25,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 25,
-      "coins": 2500,
-      "updated_at": "2026-07-22T20:46:08.679+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T15:13:22.013Z"
     },
     "shiny-bombball": {
       "baseValue": 3000,
@@ -434,28 +434,28 @@
       "updated_at": "2026-07-20T20:55:57.573+00:00"
     },
     "survivorball": {
-      "baseValue": 5,
-      "baseValueMax": 10,
-      "gemsMax": 10,
-      "coinsMax": 1000,
-      "demand": "Abysmal",
-      "scarcity": "Flooded",
-      "trend": "stable",
-      "gems": 5,
-      "coins": 500,
-      "updated_at": "2026-09-01T20:35:28.241Z"
-    },
-    "raregrug": {
-      "baseValue": 75,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
+      "scarcity": "Flooded",
+      "trend": "stable",
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T12:29:10.731Z"
+    },
+    "raregrug": {
+      "baseValue": 65,
+      "baseValueMax": 125,
+      "gemsMax": 100,
+      "coinsMax": 5000,
+      "demand": "Abysmal",
       "scarcity": "Common",
       "trend": "stable",
       "gems": 50,
-      "coins": 5000,
-      "updated_at": "2026-07-20T21:01:51.389+00:00"
+      "coins": 2500,
+      "updated_at": "2026-09-20T18:31:48.789Z"
     },
     "nightmareball": {
       "baseValue": 13000000,
@@ -494,28 +494,28 @@
       "updated_at": "2026-09-08T00:58:35.277Z"
     },
     "shiny-iceball": {
-      "baseValue": 10,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 10,
-      "coins": 1000,
-      "updated_at": "2026-07-22T16:32:19.276+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T12:28:07.464Z"
     },
     "fishball": {
-      "baseValue": 25,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
-      "demand": "Extremely Low",
-      "scarcity": "Common",
+      "demand": "Abysmal",
+      "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 25,
-      "coins": 2500,
-      "updated_at": "2026-07-22T16:37:17.802+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T18:33:29.856Z"
     },
     "shiny-grug": {
       "baseValue": 3000,
@@ -530,76 +530,76 @@
       "updated_at": "2026-07-22T16:38:20.97+00:00"
     },
     "chickball": {
-      "baseValue": 10,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Abysmal",
-      "scarcity": "Common",
-      "trend": "stable",
-      "gems": 10,
-      "coins": 1000,
-      "updated_at": "2026-07-23T16:56:15.136Z"
-    },
-    "coinball": {
-      "baseValue": 1500,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
+      "baseValue": 150,
+      "baseValueMax": 300,
+      "gemsMax": 250,
+      "coinsMax": 12500,
       "demand": "Extremely Low",
       "scarcity": "Standard",
       "trend": "stable",
-      "gems": 1500,
-      "coins": 150000,
-      "updated_at": "2026-07-22T20:25:56.38+00:00"
+      "gems": 100,
+      "coins": 5000,
+      "updated_at": "2026-09-20T15:15:01.189Z"
+    },
+    "coinball": {
+      "baseValue": 1500,
+      "baseValueMax": 3000,
+      "gemsMax": 2500,
+      "coinsMax": 125000,
+      "demand": "Extremely Low",
+      "scarcity": "Standard",
+      "trend": "stable",
+      "gems": 1000,
+      "coins": 50000,
+      "updated_at": "2026-09-20T18:30:25.480Z"
     },
     "flameball": {
-      "baseValue": 25,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 25,
-      "coins": 2500,
-      "updated_at": "2026-07-22T20:26:12.736+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T15:11:13.654Z"
     },
     "heprobot": {
-      "baseValue": 25,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 25,
-      "coins": 2500,
-      "updated_at": "2026-07-22T20:44:58.236+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T15:11:47.558Z"
     },
     "monkey": {
-      "baseValue": 25,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 25,
-      "coins": 2500,
-      "updated_at": "2026-07-22T20:45:09.527+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T15:12:11.562Z"
     },
     "militaryball": {
-      "baseValue": 25,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 25,
-      "coins": 2500,
-      "updated_at": "2026-07-22T20:45:15.599+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T15:12:48.112Z"
     },
     "shiny-roseball": {
       "baseValue": 15000,
@@ -710,16 +710,16 @@
       "updated_at": "2026-09-18T21:12:30.409Z"
     },
     "backpacker": {
-      "baseValue": 10,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 10,
-      "coins": 1000,
-      "updated_at": "2026-07-22T16:36:56.482+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T15:10:10.319Z"
     },
     "fireworkball": {
       "baseValue": 10800,
@@ -758,16 +758,16 @@
       "updated_at": "2026-07-23T20:55:53.526Z"
     },
     "poisonball": {
-      "baseValue": 1,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 1,
-      "coins": 1,
-      "updated_at": "2026-09-01T20:31:27.118Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T12:26:01.157Z"
     },
     "goldenmonkey": {
       "baseValue": 3000,
@@ -806,40 +806,40 @@
       "updated_at": "2026-07-14T21:08:34.28+00:00"
     },
     "eletricball": {
-      "baseValue": 1,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 1,
-      "coins": 1,
-      "updated_at": "2026-09-01T20:31:15.059Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T12:25:04.225Z"
     },
     "fireball": {
-      "baseValue": 1,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 1,
-      "coins": 1,
-      "updated_at": "2026-09-01T20:31:18.898Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T12:25:27.453Z"
     },
     "iceball": {
-      "baseValue": 1,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 1,
-      "coins": 1,
-      "updated_at": "2026-09-01T20:31:22.944Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T12:25:55.621Z"
     },
     "brainball": {
       "baseValue": 1000,
@@ -854,16 +854,16 @@
       "updated_at": "2026-07-14T21:11:25.539+00:00"
     },
     "shiny-beachball": {
-      "baseValue": 25,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
-      "scarcity": "Common",
+      "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 25,
-      "coins": 2500,
-      "updated_at": "2026-07-22T16:37:32.382+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T15:03:08.632Z"
     },
     "forestball": {
       "baseValue": 2500000,
@@ -938,28 +938,28 @@
       "updated_at": "2026-07-14T21:14:43.593+00:00"
     },
     "shiny-policeball": {
-      "baseValue": 25,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Abysmal",
-      "scarcity": "Common",
-      "trend": "stable",
-      "gems": 25,
-      "coins": 2500,
-      "updated_at": "2026-07-22T16:37:59.614+00:00"
-    },
-    "noob": {
-      "baseValue": 25,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 25,
-      "coins": 2500,
-      "updated_at": "2026-07-22T20:45:22.43+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T14:59:04.226Z"
+    },
+    "noob": {
+      "baseValue": 0,
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
+      "demand": "Abysmal",
+      "scarcity": "Flooded",
+      "trend": "stable",
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T15:12:55.474Z"
     },
     "droneball": {
       "baseValue": 300000,
@@ -1034,40 +1034,40 @@
       "updated_at": "2026-09-11T15:56:16.139Z"
     },
     "babyball": {
-      "baseValue": 5,
-      "baseValueMax": 10,
-      "gemsMax": 10,
-      "coinsMax": 1000,
+      "baseValue": 0,
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 5,
-      "coins": 500,
-      "updated_at": "2026-09-01T20:33:26.813Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T12:28:44.266Z"
     },
     "soulball": {
-      "baseValue": 2500,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Low",
-      "scarcity": "Limited",
+      "baseValue": 1500,
+      "baseValueMax": 3000,
+      "gemsMax": 2500,
+      "coinsMax": 125000,
+      "demand": "Extremely Low",
+      "scarcity": "Standard",
       "trend": "stable",
-      "gems": 2500,
-      "coins": 250000,
-      "updated_at": "2026-07-22T20:45:46.777+00:00"
+      "gems": 1000,
+      "coins": 50000,
+      "updated_at": "2026-09-20T18:30:31.272Z"
     },
     "chocolateball": {
-      "baseValue": 2500,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
+      "baseValue": 1500,
+      "baseValueMax": 3000,
+      "gemsMax": 2500,
+      "coinsMax": 125000,
       "demand": "Extremely Low",
-      "scarcity": "Common",
+      "scarcity": "Standard",
       "trend": "stable",
-      "gems": 2500,
-      "coins": 250000,
-      "updated_at": "2026-07-22T16:41:20.714+00:00"
+      "gems": 1000,
+      "coins": 50000,
+      "updated_at": "2026-09-20T18:27:55.920Z"
     },
     "shiny-droneball": {
       "baseValue": 35000000,
@@ -1082,40 +1082,40 @@
       "updated_at": "2026-09-11T15:46:46.215Z"
     },
     "slinger": {
-      "baseValue": 6250,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Below Average",
-      "scarcity": "Rare",
+      "baseValue": 6500,
+      "baseValueMax": 12500,
+      "gemsMax": 11500,
+      "coinsMax": 575000,
+      "demand": "Extremely Low",
+      "scarcity": "Limited",
       "trend": "stable",
-      "gems": 6250,
-      "coins": 625000,
-      "updated_at": "2026-07-22T20:46:04.388+00:00"
+      "gems": 6000,
+      "coins": 300000,
+      "updated_at": "2026-09-20T18:33:07.651Z"
     },
     "dagrungy": {
-      "baseValue": 25,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 25,
-      "coins": 2500,
-      "updated_at": "2026-07-22T20:26:05.985+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T15:11:06.073Z"
     },
     "snowball": {
-      "baseValue": 1250,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Abysmal",
-      "scarcity": "Common",
+      "baseValue": 1500,
+      "baseValueMax": 3000,
+      "gemsMax": 2500,
+      "coinsMax": 125000,
+      "demand": "Extremely Low",
+      "scarcity": "Standard",
       "trend": "stable",
-      "gems": 1250,
-      "coins": 125000,
-      "updated_at": "2026-07-22T20:46:26.811+00:00"
+      "gems": 1000,
+      "coins": 50000,
+      "updated_at": "2026-09-20T18:30:19.657Z"
     },
     "skeleball": {
       "baseValue": 65700000,
@@ -1130,28 +1130,28 @@
       "updated_at": "2026-07-22T20:47:03.075+00:00"
     },
     "frozenball": {
-      "baseValue": 25,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 25,
-      "coins": 2500,
-      "updated_at": "2026-07-22T20:26:20.32+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T15:11:24.340Z"
     },
     "grassman": {
-      "baseValue": 25,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 25,
-      "coins": 2500,
-      "updated_at": "2026-07-22T20:26:29+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T15:11:38.871Z"
     },
     "shiny-vampireball": {
       "baseValue": 1000,
@@ -1298,16 +1298,16 @@
       "updated_at": "2026-09-11T16:01:55.692Z"
     },
     "ball": {
-      "baseValue": 1,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 1,
-      "coins": 1,
-      "updated_at": "2026-07-27T10:39:15.284Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T18:59:24.504Z"
     },
     "shiny-fancyball": {
       "baseValue": 50000,
@@ -1322,16 +1322,16 @@
       "updated_at": "2026-07-19T14:41:02.579+00:00"
     },
     "fancyball": {
-      "baseValue": 250,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
-      "demand": "Low",
+      "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 250,
-      "coins": 25000,
-      "updated_at": "2026-07-23T16:50:44.224Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T18:59:55.832Z"
     },
     "hackerball": {
       "baseValue": 5000,
@@ -1874,16 +1874,16 @@
       "updated_at": "2026-09-11T15:21:02.344Z"
     },
     "shiny-ball": {
-      "baseValue": 10,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 10,
-      "coins": 1000,
-      "updated_at": "2026-07-22T16:32:39.626+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T12:27:34.544Z"
     },
     "shiny-goldenmonkey": {
       "baseValue": 750000,
@@ -2450,16 +2450,16 @@
       "updated_at": "2026-07-19T21:34:30.225+00:00"
     },
     "shiny-skeleball": {
-      "baseValue": 500000000,
-      "baseValueMax": 550000000,
-      "gemsMax": 475000000,
-      "coinsMax": 17500000000,
+      "baseValue": "N/A",
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
       "demand": "Godly",
       "scarcity": "Rare",
       "trend": "stable",
-      "gems": 450000000,
-      "coins": 15000000000,
-      "updated_at": "2026-08-31T22:46:02.142Z"
+      "gems": "N/A",
+      "coins": "N/A",
+      "updated_at": "2026-09-20T18:37:52.572Z"
     },
     "cyborgball": {
       "baseValue": 10000,
@@ -2486,16 +2486,16 @@
       "updated_at": "2026-09-11T15:26:33.652Z"
     },
     "ball-2-0": {
-      "baseValue": 5,
-      "baseValueMax": 10,
-      "gemsMax": 10,
-      "coinsMax": 1000,
+      "baseValue": 0,
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 5,
-      "coins": 500,
-      "updated_at": "2026-09-01T20:33:31.141Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T12:28:50.872Z"
     },
     "shiny-shadowprince": {
       "baseValue": 208100000,
@@ -2594,16 +2594,16 @@
       "updated_at": "2026-09-18T21:19:29.160Z"
     },
     "scarecrowball": {
-      "baseValue": 20000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Slightly Below Average",
+      "baseValue": 25000,
+      "baseValueMax": 37500,
+      "gemsMax": 27500,
+      "coinsMax": 1375000,
+      "demand": "Very Low",
       "scarcity": "Limited",
       "trend": "stable",
-      "gems": 15000,
+      "gems": 20000,
       "coins": 1000000,
-      "updated_at": "2026-07-20T13:22:31.363+00:00"
+      "updated_at": "2026-09-20T19:24:42.467Z"
     },
     "easterballny": {
       "baseValue": 40000,
@@ -2618,16 +2618,16 @@
       "updated_at": "2026-07-23T20:54:07.559Z"
     },
     "shiny-backpacker": {
-      "baseValue": 500,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
-      "scarcity": "Common",
+      "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 500,
-      "coins": 50000,
-      "updated_at": "2026-07-23T21:05:17.757Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T18:35:03.095Z"
     },
     "shiny-kingofhearts": {
       "baseValue": 5500000,
@@ -2666,40 +2666,40 @@
       "updated_at": "2026-09-08T23:37:32.014Z"
     },
     "shiny-poisonball": {
-      "baseValue": 50,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 50,
-      "coins": 5000,
-      "updated_at": "2026-07-23T21:05:00.287Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T12:28:13.194Z"
     },
     "shiny-eletricball": {
-      "baseValue": 10,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 10,
-      "coins": 1000,
-      "updated_at": "2026-07-22T16:32:35.022+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T12:27:41.244Z"
     },
     "grug": {
-      "baseValue": 25,
-      "baseValueMax": 50,
-      "gemsMax": 35,
-      "coinsMax": 3500,
-      "demand": "Very Low",
+      "baseValue": 0,
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
+      "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 15,
-      "coins": 1500,
-      "updated_at": "2026-09-01T20:32:41.909Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T12:28:56.686Z"
     },
     "wormball": {
       "baseValue": 100,
@@ -2714,40 +2714,40 @@
       "updated_at": "2026-09-01T20:34:40.525Z"
     },
     "shiny-wormball": {
-      "baseValue": 10000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Abysmal",
-      "scarcity": "Standard",
+      "baseValue": 12500,
+      "baseValueMax": 17500,
+      "gemsMax": 16500,
+      "coinsMax": 825000,
+      "demand": "Extremely Low",
+      "scarcity": "Limited",
       "trend": "stable",
-      "gems": 8500,
-      "coins": 1000000,
-      "updated_at": "2026-07-22T16:37:44.138+00:00"
+      "gems": 11500,
+      "coins": 575000,
+      "updated_at": "2026-09-20T15:02:51.810Z"
     },
     "shiny-survivorball": {
-      "baseValue": 25,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
-      "scarcity": "Common",
+      "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 25,
-      "coins": 2500,
-      "updated_at": "2026-07-22T16:37:55.868+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T14:58:55.077Z"
     },
     "shiny-babyball": {
-      "baseValue": 25,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
-      "scarcity": "Common",
+      "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 25,
-      "coins": 2500,
-      "updated_at": "2026-07-22T16:38:09.979+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T14:59:20.548Z"
     },
     "boxerball": {
       "baseValue": 10,
@@ -2762,16 +2762,16 @@
       "updated_at": "2026-07-22T16:40:28.426+00:00"
     },
     "jewelryball": {
-      "baseValue": 25,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 25,
-      "coins": 2500,
-      "updated_at": "2026-07-22T20:45:04.021+00:00"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T15:11:53.801Z"
     },
     "mummyball": {
       "baseValue": 400000,
@@ -2798,232 +2798,232 @@
       "updated_at": "2026-09-08T00:39:41.806Z"
     },
     "adball": {
-      "baseValue": 35,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 35,
-      "coins": 3500,
-      "updated_at": "2026-07-23T15:51:12.752Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T18:59:31.240Z"
     },
     "bombball": {
-      "baseValue": 35,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 35,
-      "coins": 3500,
-      "updated_at": "2026-07-23T16:07:28.503Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T18:59:37.215Z"
     },
     "bubbleball": {
-      "baseValue": 35,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 35,
-      "coins": 3500,
-      "updated_at": "2026-07-23T16:07:54.797Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T18:59:43.830Z"
     },
     "celticball": {
       "baseValue": 1500,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
+      "baseValueMax": 2750,
+      "gemsMax": 1750,
+      "coinsMax": 87500,
       "demand": "Extremely Low",
       "scarcity": "Common",
       "trend": "stable",
-      "gems": 1500,
-      "coins": 150000,
-      "updated_at": "2026-07-23T16:16:36.904Z"
+      "gems": 1000,
+      "coins": 50000,
+      "updated_at": "2026-09-20T19:21:06.880Z"
     },
     "cloverball": {
       "baseValue": 1500,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
+      "baseValueMax": 2750,
+      "gemsMax": 1750,
+      "coinsMax": 87500,
       "demand": "Extremely Low",
       "scarcity": "Common",
       "trend": "stable",
-      "gems": 1500,
-      "coins": 150000,
-      "updated_at": "2026-07-23T16:16:24.385Z"
+      "gems": 1000,
+      "coins": 50000,
+      "updated_at": "2026-09-20T19:22:22.918Z"
     },
     "demonball": {
-      "baseValue": 35,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 35,
-      "coins": 3500,
-      "updated_at": "2026-07-23T16:38:33.196Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T18:59:50.050Z"
     },
     "fossilball": {
-      "baseValue": 35,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 35,
-      "coins": 3500,
-      "updated_at": "2026-07-23T16:50:31.488Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T19:00:01.934Z"
     },
     "frostyball": {
-      "baseValue": 35,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 35,
-      "coins": 35,
-      "updated_at": "2026-07-23T16:50:38.774Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T19:00:11.380Z"
     },
     "holoball": {
-      "baseValue": 35,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 35,
-      "coins": 3500,
-      "updated_at": "2026-07-23T16:50:57.128Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T19:00:19.544Z"
     },
     "knight": {
-      "baseValue": 35,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 35,
-      "coins": 3500,
-      "updated_at": "2026-07-23T16:51:04.964Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T19:00:55.310Z"
     },
     "laserball": {
-      "baseValue": 35,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 35,
-      "coins": 3500,
-      "updated_at": "2026-07-23T16:51:12.192Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T19:01:07.226Z"
     },
     "minerball": {
-      "baseValue": 35,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 35,
-      "coins": 3500,
-      "updated_at": "2026-07-23T16:51:17.667Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T19:02:46.903Z"
     },
     "presentball": {
-      "baseValue": 1250,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Abysmal",
+      "baseValue": 1500,
+      "baseValueMax": 3000,
+      "gemsMax": 2500,
+      "coinsMax": 125000,
+      "demand": "Extremely Low",
       "scarcity": "Common",
       "trend": "stable",
       "gems": 1250,
-      "coins": 125000,
-      "updated_at": "2026-07-23T16:51:34.099Z"
+      "coins": 62500,
+      "updated_at": "2026-09-20T19:26:07.593Z"
     },
     "skateboarder": {
-      "baseValue": 35,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 35,
-      "coins": 3500,
-      "updated_at": "2026-07-23T16:51:42.003Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T19:04:19.964Z"
     },
     "tartarusball": {
-      "baseValue": 35,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
-      "demand": "Extremely Low",
-      "scarcity": "Common",
+      "demand": "Abysmal",
+      "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 35,
-      "coins": 3500,
-      "updated_at": "2026-07-23T16:54:48.540Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T19:24:59.335Z"
     },
     "vampireball": {
       "baseValue": 2500,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Abysmal",
+      "baseValueMax": 3750,
+      "gemsMax": 2750,
+      "coinsMax": 137500,
+      "demand": "Extremely Low",
       "scarcity": "Standard",
       "trend": "stable",
-      "gems": 2500,
-      "coins": 250000,
-      "updated_at": "2026-07-23T16:55:30.680Z"
+      "gems": 2000,
+      "coins": 100000,
+      "updated_at": "2026-09-20T19:23:48.356Z"
     },
     "venomousball": {
-      "baseValue": 35,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
       "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 35,
-      "coins": 3500,
-      "updated_at": "2026-07-23T16:55:09.026Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T19:15:50.453Z"
     },
     "heartball": {
-      "baseValue": 1950,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Abysmal",
-      "scarcity": "Common",
+      "baseValue": 1500,
+      "baseValueMax": 2750,
+      "gemsMax": 1750,
+      "coinsMax": 87500,
+      "demand": "Extremely Low",
+      "scarcity": "Standard",
       "trend": "stable",
-      "gems": 1950,
-      "coins": 195000,
-      "updated_at": "2026-07-23T16:55:26.284Z"
+      "gems": 1000,
+      "coins": 50000,
+      "updated_at": "2026-09-20T19:22:56.026Z"
     },
     "roseball": {
-      "baseValue": 2500,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Abysmal",
+      "baseValue": 3500,
+      "baseValueMax": 4750,
+      "gemsMax": 3750,
+      "coinsMax": 187500,
+      "demand": "Very Low",
       "scarcity": "Limited",
       "trend": "stable",
-      "gems": 2500,
-      "coins": 250000,
-      "updated_at": "2026-07-23T16:55:45.089Z"
+      "gems": 3000,
+      "coins": 150000,
+      "updated_at": "2026-09-20T19:23:37.208Z"
     },
     "angelball": {
       "baseValue": 150,
@@ -3074,28 +3074,28 @@
       "updated_at": "2026-07-23T20:38:47.916Z"
     },
     "shiny-shadowball": {
-      "baseValue": 500000000,
-      "baseValueMax": 550000000,
-      "gemsMax": 475000000,
-      "coinsMax": 17500000000,
+      "baseValue": "O/C",
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
       "demand": "Godly",
       "scarcity": "Rare",
       "trend": "stable",
-      "gems": 450000000,
-      "coins": 15000000000,
-      "updated_at": "2026-08-28T19:59:35.231Z"
+      "gems": "O/C",
+      "coins": "O/C",
+      "updated_at": "2026-09-20T18:40:50.222Z"
     },
     "shiny-zomball": {
-      "baseValue": 500000000,
-      "baseValueMax": 550000000,
-      "gemsMax": 475000000,
-      "coinsMax": 17500000000,
+      "baseValue": "N/A",
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
       "demand": "Godly",
       "scarcity": "Rare",
       "trend": "stable",
-      "gems": 450000000,
-      "coins": 15000000000,
-      "updated_at": "2026-08-28T19:58:18.024Z"
+      "gems": "N/A",
+      "coins": "N/A",
+      "updated_at": "2026-09-20T18:40:12.882Z"
     },
     "awesomegrug": {
       "baseValue": 110,
@@ -3110,16 +3110,16 @@
       "updated_at": "2026-07-23T20:44:23.382Z"
     },
     "powerarmorball": {
-      "baseValue": 35,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
-      "demand": "Normal",
-      "scarcity": "Standard",
+      "demand": "Abysmal",
+      "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 35,
-      "coins": 3500,
-      "updated_at": "2026-07-23T20:44:34.958Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T19:25:13.641Z"
     },
     "shiny-urchinball": {
       "baseValue": 4250,
@@ -3482,124 +3482,124 @@
       "updated_at": "2026-07-23T21:03:44.202Z"
     },
     "shiny-chickball": {
-      "baseValue": 17500,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Below Average",
-      "scarcity": "Common",
-      "trend": "stable",
-      "gems": 17500,
-      "coins": 1750000,
-      "updated_at": "2026-07-23T21:05:45.950Z"
-    },
-    "shiny-chocolateball": {
-      "baseValue": 35000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Very Low",
-      "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 35000,
-      "coins": 5500000,
-      "updated_at": "2026-07-23T21:06:30.268Z"
-    },
-    "shiny-coalball": {
-      "baseValue": 55000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
+      "baseValue": 75000,
+      "baseValueMax": 87500,
+      "gemsMax": 80000,
+      "coinsMax": 4000000,
       "demand": "Extremely Low",
-      "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 55000,
-      "coins": 5500000,
-      "updated_at": "2026-07-23T21:06:27.092Z"
-    },
-    "shiny-coinball": {
-      "baseValue": 25000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Abysmal",
       "scarcity": "Limited",
       "trend": "stable",
-      "gems": 25000,
-      "coins": 2500000,
-      "updated_at": "2026-07-23T21:06:45.398Z"
+      "gems": 67500,
+      "coins": 3375000,
+      "updated_at": "2026-09-20T18:54:43.648Z"
+    },
+    "shiny-chocolateball": {
+      "baseValue": 95000,
+      "baseValueMax": 105000,
+      "gemsMax": 95000,
+      "coinsMax": 4750000,
+      "demand": "Extremely Low",
+      "scarcity": "Rare",
+      "trend": "stable",
+      "gems": 85000,
+      "coins": 4250000,
+      "updated_at": "2026-09-20T18:44:55.329Z"
+    },
+    "shiny-coalball": {
+      "baseValue": 95000,
+      "baseValueMax": 105000,
+      "gemsMax": 95000,
+      "coinsMax": 4750000,
+      "demand": "Extremely Low",
+      "scarcity": "Rare",
+      "trend": "stable",
+      "gems": 85000,
+      "coins": 4250000,
+      "updated_at": "2026-09-20T18:48:46.113Z"
+    },
+    "shiny-coinball": {
+      "baseValue": 75000,
+      "baseValueMax": 87500,
+      "gemsMax": 80000,
+      "coinsMax": 4000000,
+      "demand": "Extremely Low",
+      "scarcity": "Rare",
+      "trend": "stable",
+      "gems": 67500,
+      "coins": 3375000,
+      "updated_at": "2026-09-20T18:48:07.184Z"
     },
     "shiny-dagrungy": {
-      "baseValue": 500,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
-      "scarcity": "Common",
+      "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 500,
-      "coins": 50000,
-      "updated_at": "2026-07-23T21:06:55.975Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T18:35:28.456Z"
     },
     "shiny-flameball": {
-      "baseValue": 500,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
-      "scarcity": "Common",
+      "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 500,
-      "coins": 50000,
-      "updated_at": "2026-07-23T21:07:03.970Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T18:35:34.738Z"
     },
     "shiny-frozenball": {
-      "baseValue": 500,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
-      "scarcity": "Common",
+      "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 500,
-      "coins": 50000,
-      "updated_at": "2026-07-23T21:07:12.519Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T18:35:40.479Z"
     },
     "shiny-grassman": {
-      "baseValue": 500,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
-      "scarcity": "Common",
+      "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 500,
-      "coins": 50000,
-      "updated_at": "2026-07-23T21:07:38.373Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T18:35:47.604Z"
     },
     "shiny-heprobot": {
-      "baseValue": 1500,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
-      "demand": "Extremely Low",
-      "scarcity": "Common",
+      "demand": "Abysmal",
+      "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 1500,
-      "coins": 150000,
-      "updated_at": "2026-07-23T21:07:31.282Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T18:35:55.128Z"
     },
     "shiny-jewelryball": {
       "baseValue": 15000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Normal",
-      "scarcity": "Standard",
+      "baseValueMax": 27500,
+      "gemsMax": 24500,
+      "coinsMax": 1225000,
+      "demand": "Low",
+      "scarcity": "Limited",
       "trend": "stable",
-      "gems": 15000,
-      "coins": 1500000,
-      "updated_at": "2026-07-23T21:07:52.116Z"
+      "gems": 12500,
+      "coins": 625000,
+      "updated_at": "2026-09-20T18:47:17.372Z"
     },
     "shiny-monkey": {
       "baseValue": 500,
@@ -3650,64 +3650,64 @@
       "updated_at": "2026-07-23T21:08:41.604Z"
     },
     "shiny-rockball": {
-      "baseValue": 500,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
-      "scarcity": "Common",
+      "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 500,
-      "coins": 50000,
-      "updated_at": "2026-07-23T21:08:49.913Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T18:41:35.620Z"
     },
     "shiny-soulball": {
-      "baseValue": 45000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
+      "baseValue": 75000,
+      "baseValueMax": 87500,
+      "gemsMax": 80000,
+      "coinsMax": 4000000,
+      "demand": "Extremely Low",
+      "scarcity": "Rare",
+      "trend": "stable",
+      "gems": 67500,
+      "coins": 3375000,
+      "updated_at": "2026-09-20T18:48:13.456Z"
+    },
+    "shiny-slinger": {
+      "baseValue": 150000,
+      "baseValueMax": 200000,
+      "gemsMax": 185000,
+      "coinsMax": 9250000,
       "demand": "Very Low",
       "scarcity": "Rare",
       "trend": "stable",
-      "gems": 45000,
-      "coins": 4500000,
-      "updated_at": "2026-07-23T21:09:08.729Z"
-    },
-    "shiny-slinger": {
-      "baseValue": 45000,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Low",
-      "scarcity": "Rare",
-      "trend": "stable",
-      "gems": 45000,
-      "coins": 4500000,
-      "updated_at": "2026-07-23T21:09:20.807Z"
+      "gems": 135000,
+      "coins": 6750000,
+      "updated_at": "2026-09-20T18:50:02.655Z"
     },
     "shiny-sniperball": {
-      "baseValue": 500,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
-      "scarcity": "Common",
+      "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 500,
-      "coins": 50000,
-      "updated_at": "2026-07-23T21:09:30.802Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T18:41:44.222Z"
     },
     "shiny-snowball": {
-      "baseValue": 9500,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Abysmal",
+      "baseValue": 25000,
+      "baseValueMax": 37500,
+      "gemsMax": 30000,
+      "coinsMax": 1875000,
+      "demand": "Extremely Low",
       "scarcity": "Limited",
       "trend": "stable",
-      "gems": 9500,
-      "coins": 950000,
-      "updated_at": "2026-07-23T21:09:45.259Z"
+      "gems": 27500,
+      "coins": 1250000,
+      "updated_at": "2026-09-20T18:55:31.123Z"
     },
     "shiny-crusherball": {
       "baseValue": 15000,
@@ -3770,16 +3770,16 @@
       "updated_at": "2026-07-23T23:24:21.368Z"
     },
     "shiny-fishball": {
-      "baseValue": 2250,
+      "baseValue": 0,
       "baseValueMax": null,
       "gemsMax": null,
       "coinsMax": null,
       "demand": "Abysmal",
-      "scarcity": "Common",
+      "scarcity": "Flooded",
       "trend": "stable",
-      "gems": 2250,
-      "coins": 225000,
-      "updated_at": "2026-07-26T14:47:31.137Z"
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T18:41:52.935Z"
     },
     "shiny-militaryball": {
       "baseValue": 500,
@@ -3806,16 +3806,16 @@
       "updated_at": "2026-09-08T23:37:47.938Z"
     },
     "shiny-parrotball": {
-      "baseValue": 1,
-      "baseValueMax": null,
-      "gemsMax": null,
-      "coinsMax": null,
-      "demand": "Normal",
-      "scarcity": "Standard",
+      "baseValue": 10000,
+      "baseValueMax": 15000,
+      "gemsMax": 12500,
+      "coinsMax": 625000,
+      "demand": "Extremely Low",
+      "scarcity": "Limited",
       "trend": "stable",
-      "gems": 0,
-      "coins": 0,
-      "updated_at": "2026-08-31T17:52:54.948Z"
+      "gems": 8500,
+      "coins": 425000,
+      "updated_at": "2026-09-20T18:57:43.225Z"
     },
     "appletreeball": {
       "baseValue": 2400000,
@@ -4068,6 +4068,18 @@
       "gems": "N/A",
       "coins": "N/A",
       "updated_at": "2026-09-08T23:34:53.664Z"
+    },
+    "parrotball": {
+      "baseValue": 0,
+      "baseValueMax": null,
+      "gemsMax": null,
+      "coinsMax": null,
+      "demand": "Abysmal",
+      "scarcity": "Flooded",
+      "trend": "stable",
+      "gems": 0,
+      "coins": 0,
+      "updated_at": "2026-09-20T18:33:39.366Z"
     }
   },
   "wikiOverrides": {

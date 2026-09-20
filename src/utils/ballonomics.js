@@ -93,11 +93,24 @@ export function endlessBand(streak) {
   return Math.max(1.15, 4 * Math.pow(0.96, Math.max(0, streak)));
 }
 
+// Difficulty: scales the value band. Easy = values far apart (easy compare),
+// Hard = values much closer together (tough compare).
+export const BONOMICS_DIFFICULTIES = [
+  { id: 'easy', label: 'Easy', icon: '🌱', mult: 2.2 },
+  { id: 'medium', label: 'Medium', icon: '⚖️', mult: 1 },
+  { id: 'hard', label: 'Hard', icon: '🔥', mult: 0.6 },
+];
+
+export function normalizeDifficulty(id) {
+  return BONOMICS_DIFFICULTIES.some((d) => d.id === id) ? id : 'medium';
+}
+
 /** Pick the next endless unit: deterministic, never the previous unit, never
  *  an exact value tie, and within the streak's band when the pool allows. */
-export function nextEndlessPair(pool, seed, streak, previous) {
+export function nextEndlessPair(pool, seed, streak, previous, difficulty = 'medium') {
   if (!pool || pool.length < 2 || !previous) return null;
-  const band = endlessBand(streak);
+  const mult = (BONOMICS_DIFFICULTIES.find((d) => d.id === difficulty) || {}).mult || 1;
+  const band = Math.max(1.06, endlessBand(streak) * mult);
   const prevVal = Number(previous.tradeValue) || 1;
   const rng = rngFromSeed(`${seed}:${streak}:${previous.slug}`);
   const distinct = pool.filter((e) => e.slug !== previous.slug && Number(e.tradeValue) !== prevVal);

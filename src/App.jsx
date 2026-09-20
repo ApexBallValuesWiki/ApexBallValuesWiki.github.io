@@ -151,6 +151,7 @@ export default function App() {
       <BackToTop />
       {!location.pathname.startsWith('/admin') && <FirstTimeTutorial />}
       <AchievementPopup />
+      <LiveUpdateToast />
       <ErrorBoundary>
         <AppRoutes />
       </ErrorBoundary>
@@ -159,11 +160,42 @@ export default function App() {
           Apex WIKI &amp; Values — fan-made companion for Ball Tower Defense. Not affiliated with Cash Grab Studios.
         </span>
         <span className="site-footer-links">
+          <a href="/changelog">What's new</a>
+          <span aria-hidden="true">·</span>
           <a href="/privacy">Privacy Policy</a>
           <span aria-hidden="true">·</span>
           <a href="/credits">Credits</a>
         </span>
       </footer>
     </SmoothScroll>
+  );
+}
+
+// Small "live data updated" notice — appears when the KV poll picks up a new
+// published version (values/wiki edits), then fades away.
+function LiveUpdateToast() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    let t = 0;
+    const onLive = () => {
+      setVisible(true);
+      window.clearTimeout(t);
+      t = window.setTimeout(() => setVisible(false), 4000);
+    };
+    window.addEventListener('apex-live-updated', onLive);
+    return () => { window.removeEventListener('apex-live-updated', onLive); window.clearTimeout(t); };
+  }, []);
+  if (!visible) return null;
+  return (
+    <div
+      role="status"
+      style={{
+        position: 'fixed', bottom: 14, right: 14, zIndex: 90,
+        background: 'rgba(77, 157, 255, 0.14)', border: '1px solid rgba(77, 157, 255, 0.5)',
+        color: '#9ecbff', borderRadius: 12, padding: '10px 14px', fontSize: 13, pointerEvents: 'none',
+      }}
+    >
+      ⚡ Live data updated
+    </div>
   );
 }

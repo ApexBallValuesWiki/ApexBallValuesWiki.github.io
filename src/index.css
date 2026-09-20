@@ -643,3 +643,19 @@ a:focus-visible {
 .privacy-page li { line-height: 1.55; color: var(--text-dim, #bfbfbf); }
 .privacy-page a { color: var(--accent, #4d9dff); }
 .privacy-updated { font-size: 0.78rem; color: var(--text-faint); margin: 4px 0 14px; }
+
+/* Origin tags (Seasonal / Exclusive / Unobtainable / Event) on unit cards */
+.origin-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-start;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid;
+  margin-top: 2px;
+}

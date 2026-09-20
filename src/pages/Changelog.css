@@ -1,0 +1,84 @@
+.changelog-page {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 26px 18px 70px;
+}
+
+.changelog-hero h1 {
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+  margin-bottom: 6px;
+}
+
+.changelog-sub {
+  color: var(--text-dim, #bfbfbf);
+  line-height: 1.6;
+  max-width: 560px;
+}
+
+.changelog-timeline {
+  margin-top: 26px;
+  display: grid;
+  gap: 14px;
+}
+
+.changelog-entry {
+  padding: 16px 18px;
+}
+
+.changelog-entry-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 0.72rem;
+}
+
+.changelog-date {
+  color: var(--text-faint, #8a8a93);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.changelog-tag {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid;
+}
+
+.changelog-version {
+  color: var(--text-dim, #bfbfbf);
+  font-weight: 600;
+}
+
+.changelog-entry h2 {
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
+
+.changelog-entry ul {
+  margin: 0 0 0 4px;
+  display: grid;
+  gap: 5px;
+  list-style: none;
+}
+
+.changelog-entry li {
+  position: relative;
+  padding-left: 16px;
+  color: var(--text-dim, #bfbfbf);
+  line-height: 1.5;
+  font-size: 0.92rem;
+}
+
+.changelog-entry li::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: var(--accent, #4d9dff);
+  font-weight: 800;
+}

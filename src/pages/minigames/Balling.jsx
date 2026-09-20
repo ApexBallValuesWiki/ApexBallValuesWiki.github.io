@@ -18,6 +18,7 @@ import {
 } from '../../utils/balling';
 import { incrementStat } from '../../utils/achievements';
 import './Minigames.css';
+import { hintBalance, spendHint, grantHint, HINTS_EVENT } from '../../utils/hints';
 
 const STATS_KEY = 'apex-balling-stats-v1';
 const USER_SEED_KEY = 'apex-balling-user-seed-v1';
@@ -84,6 +85,7 @@ export default function Balling() {
   const [message, setMessage] = useState('');
   const [shareMessage, setShareMessage] = useState('');
   const [stats, setStats] = useState(() => loadStats(STATS_KEY));
+  const [hints, setHints] = useState(() => hintBalance());
 
   const canvasRef = useRef(null);
   const imageRef = useRef(null);
@@ -164,6 +166,21 @@ export default function Balling() {
     });
   }
 
+  useEffect(() => {
+    const onHints = () => setHints(hintBalance());
+    window.addEventListener(HINTS_EVENT, onHints);
+    return () => window.removeEventListener(HINTS_EVENT, onHints);
+  }, []);
+
+  function usePixelHint() {
+    if (!answer || finished) return;
+    if (!spendHint()) { setMessage('No hints left — win dailies to earn more.'); return; }
+    setHints(hintBalance());
+    const next = Math.min(stageIndex + 1, PIXEL_STAGES.length - 1);
+    setStageIndex(next);
+    setMessage(`Hint used — revealed more pixels (${PIXEL_STAGES[next]}px).`);
+  }
+
   function submitGuess(event) {
     event.preventDefault();
     if (!answer || finished) return;
@@ -188,13 +205,14 @@ export default function Balling() {
       if (mode === 'quick') {
         const nextChain = quickChain + 1;
         setQuickChain(nextChain);
-        if (nextChain >= 5) incrementStat('balling_quick_streak_5', 1);
+        if (nextChain >= 5) { incrementStat('balling_quick_streak_5', 1); grantHint(1); }
       }
       if (mode === 'daily') {
         const next = { solved: true, lost: false, guesses, stageIndex, startTime: daily.startTime };
         setDaily(next);
         if (dailyStorageKey) saveProgress(dailyStorageKey, next);
         recordDailyResult(true, stageIndex);
+        grantHint(1); // daily solve earns a hint
       } else {
         setQuick({ ...quick, solved: true, guesses });
         setStats((prev) => {
@@ -397,6 +415,15 @@ export default function Balling() {
                   aria-label="Your guess"
                 />
                 <button type="submit">Guess</button>
+                <button
+                  type="button"
+                  className="ball-hint-btn"
+                  onClick={usePixelHint}
+                  disabled={!answer || finished}
+                  title="Spend 1 hint to reveal more pixels"
+                >
+                  💡 {hints}
+                </button>
                 {dropdownOpen && (
                   <div className="ball-suggestion-menu" data-lenis-prevent>
                     {suggestions.length > 0 ? suggestions.map((entry) => (

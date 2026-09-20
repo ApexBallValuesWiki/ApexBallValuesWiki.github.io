@@ -4,6 +4,14 @@ import { ALL_UNITS, createShinyUnit } from '../data/units';
 import { isSpecialBaseValue } from '../utils/adminForms';
 import { computeTradeValue } from '../utils/calculator';
 import { APEX_KV_URL, fetchKvBundle } from '../utils/apexClient';
+
+// Cross-tab live sync: one tab's poll refreshes every open tab.
+let liveChannel = null;
+function apexLiveChannel() {
+  if (typeof window === 'undefined' || !('BroadcastChannel' in window)) return null;
+  if (!liveChannel) liveChannel = new BroadcastChannel('apex-kv-live');
+  return liveChannel;
+}
 import { rowToWikiOverride } from '../utils/wikiOverrides';
 import { loadLocalValueOverrides, loadLocalWikiOverrides, loadLocalMapOverrides, loadLocalCrateOverrides, loadLocalMaterialOverrides, loadLocalDeletedOverrides, loadLocalDeletedUnits, markLocalUnitDeleted, unmarkLocalUnitDeleted } from '../utils/localOverrides';
 import { PUBLIC_LIVE_SYNC_ENABLED } from '../config/egressControl';
@@ -294,8 +302,13 @@ export function DataProvider({ children }) {
     return PUBLIC_LIVE_SYNC_ENABLED || (typeof window !== 'undefined' && window.location?.pathname?.startsWith('/admin'));
   }, []);
 
+  const lastVersionRef = useRef(null);
+
   const applyBundle = useCallback((data) => {
     if (!data) return;
+    const version = typeof data.__v === 'number' ? data.__v : null;
+    const changed = version === null || lastVersionRef.current === null || version !== lastVersionRef.current;
+    lastVersionRef.current = version;
 
     const nextValues = bundleToValueRows(data);
     const nextWiki = bundleToWikiRows(data);
@@ -319,7 +332,7 @@ export function DataProvider({ children }) {
     setWikiLoading(false);
   }, []);
 
-  const syncFromKV = useCallback(async ({ force = false } = {}) => {
+  const syncFromKV = useCallback(async ({ force = false, applyAnyway = false } = {}) => {
     if (!canSync()) return;
     const now = Date.now();
     if (!force && (inFlightRef.current || now - lastFetchRef.current < 15000)) return;
@@ -329,7 +342,11 @@ export function DataProvider({ children }) {
       let data = await fetchKvBundle();
       if (!data) data = await fetchBakedBundle();
       if (data) {
-        applyBundle(data);
+        const v = typeof data.__v === 'number' ? data.__v : null;
+        const unchanged = v !== null && v === lastVersionRef.current;
+        if (!unchanged || applyAnyway) {
+          applyBundle(data);
+        }
         setError(null);
         setWikiError(null);
       } else if (!force) {
@@ -344,7 +361,7 @@ export function DataProvider({ children }) {
   }, [applyBundle, canSync]);
 
   // Stable public API — AdminHome calls these after publishing edits.
-  const refresh = useCallback(async () => syncFromKV({ force: true }), [syncFromKV]);
+  const refresh = useCallback(async () => syncFromKV({ force: true, applyAnyway: true }), [syncFromKV]);
   const refreshWiki = refresh;
   const refreshContent = refresh;
 
@@ -373,17 +390,31 @@ export function DataProvider({ children }) {
     };
   }, [canSync, syncFromKV]);
 
-  // Lightweight polling while the tab is visible: published edits appear for
-  // every visitor within ~2 minutes without any realtime infrastructure.
+  // Live polling while the tab is visible: published edits appear for every
+  // visitor within ~25s — no refresh, no realtime infrastructure needed. The
+  // version gate inside syncFromKV skips the re-apply when nothing changed.
   useEffect(() => {
     if (!canSync()) return undefined;
     const id = window.setInterval(() => {
       if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
         syncFromKV({ force: true });
       }
-    }, 120000);
+    }, 25000);
     return () => window.clearInterval(id);
   }, [canSync, syncFromKV]);
+
+  // Other tabs refreshed already: pull the new data here too (instant).
+  useEffect(() => {
+    const ch = apexLiveChannel();
+    if (!ch) return undefined;
+    const onMsg = (event) => {
+      if (event?.data?.type === 'apex-sync' && event.data.version !== lastVersionRef.current) {
+        syncFromKV({ force: true });
+      }
+    };
+    ch.addEventListener('message', onMsg);
+    return () => ch.removeEventListener('message', onMsg);
+  }, [syncFromKV]);
 
   // Static roster: slugs shipped in the data files. Any WIKI database row
   // whose slug is NOT here is a unit an editor created at runtime — it is
