@@ -684,6 +684,7 @@ export default function AdminHome() {
     if (section === 'wiki') return (loadLocalWikiOverrides() || {})[slug];
     if (section === 'map') return (loadLocalMapOverrides() || {})[slug];
     if (section === 'crate') return (loadLocalCrateOverrides() || {})[slug];
+    if (section === 'materials') return (loadLocalMaterialOverrides() || {})[slug];
     return null;
   }
 
@@ -699,12 +700,51 @@ export default function AdminHome() {
       unmarkLocalOverrideDeleted(section, slug);
       if (!silent) setMessage(`✓ Published to live database (v${result.version}).`);
     } else if (result.status === 401) {
-      setMessage('⚠️ Saved locally, but cloud publish failed: Your saved login/passcode is invalid.');
-    } else {
-      setMessage(`⚠️ Cloud publish failed: ${result.error || 'Server error'}`);
+      if (!silent) setMessage('⚠️ Saved locally, but cloud publish failed: Your saved login/passcode is invalid.');
+    } else if (!silent) {
+      setMessage(`⚠️ Cloud publish failed: ${result.error || `Server error (HTTP ${result.status || 'network'})`}`);
       setMessageAction({ label: '🔄 Try again', run: () => { pushEntryToKV(section, slug, { silent }); } });
     }
-    return result.ok;
+    return result;
+  }
+
+  // ---- BACKGROUND PUBLISH QUEUE ------------------------------------------------
+  // Save buttons never wait for the network: the local write is instant and
+  // the cloud publish runs behind the UI. Serial + deduped, so 50 rapid saves
+  // collapse into one publish per unit (latest state wins) and can never
+  // clobber each other. Failures retry automatically, then surface a Retry
+  // button — local drafts are always safe either way.
+  const publishQueueRef = useRef(Promise.resolve());
+  const pendingPublishRef = useRef(new Map());
+
+  function queueCloudPublish(section, slug) {
+    const key = `${section}:${slug}`;
+    pendingPublishRef.current.set(key, { section, slug });
+    publishQueueRef.current = publishQueueRef.current
+      .then(async () => {
+        await new Promise((r) => setTimeout(r, 250)); // collapse rapid re-saves of the same unit
+        const pending = pendingPublishRef.current.get(key);
+        if (!pending) return;
+        pendingPublishRef.current.delete(key);
+        let result = null;
+        for (let attempt = 1; attempt <= 3; attempt += 1) {
+          try {
+            result = await pushEntryToKV(pending.section, pending.slug, { silent: true });
+          } catch { result = null; }
+          if (result && result.ok) break;
+          if (result && result.status === 401) break; // no point retrying a bad login
+          await new Promise((r) => setTimeout(r, 500 * attempt));
+        }
+        if (result && result.ok) {
+          setMessage(`☁️ Live: ${pending.slug} published${typeof result.version === 'number' ? ` (v${result.version})` : ''}.`);
+        } else {
+          const why = (result && result.error) ? result.error : `HTTP ${result && result.status ? result.status : 'network error'}`;
+          setMessage(`⚠️ Cloud publish failed for ${pending.slug}: ${why} — your edits are safe locally and will publish with the next save.`);
+          setMessageAction({ label: '🔄 Publish now', run: () => { queueCloudPublish(pending.section, pending.slug); } });
+        }
+      })
+      .catch(() => { /* the queue must never die */ });
+    return key;
   }
 
   async function deleteEntryFromKV(section, slug) {
@@ -1041,7 +1081,7 @@ export default function AdminHome() {
     setSelectedSlug(payload.slug);
     setActiveView('wiki');
     try { await Promise.all([refreshAdminData(), refresh(), refreshWiki()]); } catch { /* ignore */ }
-    pushEntryToKV('wiki', payload.slug);
+    queueCloudPublish('wiki', payload.slug);
   }
 
   // Delete ANY unit (built-in or created) from the entire site: it vanishes
@@ -1224,7 +1264,7 @@ export default function AdminHome() {
       setMessageAction(null);
       materialSeedRef.current = null; // re-seed from the saved state
       try { await Promise.all([refreshAdminData(), refreshWiki()]); } catch { /* ignore */ }
-      pushEntryToKV('materials', payload.slug);
+      queueCloudPublish('materials', payload.slug);
     } catch (error) {
       setMessage(`Material save failed: ${errorMessage(error)}`);
     }
@@ -1244,7 +1284,7 @@ export default function AdminHome() {
     setActiveTool('maps');
     setContentSlug(payload.slug);
     try { await Promise.all([refreshAdminData(), refreshContent()]); } catch { /* ignore */ }
-    pushEntryToKV('map', payload.slug);
+    queueCloudPublish('map', payload.slug);
   }
 
   async function handleCreateSkin(payload) {
@@ -1256,7 +1296,7 @@ export default function AdminHome() {
     setMessage(`✓ Created skin "${payload.name}"! It is live on the skins pages.`);
     setMessageAction(null);
     try { await Promise.all([refreshAdminData(), refreshWiki()]); } catch { /* ignore */ }
-    pushEntryToKV('wiki', payload.slug);
+    queueCloudPublish('wiki', payload.slug);
   }
 
   async function handleCreateMaterial(payload) {
@@ -1268,7 +1308,7 @@ export default function AdminHome() {
     setMessageAction(null);
     setActiveView('materials');
     try { await Promise.all([refreshAdminData(), refreshWiki()]); } catch { /* ignore */ }
-    pushEntryToKV('materials', payload.slug);
+    queueCloudPublish('materials', payload.slug);
   }
 
   // Lightweight credential probe (any admin-authed endpoint works). Only a
@@ -1422,15 +1462,14 @@ export default function AdminHome() {
       });
       justSavedRef.current = true;
       logChange(selectedUnit.slug, 'value', `Value: ${next.baseValue}${next.baseValueMax ? '-' + next.baseValueMax : ''} | Gems: ${next.gems} | Coins: ${next.coins} | ${next.demand} / ${next.scarcity}`);
-      setMessage(`✓ Saved! Value: ${next.baseValue}${next.baseValueMax ? '-' + next.baseValueMax : ''} | Gems: ${next.gems} | Coins: ${next.coins}`);
+      setMessage(`✓ Saved! Value: ${next.baseValue}${next.baseValueMax ? '-' + next.baseValueMax : ''} | Gems: ${next.gems} | Coins: ${next.coins} — ☁️ publishing live…`);
       setMessageAction(null);
       baseline('value', valueForm); // the on-screen form IS what was saved
       clearFormDraft('value');
       pushRecentEdit({ slug: selectedUnit.slug, name: selectedUnit.name || selectedUnit.slug, kind: 'values' });
       setRecentEdits(loadRecentEdits());
       setDraftsVersion((v) => v + 1);
-      try { await pushEntryToKV('value', selectedUnit.slug); } catch { /* ignore */ }
-      try { await refreshAdminData({ logsOnly: true }); } catch { /* ignore */ }
+      queueCloudPublish('value', selectedUnit.slug); // background: never blocks the button
     } catch (error) {
       setMessage(`Save failed: ${errorMessage(error)}`);
     }
@@ -1508,7 +1547,7 @@ export default function AdminHome() {
       } catch {
         // ignore
       }
-      await pushEntryToKV('wiki', selectedUnit.slug);
+      queueCloudPublish('wiki', selectedUnit.slug); // background: never blocks the button
       clearFormDraft('wiki');
       pushRecentEdit({ slug: selectedUnit.slug, name: selectedUnit.name || selectedUnit.slug, kind: 'wiki' });
       setRecentEdits(loadRecentEdits());
@@ -1516,7 +1555,7 @@ export default function AdminHome() {
       // The shiny auto-sync above wrote its own local draft — publish it too.
       const shinySlug = makeShinySlug(selectedUnit.slug);
       if (shinySlug !== selectedUnit.slug) {
-        try { await pushEntryToKV('wiki', shinySlug); } catch { /* ignore */ }
+        queueCloudPublish('wiki', shinySlug);
       }
     } catch (error) {
       setMessage(`Wiki save failed: ${errorMessage(error)}`);
@@ -1582,7 +1621,7 @@ export default function AdminHome() {
       clearFormDraft(activeTool === 'maps' ? 'maps' : 'crates');
       setDraftsVersion((v) => v + 1);
       logChange(selectedContentItem.slug, mapsMode ? 'map' : 'crate', `${mapsMode ? 'Map' : 'Crate'} updated: ${contentForm.name}`);
-      pushEntryToKV(mapsMode ? 'map' : 'crate', selectedContentItem.slug);
+      queueCloudPublish(mapsMode ? 'map' : 'crate', selectedContentItem.slug);
     } catch (error) { setMessage(`Content save failed: ${errorMessage(error)}`); }
     setSaving(false);
   }

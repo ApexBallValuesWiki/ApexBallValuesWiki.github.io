@@ -121,7 +121,7 @@ export async function pushBundleToCloudflareKV(bundle, { isRestore = false, onSt
     }
 
     const errData = await response.json().catch(() => ({}));
-    onStatus?.(`⚠️ Saved locally, but cloud publish failed: ${errData.error || 'Server error'}`);
+    onStatus?.(`⚠️ Saved locally, but cloud publish failed: ${errData.error || `Server error (HTTP ${response.status})`}`);
     return { ok: false, conflict: false };
   } catch (e) {
     onStatus?.(`⚠️ Saved locally, but could not connect to Cloudflare KV database: ${e.message}`);
