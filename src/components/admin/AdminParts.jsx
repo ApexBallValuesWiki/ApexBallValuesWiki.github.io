@@ -8,6 +8,7 @@ import { DEMAND_LABELS, SCARCITY_LABELS, getRarityGlow, isShinyRarity, UNIT_RARI
 import { upgradeToForm, ensureArray, linesToObject, objectToLines } from '../../utils/adminForms';
 import { computeTradeValue } from '../../utils/calculator';
 import { getDisplayName } from '../../utils/teamMembers';
+import { UNIT_TAGS, normalizeUnitTag } from '../../utils/originTag';
 
 const TRENDS = [
   { value: 'stable', label: 'Stable' },
@@ -471,7 +472,7 @@ export function WikiEditor({ unit, form = {}, selectedRow, updateField, imageFil
 
           <AdminInput label="Type" value={form.type} onChange={(value) => updateField('type', value)} />
           <AdminInput label="Raw Type" value={form.rawType} onChange={(value) => updateField('rawType', value)} />
-          <AdminInput label="Category" value={form.category} onChange={(value) => updateField('category', value)} />
+          <AdminSelect label="Tag" value={normalizeUnitTag(form.category)} onChange={(value) => updateField('category', value)} options={UNIT_TAGS} />
           <AdminInput label="Placement Limit" value={form.placementLimit} onChange={(value) => updateField('placementLimit', value)} />
           <AdminInput label="Total Cost" value={form.totalCost} onChange={(value) => updateField('totalCost', value)} />
 

@@ -36,5 +36,8 @@ export function mergeWikiOverride(unit, override) {
   const cleanOverride = Object.fromEntries(
     Object.entries(override).filter(([, value]) => value !== undefined)
   );
+  // Keep `categories` in sync with an overridden `category` so every consumer
+  // (tag badges, unobtainable checks, filters) sees the admin's edit.
+  if (cleanOverride.category) cleanOverride.categories = [cleanOverride.category];
   return { ...unit, ...cleanOverride };
 }

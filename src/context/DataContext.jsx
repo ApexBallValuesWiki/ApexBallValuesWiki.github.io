@@ -12,7 +12,7 @@ function apexLiveChannel() {
   if (!liveChannel) liveChannel = new BroadcastChannel('apex-kv-live');
   return liveChannel;
 }
-import { rowToWikiOverride } from '../utils/wikiOverrides';
+import { rowToWikiOverride, mergeWikiOverride } from '../utils/wikiOverrides';
 import { loadLocalValueOverrides, loadLocalWikiOverrides, loadLocalMapOverrides, loadLocalCrateOverrides, loadLocalMaterialOverrides, loadLocalDeletedOverrides, loadLocalDeletedUnits, markLocalUnitDeleted, unmarkLocalUnitDeleted } from '../utils/localOverrides';
 import { PUBLIC_LIVE_SYNC_ENABLED } from '../config/egressControl';
 import staticOverridesJson from '../data/overrides/staticOverrides.json';
@@ -566,13 +566,7 @@ export function DataProvider({ children }) {
     const mergeWiki = (entry) => {
       const withVal = withLiveValue(entry, rowsBySlug, localValueOverrides);
       const wikiOver = getWikiOverride(entry.slug);
-      if (wikiOver) {
-        const cleanOver = Object.fromEntries(
-          Object.entries(wikiOver).filter(([, v]) => v !== undefined)
-        );
-        return { ...withVal, ...cleanOver };
-      }
-      return withVal;
+      return wikiOver ? mergeWikiOverride(withVal, wikiOver) : withVal;
     };
     const createdValueEntries = createdUnits.map((unit) => ({
       ...unit,

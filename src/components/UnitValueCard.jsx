@@ -91,16 +91,16 @@ export default function UnitValueCard({ unit, linkBase, highlighted }) {
           <div className="unit-card-rarity" style={{ color: glow }}>
             {unit.rarity}
           </div>
-          {originTag(unit) && (
-            <span
-              className="origin-tag"
-              style={{ color: originTag(unit).color, borderColor: `color-mix(in srgb, ${originTag(unit).color} 45%, transparent)`, background: `color-mix(in srgb, ${originTag(unit).color} 12%, transparent)` }}
-              title={`${originTag(unit).label} unit`}
-            >
-              {originTag(unit).icon} {originTag(unit).label}
-            </span>
-          )}
         </div>
+      </div>
+      <div className="unit-card-tag-row">
+        <span
+          className="origin-tag"
+          style={{ color: originTag(unit).color, borderColor: `color-mix(in srgb, ${originTag(unit).color} 45%, transparent)`, background: `color-mix(in srgb, ${originTag(unit).color} 12%, transparent)` }}
+          title={`${originTag(unit).label} unit`}
+        >
+          {originTag(unit).label}
+        </span>
       </div>
 
       <div className="unit-card-body">

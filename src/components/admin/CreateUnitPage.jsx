@@ -4,6 +4,7 @@ import { slugify } from '../../utils/slug';
 import { uploadUnitImage } from '../../utils/adminImage';
 import { compressImage } from '../../utils/adminSafety';
 import Dropdown from '../Dropdown';
+import { UNIT_TAGS } from '../../utils/originTag';
 
 // CREATE UNIT — a dedicated admin page for WIKI editors to add REAL units to
 // the site. This is not a "custom unit" concept: a created unit behaves
@@ -13,7 +14,6 @@ import Dropdown from '../Dropdown';
 
 const BASE_RARITIES = UNIT_RARITIES.filter((r) => !r.startsWith('Shiny'));
 const TYPES = ['DPS', 'Support', 'Economy', 'Buff', 'Summoner'];
-const CATEGORIES = ['Standard', 'Event', 'Limited', 'Unobtainable'];
 
 const toOptions = (list) => list.map((value) => ({ value, label: value }));
 
@@ -21,7 +21,7 @@ export default function CreateUnitPage({ session, onCreate, saving, existingSlug
   const [name, setName] = useState('');
   const [rarity, setRarity] = useState(BASE_RARITIES[0] || 'Normie');
   const [type, setType] = useState('DPS');
-  const [category, setCategory] = useState('Standard');
+  const [category, setCategory] = useState('Normal');
   const [description, setDescription] = useState('');
   const [obtainText, setObtainText] = useState('');
   const [imageFile, setImageFile] = useState(null);
@@ -140,8 +140,8 @@ function UnitFormFields({ name, setName, rarity, setRarity, type, setType, categ
         <Dropdown value={type} onChange={setType} options={toOptions(TYPES)} ariaLabel="Unit type" />
       </div>
       <div className="admin-field">
-        <span>Category</span>
-        <Dropdown value={category} onChange={setCategory} options={toOptions(CATEGORIES)} ariaLabel="Category" />
+        <span>Tag</span>
+        <Dropdown value={category} onChange={setCategory} options={toOptions(UNIT_TAGS)} ariaLabel="Tag" />
       </div>
       <label className="admin-field full">
         <span>Description</span>
