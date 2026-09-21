@@ -157,13 +157,8 @@ async function readUnitHistory(env, section, slug) {
 const TEAM_ROLES = {
   'gustavo.rb1410@gmail.com': 'owner',
   'bananatempest25@gmail.com': 'admin',
-  'treymurphy3rd@gmail.com': 'admin',
   'johnmustard129@gmail.com': 'admin',
-  'destroyha3@gmail.com': 'editor',
-  'gloomy302010@gmail.com': 'editor',
-  'alieldaw6@gmail.com': 'editor',
-  'hungryaistukas@gmail.com': 'editor',
-  'luquitas290414@gmail.com': 'editor'
+  'isaacconnan@gmail.com': 'admin'
 };
 
 const TEAM_EMAILS = Object.keys(TEAM_ROLES);

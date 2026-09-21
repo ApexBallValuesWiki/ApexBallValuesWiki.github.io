@@ -6,13 +6,8 @@
 export const TEAM_MEMBERS = {
   'gustavo.rb1410@gmail.com': { name: 'Gustavo', roleKey: 'owner', roleLabel: 'Owner', icon: '👑' },
   'bananatempest25@gmail.com': { name: 'Nemuiito', roleKey: 'admin', roleLabel: 'Admin', icon: '🎩' },
-  'treymurphy3rd@gmail.com': { name: 'DancyBalls', roleKey: 'admin', roleLabel: 'Admin', icon: '🎩' },
   'johnmustard129@gmail.com': { name: 'Silly Goober', roleKey: 'admin', roleLabel: 'Admin', icon: '🎩' },
-  'destroyha3@gmail.com': { name: 'Nose', roleKey: 'editor', roleLabel: 'Editor', icon: '✏️' },
-  'gloomy302010@gmail.com': { name: 'Gloomy', roleKey: 'editor', roleLabel: 'Editor', icon: '✏️' },
-  'alieldaw6@gmail.com': { name: 'Kron3d', roleKey: 'editor', roleLabel: 'Editor', icon: '✏️' },
-  'hungryaistukas@gmail.com': { name: 'Hungry', roleKey: 'editor', roleLabel: 'Editor', icon: '✏️' },
-  'luquitas290414@gmail.com': { name: 'Nooberto', roleKey: 'editor', roleLabel: 'Editor', icon: '✏️' },
+  'isaacconnan@gmail.com': { name: 'Isaac', roleKey: 'admin', roleLabel: 'Admin', icon: '🎩' },
 };
 
 export function getTeamMember(email) {
