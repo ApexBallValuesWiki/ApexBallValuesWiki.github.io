@@ -1,12 +1,142 @@
-.uv-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+.rarity-list-header {
+  --rarity-accent: var(--accent, #ffffff);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
   gap: 20px;
+  padding: 26px 30px;
+  margin-bottom: 26px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  background:
+    radial-gradient(65% 95% at 88% 50%, color-mix(in srgb, var(--rarity-accent) 16%, transparent), transparent 72%),
+    linear-gradient(160deg, #09090e 0%, #040407 58%, #000000 100%);
+  box-shadow:
+    0 20px 52px rgba(0, 0, 0, 0.76),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
-@media (max-width: 480px) {
-  .uv-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 12px;
+.rarity-list-cutout {
+  position: absolute;
+  right: 24px;
+  top: -16px;
+  width: 175px;
+  height: 175px;
+  opacity: 0.24;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.rarity-list-title-group {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rarity-list-title-group .crumb {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-faint);
+}
+
+.rarity-list-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rarity-list-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--rarity-accent);
+  box-shadow: 0 0 14px var(--rarity-accent);
+}
+
+.rarity-list-title-row h1 {
+  margin: 0;
+  font-size: clamp(1.85rem, 3vw, 2.55rem);
+  font-weight: 900;
+  letter-spacing: -0.032em;
+  line-height: 1.08;
+}
+
+.rarity-list-sub {
+  margin: 2px 0 0;
+  font-size: 0.84rem;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.rarity-list-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.rarity-list-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(10, 10, 14, 0.82);
+  color: var(--text);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition:
+    border-color 160ms var(--ease-out),
+    background-color 160ms var(--ease-out),
+    color 160ms var(--ease-out),
+    transform 160ms var(--ease-out);
+}
+
+.rarity-list-btn:hover {
+  border-color: var(--rarity-accent);
+  transform: translateY(-2px);
+}
+
+.rarity-list-btn.primary {
+  background: var(--rarity-accent);
+  border-color: var(--rarity-accent);
+  color: #000000;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--rarity-accent) 26%, transparent);
+}
+
+.rarity-list-btn.primary:hover {
+  color: #000000;
+  filter: brightness(1.08);
+}
+
+/* Expanded Unit Value Grid */
+.uv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 680px) {
+  .rarity-list-header {
+    padding: 20px;
+  }
+
+  .rarity-list-cutout {
+    width: 120px;
+    height: 120px;
+    opacity: 0.16;
   }
 }

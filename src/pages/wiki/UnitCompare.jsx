@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import PageShell from '../../components/PageShell';
 import UnitTags from '../../components/UnitTags';
 import Dropdown from '../../components/Dropdown';
+import { useWikiImageOverrides } from '../../hooks/useWikiImageOverrides';
 import { WIKI_NAV } from '../../config/navigation';
 import { getRarityGlow } from '../../data/taxonomy';
 import { groupAndSortUnitsByRarity } from '../../utils/sortUnits';
@@ -29,6 +30,7 @@ export default function UnitCompare() {
   // Grouped + sorted (rarity ladder first, then A–Z within each rarity) so a
   // unit like KrampusBall (Transcendent) sits with the other Transcendents
   // instead of appearing in the middle of the Legendaries.
+  const { imageMap } = useWikiImageOverrides(options.map((u) => u.slug));
   const groupedOptions = useMemo(
     () => groupAndSortUnitsByRarity(options).map((group) => ({
       label: group.rarity,
@@ -36,9 +38,10 @@ export default function UnitCompare() {
         value: unit.slug,
         label: unit.name,
         accent: getRarityGlow(unit.rarity),
+        icon: imageMap[unit.slug] || null,
       })),
     })),
-    [options]
+    [options, imageMap]
   );
   const [leftSlug, setLeftSlug] = useState(options[0]?.slug || '');
   const [rightSlug, setRightSlug] = useState(options[1]?.slug || options[0]?.slug || '');

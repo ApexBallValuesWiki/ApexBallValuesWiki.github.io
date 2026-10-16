@@ -340,27 +340,27 @@ export function isShinyRarity(rarityName) {
 // (Rare — very few copies). Both power the filled progress bars on unit
 // value cards.
 export const DEMAND_COLORS = {
-  Abysmal: '#4d0000',
-  'Extremely Low': '#7a0000',
-  'Very Low': '#a30000',
-  Low: '#c92a00',
-  'Below Average': '#e05a00',
-  'Slightly Below Average': '#e8890a',
-  Normal: '#e0c400',
-  'Slightly Above Average': '#a8d400',
-  'Above Average': '#55c93e',
-  High: '#14bf7a',
-  'Very High': '#14a3bf',
-  'Extremely High': '#4d6fe0',
-  Godly: '#9b30ff',
+  Abysmal: '#dc2626',
+  'Extremely Low': '#ef4444',
+  'Very Low': '#f87171',
+  Low: '#f97316',
+  'Below Average': '#fb923c',
+  'Slightly Below Average': '#f59e0b',
+  Normal: '#eab308',
+  'Slightly Above Average': '#84cc16',
+  'Above Average': '#22c55e',
+  High: '#10b981',
+  'Very High': '#06b6d4',
+  'Extremely High': '#3b82f6',
+  Godly: '#a855f7',
 };
 
 export const SCARCITY_COLORS = {
-  Flooded: '#a30000',
-  Common: '#e05a00',
-  Standard: '#e0c400',
-  Limited: '#55c93e',
-  Rare: '#9b30ff',
+  Flooded: '#ef4444',
+  Common: '#f97316',
+  Standard: '#eab308',
+  Limited: '#22c55e',
+  Rare: '#a855f7',
 };
 
 // Percent fill (0-100) for each tier, used to size the progress bar fill.

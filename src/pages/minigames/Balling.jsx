@@ -19,6 +19,7 @@ import {
 import { incrementStat } from '../../utils/achievements';
 import './Minigames.css';
 import { hintBalance, spendHint, grantHint, HINTS_EVENT } from '../../utils/hints';
+import { useWikiImageOverrides } from '../../hooks/useWikiImageOverrides';
 
 const STATS_KEY = 'apex-balling-stats-v1';
 const USER_SEED_KEY = 'apex-balling-user-seed-v1';
@@ -65,6 +66,7 @@ export default function Balling() {
   const userSeed = useMemo(() => getUserSeed(USER_SEED_KEY), []);
 
   const pool = useMemo(() => eligiblePool(allValueEntries), [allValueEntries]);
+  const { imageMap } = useWikiImageOverrides(pool.map((e) => e.slug));
   const nameIndex = useMemo(
     () => pool.map((entry) => ({ slug: entry.slug, name: entry.name, normal: normalizeGuess(entry.name) })),
     [pool]
@@ -434,6 +436,9 @@ export default function Balling() {
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => { setGuess(entry.name); setDropdownOpen(false); }}
                       >
+                        {imageMap[entry.slug]
+                          ? <img className="mg-sug-img" src={imageMap[entry.slug]} alt="" loading="lazy" />
+                          : <span className="mg-sug-img fallback" aria-hidden="true" />}
                         <span>{entry.name}</span>
                       </button>
                     )) : <div className="ball-suggestion-empty">No matching units.</div>}

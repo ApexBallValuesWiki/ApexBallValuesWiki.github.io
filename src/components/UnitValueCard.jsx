@@ -19,17 +19,16 @@ import './UnitValueCard.css';
 
 const MotionLink = motion(Link);
 
-// Status (from the admin Trend setting): graph icon + colored label.
 const STATUS_META = {
-  rising: { label: 'Rising', color: '#42d392' },
+  rising: { label: 'Rising', color: '#34d399' },
   stable: { label: 'Stable', color: '#ffffff' },
-  falling: { label: 'Dropping', color: '#ff5c5c' },
-  fluctuating: { label: 'Fluctuating', color: '#ffd24d' },
+  falling: { label: 'Dropping', color: '#f87171' },
+  fluctuating: { label: 'Fluctuating', color: '#fbbf24' },
 };
 
 function TrendGlyph({ color }) {
   return (
-    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true" style={{ display: 'block' }}>
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true" style={{ display: 'block' }}>
       <path d="M1 12.5L5 8l3 2.5L15 4" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M11 4h4v4" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -37,19 +36,15 @@ function TrendGlyph({ color }) {
 }
 
 export const uvCardVariants = {
-  initial: { opacity: 0, y: 18, scale: 0.94 },
+  initial: { opacity: 0, y: 16, scale: 0.96 },
   animate: {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.36, ease: [0.23, 1, 0.32, 1] },
   },
 };
 
-/**
- * Detailed unit value card — updated layout with icon on left,
- * name and rarity on right in header, value info below. Encases stats inside elevated panel box.
- */
 export default function UnitValueCard({ unit, linkBase, highlighted }) {
   const palette = getRarityPalette(unit.rarity);
   const glow = getRarityGlow(unit.rarity);
@@ -61,6 +56,7 @@ export default function UnitValueCard({ unit, linkBase, highlighted }) {
   const scarcityPercent = unit.scarcity ? SCARCITY_PERCENT[unit.scarcity] : 0;
 
   const targetUrl = `${linkBase}/${unit.slug}`;
+  const tag = originTag(unit);
 
   return (
     <MotionLink
@@ -68,39 +64,38 @@ export default function UnitValueCard({ unit, linkBase, highlighted }) {
       data-slug={unit.slug}
       className={highlighted ? 'unit-card uv-card unit-card-highlight' : 'unit-card uv-card'}
       onMouseEnter={() => warmUnitHistory(unit.slug)}
-      whileHover={{ y: -4, scale: 1.015 }}
-      whileTap={{ scale: 0.985 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 22 }}
       style={{
         '--rarity-border': gradientBorder,
         '--rarity-glow': glow,
       }}
       variants={uvCardVariants}
-      whileHover={{ y: -6, transition: { duration: 0.25, ease: 'easeOut' } }}
-      whileTap={{ scale: 0.975, transition: { duration: 0.12 } }}
+      whileHover={{ y: -4, transition: { duration: 0.18, ease: [0.23, 1, 0.32, 1] } }}
+      whileTap={{ scale: 0.975, transition: { duration: 0.1 } }}
     >
       <div className="unit-card-stripe" />
       <div className="unit-card-header">
         <div className="unit-card-icon-wrap">
-          <UnitIcon slug={unit.slug} name={unit.name} glowColor={glow} shiny={isShinyRarity(unit.rarity)} size={74} imageUrl={unit.imageUrl} />
+          <UnitIcon slug={unit.slug} name={unit.name} glowColor={glow} shiny={isShinyRarity(unit.rarity)} size={72} imageUrl={unit.imageUrl} />
         </div>
         <div className="unit-card-header-text">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            <div className="unit-card-name">{unit.name}</div>
-          </div>
-          <div className="unit-card-rarity" style={{ color: glow }}>
-            {unit.rarity}
+          <div className="unit-card-name">{unit.name}</div>
+          <div className="unit-card-badges-inline">
+            <div className="unit-card-rarity" style={{ color: glow }}>
+              {unit.rarity}
+            </div>
+            <span
+              className="origin-tag"
+              style={{
+                color: tag.color,
+                borderColor: `color-mix(in srgb, ${tag.color} 38%, transparent)`,
+                background: `color-mix(in srgb, ${tag.color} 10%, transparent)`,
+              }}
+              title={`${tag.label} unit`}
+            >
+              {tag.label}
+            </span>
           </div>
         </div>
-      </div>
-      <div className="unit-card-tag-row">
-        <span
-          className="origin-tag"
-          style={{ color: originTag(unit).color, borderColor: `color-mix(in srgb, ${originTag(unit).color} 45%, transparent)`, background: `color-mix(in srgb, ${originTag(unit).color} 12%, transparent)` }}
-          title={`${originTag(unit).label} unit`}
-        >
-          {originTag(unit).label}
-        </span>
       </div>
 
       <div className="unit-card-body">
@@ -113,12 +108,12 @@ export default function UnitValueCard({ unit, linkBase, highlighted }) {
                   <span className="uv-stat-amount uv-special-value" title="Set by the APEX team — no numeric value applies">{unit.specialValue}</span>
                 </div>
               ) : (
-              <div className="uv-stat-row">
-                <TermTip term="value" className="uv-stat-label uv-label-value">Value</TermTip>
-                <span className="uv-stat-amount" title={unit.tradeValueMax ? `${formatFullNumber(unit.tradeValue)} - ${formatFullNumber(unit.tradeValueMax)} exact` : `${formatFullNumber(unit.tradeValue)} exact`}>
-                  {unit.tradeValueMax ? `${formatCompactNumber(unit.tradeValue)}-${formatCompactNumber(unit.tradeValueMax)}` : formatCompactNumber(unit.tradeValue)}
-                </span>
-              </div>
+                <div className="uv-stat-row">
+                  <TermTip term="value" className="uv-stat-label uv-label-value">Value</TermTip>
+                  <span className="uv-stat-amount" title={unit.tradeValueMax ? `${formatFullNumber(unit.tradeValue)} - ${formatFullNumber(unit.tradeValueMax)} exact` : `${formatFullNumber(unit.tradeValue)} exact`}>
+                    {unit.tradeValueMax ? `${formatCompactNumber(unit.tradeValue)}-${formatCompactNumber(unit.tradeValueMax)}` : formatCompactNumber(unit.tradeValue)}
+                  </span>
+                </div>
               )}
 
               <div className="uv-stat-row">
@@ -134,16 +129,12 @@ export default function UnitValueCard({ unit, linkBase, highlighted }) {
                 </span>
               </div>
             </div>
+
             {STATUS_META[unit.trend] && (
-              <div className="uv-status-strip" style={{ borderColor: `color-mix(in srgb, ${STATUS_META[unit.trend].color} 45%, transparent)` }}>
+              <div className="uv-status-strip" style={{ borderColor: `color-mix(in srgb, ${STATUS_META[unit.trend].color} 35%, transparent)` }}>
                 <TrendGlyph color={STATUS_META[unit.trend].color} />
                 <TermTip term="status" className="uv-status-word">Status</TermTip>
-                <strong style={{ color: STATUS_META[unit.trend].color }}>{STATUS_META[unit.trend].label}</strong>
-              </div>
-            )}
-            {unit.updatedAt && (
-              <div className="uv-updated" title={new Date(unit.updatedAt).toLocaleString()}>
-                Updated {formatRelativeTime(unit.updatedAt)} by the APEX team
+                <strong style={{ color: STATUS_META[unit.trend].color, marginLeft: 'auto' }}>{STATUS_META[unit.trend].label}</strong>
               </div>
             )}
 
@@ -159,7 +150,7 @@ export default function UnitValueCard({ unit, linkBase, highlighted }) {
                     style={{ background: demandColor }}
                     initial={{ width: 0 }}
                     animate={{ width: `${demandPercent}%` }}
-                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    transition={{ duration: 0.45, ease: [0.23, 1, 0.32, 1] }}
                   />
                 </div>
               </div>
@@ -175,11 +166,17 @@ export default function UnitValueCard({ unit, linkBase, highlighted }) {
                     style={{ background: scarcityColor }}
                     initial={{ width: 0 }}
                     animate={{ width: `${scarcityPercent}%` }}
-                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    transition={{ duration: 0.45, ease: [0.23, 1, 0.32, 1] }}
                   />
                 </div>
               </div>
             </div>
+
+            {unit.updatedAt && (
+              <div className="uv-updated" title={new Date(unit.updatedAt).toLocaleString()}>
+                Updated {formatRelativeTime(unit.updatedAt)}
+              </div>
+            )}
           </div>
         ) : (
           <div className="uv-no-data">No market data yet</div>
@@ -189,8 +186,6 @@ export default function UnitValueCard({ unit, linkBase, highlighted }) {
   );
 }
 
-// Hover prefetch: warm the unit's shared history so the detail page trend
-// graph loads instantly. Each slug is fetched at most once per session.
 const warmedSlugs = new Set();
 function warmUnitHistory(slug) {
   if (!slug || warmedSlugs.has(slug)) return;

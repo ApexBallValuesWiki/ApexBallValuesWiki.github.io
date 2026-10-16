@@ -2,12 +2,14 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { fetchChangeLog } from '../../utils/apexClient';
 import { compressImage } from '../../utils/adminSafety';
 import UnitIcon from '../UnitIcon';
+import ThemeCutout from '../ThemeCutout';
 import Dropdown from '../Dropdown';
 import ValueTrendGraph from '../ValueTrendGraph';
 import { DEMAND_LABELS, SCARCITY_LABELS, getRarityGlow, isShinyRarity, UNIT_RARITIES } from '../../data/taxonomy';
 import { upgradeToForm, ensureArray, linesToObject, objectToLines } from '../../utils/adminForms';
 import { computeTradeValue } from '../../utils/calculator';
 import { getDisplayName } from '../../utils/teamMembers';
+import EditorLeaderboard from './EditorLeaderboard';
 import { UNIT_TAGS, normalizeUnitTag } from '../../utils/originTag';
 
 const TRENDS = [
@@ -86,7 +88,12 @@ export function AdminMessage({ message, action }) {
 export function AuthPanel({ title, message, children }) {
   return (
     <section className="admin-auth card">
-      <p className="admin-kicker">Testing Admin Portal</p>
+      <ThemeCutout
+        variant="overlord"
+        floating
+        className="admin-auth-cutout"
+      />
+      <p className="admin-kicker">Testing Admin Portal · Command Access</p>
       <h1>{title}</h1>
       <AdminMessage message={message} />
       {children}
@@ -712,7 +719,7 @@ export function AdminLog({ activeTool: _activeTool, valueLog = [], wikiLog = [],
         )
       ) : (role === 'owner' || role === 'admin') && (
         <div className="admin-log-graph-wrap">
-          <ContributionGraphInline valueLogs={valueLogs || valueLog} wikiLogs={wikiLogs || wikiLog} localChangeLog={allEntries} />
+          <EditorLeaderboard />
         </div>
       )}
 
@@ -753,47 +760,6 @@ export function AdminLog({ activeTool: _activeTool, valueLog = [], wikiLog = [],
         </div>
       ))}
     </section>
-  );
-}
-
-function ContributionGraphInline({ valueLogs = [], wikiLogs = [], localChangeLog = [] }) {
-  const days = 30;
-  const now = new Date();
-  const buckets = {};
-  for (let i = 0; i < days; i++) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
-    buckets[key] = 0;
-  }
-  [...(valueLogs || []), ...(wikiLogs || []), ...(localChangeLog || [])].forEach((entry) => {
-    if (entry?.changed_at) {
-      const key = new Date(entry.changed_at).toISOString().slice(0, 10);
-      if (key in buckets) buckets[key]++;
-    }
-  });
-  const entries = Object.entries(buckets).reverse();
-  const max = Math.max(1, ...entries.map(([, v]) => v));
-
-  return (
-    <div>
-      <p style={{ fontSize: '0.8rem', color: 'var(--text-dim, #888)', marginBottom: 8 }}>Activity (last {days} days)</p>
-      <div style={{ display: 'flex', gap: 3, alignItems: 'flex-end', height: 60 }}>
-        {entries.map(([date, count]) => (
-          <div key={date} title={`${date}: ${count} edits`} style={{
-            flex: 1,
-            height: `${Math.max(4, (count / max) * 100)}%`,
-            background: count > 0 ? 'var(--accent, var(--c-info))' : 'rgba(255,255,255,0.06)',
-            borderRadius: 3,
-            minHeight: 4,
-          }} />
-        ))}
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--text-dim, #666)', marginTop: 4 }}>
-        <span>{entries[0]?.[0]}</span>
-        <span>{entries[entries.length - 1]?.[0]}</span>
-      </div>
-    </div>
   );
 }
 

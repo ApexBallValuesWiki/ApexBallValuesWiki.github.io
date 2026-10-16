@@ -4,10 +4,8 @@ import { decodeRouteParam } from '../../utils/routeParams';
 import { motion } from 'framer-motion';
 import { getUnitValueBySlug } from '../../data/values';
 import { getUnitBySlug } from '../../data/units';
-import { slugify } from '../../utils/slug';
 import { useData } from '../../context/DataContext';
 import {
-  getRarityPalette,
   getRarityGlow,
   isShinyRarity,
   DEMAND_COLORS,
@@ -19,22 +17,25 @@ import PageShell from '../../components/PageShell';
 import { VALUES_NAV } from '../../config/navigation';
 import PageIntro from '../../components/PageIntro';
 import UnitIcon from '../../components/UnitIcon';
+import ShinyToggle from '../../components/ShinyToggle';
+import ThemeCutout, { getCutoutForRarity } from '../../components/ThemeCutout';
 import { formatCompactNumber, formatFullNumber, formatRelativeTime } from '../../utils/formatNumber';
+import '../wiki/UnitDetail.css';
 import './UnitValueDetail.css';
 import { TermTip } from '../../components/StatMeta';
 
 const statGridVariants = {
   initial: {},
-  animate: { transition: { staggerChildren: 0.08 } },
+  animate: { transition: { staggerChildren: 0.06 } },
 };
 
 const statBoxVariants = {
-  initial: { opacity: 0, y: 14, scale: 0.94 },
+  initial: { opacity: 0, y: 12, scale: 0.96 },
   animate: {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.3, ease: [0.23, 1, 0.32, 1] },
   },
 };
 
@@ -48,9 +49,9 @@ export default function UnitValueDetail() {
   const liveUnit = useMemo(() => (slug ? getLiveUnit(slug) : null), [getLiveUnit, slug]);
   const unit = liveUnit || staticUnit;
 
+  const isShiny = Boolean(unit && (unit.shiny || isShinyRarity(unit.rarity)));
   const counterpartLink = useMemo(() => {
     if (!unit) return null;
-    const isShiny = unit.shiny || isShinyRarity(unit.rarity);
     if (isShiny) {
       const baseSlug = unit.slug.replace(/^shiny-/, '');
       const bu = getUnitBySlug(baseSlug);
@@ -61,7 +62,7 @@ export default function UnitValueDetail() {
       if (su) return `/values/units/${encodeURIComponent(su.rarity)}/${su.slug}`;
     }
     return null;
-  }, [unit]);
+  }, [unit, isShiny]);
 
   if (!unit) {
     return (
@@ -73,83 +74,63 @@ export default function UnitValueDetail() {
     );
   }
 
-  const palette = getRarityPalette(unit.rarity);
   const glow = getRarityGlow(unit.rarity);
 
   return (
     <PageShell sidebarTitle="VALUES" navTree={VALUES_NAV}>
-      <motion.div
-        className="rarity-top-bar"
-        style={{ background: `linear-gradient(90deg, ${palette.join(', ')})`, height: 3, borderRadius: 2 }}
-        initial={{ scaleX: 0, originX: 0 }}
-        animate={{ scaleX: 1 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      />
+      <p className="crumb">
+        <Link to="/values/units">Units</Link> / <Link to={`/values/units/${encodeURIComponent(unit.rarity)}`}>{unit.rarity}</Link> / {unit.name}
+      </p>
 
-      <PageIntro
-        eyebrow={unit.rarity}
-        title={
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            {unit.name}
-            {counterpartLink && (
-              <Link 
-                to={counterpartLink} 
-                className="shiny-toggle-star"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '50% !important',
-                  width: '32px',
-                  height: '32px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  fontSize: '15px',
-                  color: (unit.shiny || isShinyRarity(unit.rarity)) ? '#ffaa00' : 'rgba(255,255,255,0.4)',
-                  boxShadow: (unit.shiny || isShinyRarity(unit.rarity)) ? '0 0 10px rgba(255, 170, 0, 0.25)' : 'none',
-                  transition: 'all 0.25s ease',
-                  verticalAlign: 'middle'
-                }}
-                title={(unit.shiny || isShinyRarity(unit.rarity)) ? "Switch to Base Variant" : "Switch to Shiny Variant"}
-              >
-                <style>{`
-                  .shiny-toggle-star:hover {
-                    background: rgba(255, 170, 0, 0.1) !important;
-                    border-color: #ffaa00 !important;
-                    color: #ffaa00 !important;
-                    transform: scale(1.1);
-                  }
-                `}</style>
-                ⭐
-              </Link>
-            )}
-          </span>
-        }
-        actions={(
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-end' }}>
-            <UnitIcon
-              slug={unit.slug}
-              name={unit.name}
-              glowColor={glow}
-              shiny={isShinyRarity(unit.rarity)}
-              size={92}
-              imageUrl={unit.imageUrl}
-            />
-            <Link
-              to={`/wiki/units/${encodeURIComponent(unit.rarity)}/${unit.slug}`}
-              className="badge filled"
-              style={{ textDecoration: 'none', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: 6 }}
-            >
-              View WIKI Page →
-            </Link>
-          </div>
-        )}
+      <motion.div
+        className="unit-header"
+        style={{ '--rarity-accent': glow }}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.32, ease: [0.23, 1, 0.32, 1] }}
       >
-        <p style={{ color: glow, textShadow: `0 0 14px ${glow}66` }}>
-          {unit.type || 'Unit'} · {unit.category || 'Standard'}
-        </p>
-      </PageIntro>
+        <ThemeCutout
+          variant={getCutoutForRarity(unit.rarity)}
+          tintColor={glow}
+          floating
+          className="unit-header-cutout"
+        />
+        <div className="unit-title-row">
+          <UnitIcon
+            slug={unit.slug}
+            name={unit.name}
+            glowColor={glow}
+            shiny={isShinyRarity(unit.rarity)}
+            size={108}
+            imageUrl={unit.imageUrl}
+          />
+          <div className="unit-title-copy">
+            <h1>{unit.name}</h1>
+            <div className="unit-badges">
+              <span className="badge filled">{unit.rarity}</span>
+              {unit.type && <span className="badge">{unit.type}</span>}
+              {unit.category && <span className="badge dim">{unit.category}</span>}
+            </div>
+          </div>
+          <div className="unit-header-actions">
+            <ShinyToggle isShiny={isShiny} counterpartLink={counterpartLink} />
+            <div className="unit-header-btn-group">
+              <Link
+                to="/values/calculator"
+                className="unit-secondary-btn"
+              >
+                🧮 Calculator
+              </Link>
+              <Link
+                to={`/wiki/units/${encodeURIComponent(unit.rarity)}/${unit.slug}`}
+                className="unit-crosslink-btn"
+              >
+                View WIKI Page →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
       {error && <p className="pending-flag">Live values could not load; showing bundled fallback values.</p>}
 
@@ -167,56 +148,50 @@ export default function UnitValueDetail() {
             initial="initial"
             animate="animate"
           >
-            <StatBox 
+            <StatBox
               term="value"
-              label="Value" 
-              value={unit.specialValue || (unit.tradeValueMax ? `${formatCompactNumber(unit.tradeValue)}-${formatCompactNumber(unit.tradeValueMax)}` : formatCompactNumber(unit.tradeValue))} 
-              fullValue={unit.specialValue || (unit.tradeValueMax ? `${formatFullNumber(unit.tradeValue)} - ${formatFullNumber(unit.tradeValueMax)}` : formatFullNumber(unit.tradeValue))} 
-              color="var(--c-info)" 
+              label="Value"
+              value={unit.specialValue || (unit.tradeValueMax ? `${formatCompactNumber(unit.tradeValue)}-${formatCompactNumber(unit.tradeValueMax)}` : formatCompactNumber(unit.tradeValue))}
+              fullValue={unit.specialValue || (unit.tradeValueMax ? `${formatFullNumber(unit.tradeValue)} - ${formatFullNumber(unit.tradeValueMax)}` : formatFullNumber(unit.tradeValue))}
+              color="var(--c-info)"
+            />
+            <StatBox
+              term="gems"
+              label="Gems"
+              value={unit.specialGems || (unit.gemsMax ? `${formatCompactNumber(unit.gems)}-${formatCompactNumber(unit.gemsMax)}` : formatCompactNumber(unit.gems))}
+              fullValue={unit.specialGems || (unit.gemsMax ? `${formatFullNumber(unit.gems)} - ${formatFullNumber(unit.gemsMax)}` : formatFullNumber(unit.gems))}
+              color="var(--c-purple)"
+            />
+            <StatBox
+              term="coins"
+              label="Coins"
+              value={unit.specialCoins || (unit.coinsMax ? `${formatCompactNumber(unit.coins)}-${formatCompactNumber(unit.coinsMax)}` : formatCompactNumber(unit.coins))}
+              fullValue={unit.specialCoins || (unit.coinsMax ? `${formatFullNumber(unit.coins)} - ${formatFullNumber(unit.coinsMax)}` : formatFullNumber(unit.coins))}
+              color="var(--c-warning)"
             />
             {unit.trend && (
-            <StatBox 
-              term="status"
-              label="Status" 
-              value={unit.trend === 'rising' ? 'Rising' : unit.trend === 'falling' ? 'Dropping' : unit.trend === 'fluctuating' ? 'Fluctuating' : 'Stable'} 
-              fullValue={`Trend: ${unit.trend}`} 
-              color={unit.trend === 'rising' ? '#42d392' : unit.trend === 'falling' ? '#ff5c5c' : unit.trend === 'fluctuating' ? '#ffd24d' : '#ffffff'} 
-            /> 
+              <StatBox
+                term="status"
+                label="Status"
+                value={unit.trend === 'rising' ? 'Rising' : unit.trend === 'falling' ? 'Dropping' : unit.trend === 'fluctuating' ? 'Fluctuating' : 'Stable'}
+                fullValue={`Trend: ${unit.trend}`}
+                color={unit.trend === 'rising' ? 'var(--c-success)' : unit.trend === 'falling' ? 'var(--c-danger)' : unit.trend === 'fluctuating' ? 'var(--c-warning)' : '#ffffff'}
+              />
             )}
-            <StatBox 
-              term="gems"
-              label="Gems" 
-              value={unit.specialGems || (unit.gemsMax ? `${formatCompactNumber(unit.gems)}-${formatCompactNumber(unit.gemsMax)}` : formatCompactNumber(unit.gems))} 
-              fullValue={unit.specialGems || (unit.gemsMax ? `${formatFullNumber(unit.gems)} - ${formatFullNumber(unit.gemsMax)}` : formatFullNumber(unit.gems))} 
-              color="var(--c-purple)" 
-            />
-            <StatBox 
-              term="coins"
-              label="Coins" 
-              value={unit.specialCoins || (unit.coinsMax ? `${formatCompactNumber(unit.coins)}-${formatCompactNumber(unit.coinsMax)}` : formatCompactNumber(unit.coins))} 
-              fullValue={unit.specialCoins || (unit.coinsMax ? `${formatFullNumber(unit.coins)} - ${formatFullNumber(unit.coinsMax)}` : formatFullNumber(unit.coins))} 
-              color="var(--c-warning)" 
-            />
-            {unit.trend && <StatBox label="Trend" value={unit.trend} />}
           </motion.div>
+
+          <div className="vud-bars">
+            <BarRow term="demand" label="Demand" tier={unit.demand} color={DEMAND_COLORS[unit.demand]} percent={DEMAND_PERCENT[unit.demand]} delay={0.12} />
+            <BarRow term="scarcity" label="Scarcity" tier={unit.scarcity} color={SCARCITY_COLORS[unit.scarcity]} percent={SCARCITY_PERCENT[unit.scarcity]} delay={0.2} />
+          </div>
+
           {unit.updatedAt && (
             <p className="vud-updated" title={new Date(unit.updatedAt).toLocaleString()}>
               🕒 Value last updated {formatRelativeTime(unit.updatedAt)}
             </p>
           )}
-
-            {unit.liveValue && unit.updatedAt && (
-              <p className="pending-flag" style={{ marginTop: 12 }}>
-                Live value updated {new Date(unit.updatedAt).toLocaleString()}.
-              </p>
-            )}
-
-            <div className="vud-bars">
-              <BarRow term="demand" label="Demand" tier={unit.demand} color={DEMAND_COLORS[unit.demand]} percent={DEMAND_PERCENT[unit.demand]} delay={0.2} />
-              <BarRow term="scarcity" label="Scarcity" tier={unit.scarcity} color={SCARCITY_COLORS[unit.scarcity]} percent={SCARCITY_PERCENT[unit.scarcity]} delay={0.3} />
-            </div>
-          </>
-        )}
+        </>
+      )}
     </PageShell>
   );
 }
@@ -224,7 +199,7 @@ export default function UnitValueDetail() {
 function StatBox({ label, value, fullValue, color, term }) {
   return (
     <motion.div className="stat-box" variants={statBoxVariants}>
-      <div className="stat-value" title={fullValue ? `${fullValue} exact` : undefined} style={color ? { color, textShadow: `0 0 10px ${color}80` } : undefined}>
+      <div className="stat-value" title={fullValue ? `${fullValue} exact` : undefined} style={color ? { color } : undefined}>
         {value}
       </div>
       <div className="stat-label">
@@ -244,10 +219,10 @@ function BarRow({ label, tier, color, percent, delay = 0, term }) {
       <div className="vud-bar-track">
         <motion.div
           className="vud-bar-fill"
-          style={{ background: color, boxShadow: `0 0 12px ${color}88` }}
+          style={{ background: color }}
           initial={{ width: 0 }}
           animate={{ width: `${percent}%` }}
-          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1], delay }}
+          transition={{ duration: 0.55, ease: [0.23, 1, 0.32, 1], delay }}
         />
       </div>
     </div>

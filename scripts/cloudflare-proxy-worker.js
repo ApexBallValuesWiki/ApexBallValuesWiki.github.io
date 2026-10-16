@@ -48,6 +48,36 @@ function recordLoginFail(ip) {
   LOGIN_ATTEMPTS.set(ip, rec);
 }
 
+// GENERIC RATE LIMITING for public/semi-public POST routes (bug reports,
+// login attempts, password changes). Per-isolate sliding window — best-effort
+// abuse deterrence without any storage cost (KV writes cost quota).
+const RATE_BUCKETS = new Map();
+
+function rateLimited(key, max, windowMs) {
+  const now = Date.now();
+  let hits = (RATE_BUCKETS.get(key) || []).filter((t) => now - t < windowMs);
+  if (hits.length >= max) {
+    RATE_BUCKETS.set(key, hits);
+    return Math.ceil((windowMs - (now - hits[0])) / 1000); // seconds until the oldest hit expires
+  }
+  hits.push(now);
+  RATE_BUCKETS.set(key, hits);
+  if (RATE_BUCKETS.size > 4000) {
+    for (const [k, v] of RATE_BUCKETS) {
+      if (!v.some((t) => now - t < 24 * 3600 * 1000)) RATE_BUCKETS.delete(k);
+    }
+  }
+  return 0;
+}
+
+function tooManyResponse(retryAfterSec) {
+  return new Response(JSON.stringify({ error: `Too many requests. Try again in about ${Math.max(1, retryAfterSec)} seconds.` }), {
+    status: 429,
+    headers: { 'Content-Type': 'application/json', 'Retry-After': String(Math.max(1, retryAfterSec)) },
+  });
+}
+
+
 // BUNDLE VERSIONING + CHANGE HISTORY
 // The live bundle carries __v (bumped on every write). Full-bundle POSTs can
 // pass __baseVersion — a stale version is rejected with 409 so concurrent
@@ -158,7 +188,8 @@ const TEAM_ROLES = {
   'gustavo.rb1410@gmail.com': 'owner',
   'bananatempest25@gmail.com': 'admin',
   'johnmustard129@gmail.com': 'admin',
-  'isaacconnan@gmail.com': 'admin'
+  'isaacconnan@gmail.com': 'admin',
+  'bigbig4780@gmail.com': 'value_editor'
 };
 
 const TEAM_EMAILS = Object.keys(TEAM_ROLES);
@@ -294,6 +325,10 @@ async function handleRequest(request, env, ctx) {
 
   // 2. POST /bug-reports - Submit a bug report into KV
   if (path === '/bug-reports' && request.method === 'POST') {
+    // Rate limit: 5 reports per IP per hour — stops spam floods cold.
+    const rl = rateLimited(`bug-report:${clientIp(request)}`, 5, 60 * 60 * 1000);
+    if (rl) return tooManyResponse(rl);
+
     const payloadText = await request.text();
     let newReport = null;
     try {
@@ -316,6 +351,33 @@ async function handleRequest(request, env, ctx) {
       if (raw) reports = JSON.parse(raw);
     } catch {}
 
+    // DEDUPE: an identical OPEN report (same normalized title + page) folds
+    // into the existing row and bumps its count instead of spamming the list.
+    const norm = (v) => String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const dupKey = `${norm(newReport.title)}|${norm(newReport.page_url)}`;
+    const dup = reports.find((r) => !r.resolved && (r.dup_key || `${norm(r.title)}|${norm(r.page_url)}`) === dupKey);
+    if (dup) {
+      dup.count = (dup.count || 1) + 1;
+      dup.last_duplicate_at = new Date().toISOString();
+      try {
+        const serialized = JSON.stringify(reports);
+        if (env.APEX_OVERRIDES) {
+          await env.APEX_OVERRIDES.put('bugReports', serialized);
+        } else {
+          IN_MEMORY_BUG_REPORTS = serialized;
+        }
+      } catch (e) {
+        return new Response(JSON.stringify({ error: `KV Write Failed: ${e.message}` }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response(JSON.stringify({ success: true, merged: true, message: 'Thanks! We already had this one — your report was counted.' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     const reportId = Date.now() + Math.floor(Math.random() * 1000);
     const reportRow = {
       id: reportId,
@@ -325,11 +387,25 @@ async function handleRequest(request, env, ctx) {
       page_url: newReport.page_url || '',
       contact: newReport.contact || null,
       browser: newReport.browser || null,
+      count: 1,
+      dup_key: dupKey,
       resolved: false,
       created_at: new Date().toISOString()
     };
 
     reports.push(reportRow);
+
+    // Storage cap: keep at most 500 rows — oldest resolved ones go first.
+    if (reports.length > 500) {
+      const resolvedOld = reports.filter((r) => r.resolved).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      let overflow = reports.length - 500;
+      for (const r of resolvedOld) {
+        if (overflow <= 0) break;
+        reports = reports.filter((x) => x.id !== r.id);
+        overflow -= 1;
+      }
+      if (reports.length > 500) reports = reports.slice(-500);
+    }
 
     try {
       const serialized = JSON.stringify(reports);
@@ -499,7 +575,20 @@ async function handleRequest(request, env, ctx) {
 
   // 5. GET /overrides - Read the live staticOverrides JSON database
   if (path === '/overrides' && request.method === 'GET') {
+    // Edge cache: the 60s live-update poll from every visitor otherwise burns
+    // one full-bundle KV read per poll (free tier: 100k reads/day). With the
+    // cache, KV is read at most ~once a minute per edge location. Authenticated
+    // admin requests skip the cache so editors always see fresh data.
+    const isAdminFetch = Boolean(request.headers.get('x-admin-email'));
+    const cache = caches.default;
+    let cached = null;
+    if (!isAdminFetch) {
+      try { cached = await cache.match(request.url); } catch { /* cache miss is fine */ }
+      if (cached) return cached;
+    }
+
     let data = null;
+    let kvFailed = false;
     try {
       if (env.APEX_OVERRIDES) {
         data = await env.APEX_OVERRIDES.get('staticOverrides');
@@ -507,10 +596,22 @@ async function handleRequest(request, env, ctx) {
         data = IN_MEMORY_DB_FALLBACK;
       }
     } catch (e) {
-      console.error('Failed to read from Cloudflare KV:', e);
+      // KV read failed (daily quota / transient). NEVER fall through to the
+      // GitHub bootstrap below — that would overwrite the live database with
+      // the static baseline and wipe every editor's overrides.
+      console.error('KV read failed (NOT bootstrapping — live data must survive):', e);
+      kvFailed = true;
     }
 
-    // Fallback: If KV database is completely empty/fresh, fetch the latest baked database from your GitHub Pages live site!
+    if (kvFailed) {
+      return new Response(JSON.stringify({ error: 'KV temporarily unavailable — try again shortly.' }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+      });
+    }
+
+    // Fallback: ONLY when KV is genuinely empty (fresh deployment), fetch the
+    // latest baked database from the GitHub Pages live site.
     if (!data) {
       try {
         const fbResponse = await fetch('https://apexballvalueswiki.github.io/overrides/staticOverrides.json');
@@ -708,6 +809,10 @@ async function handleRequest(request, env, ctx) {
 
   // 8. POST /login - Verify individual editor credentials
   if (path === '/login' && request.method === 'POST') {
+    // Rate limit: 30 attempts per IP per hour (on top of the fail-lockout).
+    const loginRl = rateLimited(`login:${clientIp(request)}`, 30, 60 * 60 * 1000);
+    if (loginRl) return tooManyResponse(loginRl);
+
     const ip = clientIp(request);
     if (loginBlocked(ip)) {
       return new Response(JSON.stringify({ error: 'Too many failed attempts. Try again in a few minutes.' }), { status: 429, headers: { 'Content-Type': 'application/json' } });
@@ -1039,10 +1144,21 @@ async function handleRequest(request, env, ctx) {
       if (!entry || typeof entry !== 'object') {
         return new Response(JSON.stringify({ error: 'Invalid JSON entry' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
       }
-      bundle[sectionKey][slug] = entry;
+      // MERGE, never replace: a client payload that omits a field (e.g. a
+      // wiki save that doesn't include rarity) must not erase the stored
+      // value — replacing rows is how units lost their rarity and vanished.
+      const existing = bundle[sectionKey][slug];
+      const incoming = Object.fromEntries(
+        Object.entries(entry).filter(([, v]) => v !== undefined)
+      );
+      bundle[sectionKey][slug] = existing && typeof existing === 'object' && !Array.isArray(existing)
+        ? { ...existing, ...incoming }
+        : entry;
     }
     const writeError = await writeOverridesBundle(env, bundle);
     if (writeError) return writeError;
+    // Per-entry publishes get the same instant-visibility cache purge.
+    try { ctx.waitUntil(caches.default.delete(new URL('/overrides', request.url).toString())); } catch { /* best effort */ }
     const record = {
       id: Date.now() + Math.floor(Math.random() * 1000),
       at: new Date().toISOString(),

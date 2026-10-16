@@ -13,6 +13,7 @@ import {
 import { incrementStat, setStat } from '../utils/achievements';
 import { endlessConfig, pickEndlessPuzzle, loadBestLevel, saveBestLevel } from '../utils/bkEndless';
 import { buildCandidates } from '../utils/bkCandidates';
+import { useWikiImageOverrides } from '../hooks/useWikiImageOverrides';
 import './BallKnowledge.css';
 import { hintBalance, spendHint, grantHint, HINTS_EVENT } from '../utils/hints';
 
@@ -252,6 +253,7 @@ function confettiPieces() {
 export default function BallKnowledge() {
   const candidates = useMemo(() => buildCandidates(), []);
   const units = useMemo(() => BASE_UNITS.filter((u) => u.documented && !u.unavailableData), []);
+  const { imageMap } = useWikiImageOverrides(units.map((u) => u.slug));
   const userSeed = useMemo(() => getUserSeed(), []);
   const [mode, setMode] = useState(() => localStorage.getItem('apex-ball-knowledge-mode') || 'normal');
   const modeConfig = MODES[mode] || MODES.normal;
@@ -380,7 +382,7 @@ export default function BallKnowledge() {
   }, []);
   const activePuzzle = mode === 'endless' ? endlessPuzzle : puzzle;
   useEffect(() => { setUsedHints({}); }, [activePuzzle?.unit?.slug]);
-  function useHint(kind) {
+  function applyHint(kind) {
     if (!activePuzzle || usedHints[kind]) return;
     if (!spendHint()) { setMessage('No hints left — win dailies to earn more.'); return; }
     setHintWallet(hintBalance());
@@ -637,6 +639,9 @@ export default function BallKnowledge() {
                     <div className="bk-suggestion-menu" data-lenis-prevent>
                       {suggestions.length > 0 ? suggestions.map((unit) => (
                         <button type="button" key={unit.slug} className="bk-suggestion-option" onMouseDown={(e) => e.preventDefault()} onClick={() => pickSuggestion(unit.name)}>
+                          {imageMap[unit.slug]
+                            ? <img className="mg-sug-img" src={imageMap[unit.slug]} alt="" loading="lazy" />
+                            : <span className="mg-sug-img fallback" aria-hidden="true" />}
                           <span>{unit.name}</span><small>{unit.rarity}</small>
                         </button>
                       )) : <div className="bk-suggestion-empty">No matching units.</div>}
@@ -729,13 +734,13 @@ export default function BallKnowledge() {
         ) : (
           <form className="bk-guess-form" onSubmit={submitGuess}>
             <div className="bk-hints-row">
-              <button type="button" className="bk-hint-btn" disabled={usedHints.letter || !activePuzzle} onClick={() => useHint('letter')} title="Spend 1 hint: first letter + name length">
+              <button type="button" className="bk-hint-btn" disabled={usedHints.letter || !activePuzzle} onClick={() => applyHint('letter')} title="Spend 1 hint: first letter + name length">
                 💡 Letter{usedHints.letter ? `: ${activePuzzle?.unit?.name?.[0] ?? '?'}… ${activePuzzle?.unit?.name?.length ?? '?'} chars` : ''}
               </button>
-              <button type="button" className="bk-hint-btn" disabled={usedHints.rarity || !activePuzzle} onClick={() => useHint('rarity')} title="Spend 1 hint: reveal the rarity">
+              <button type="button" className="bk-hint-btn" disabled={usedHints.rarity || !activePuzzle} onClick={() => applyHint('rarity')} title="Spend 1 hint: reveal the rarity">
                 💡 Rarity{usedHints.rarity ? `: ${activePuzzle?.unit?.rarity ?? ''}` : ''}
               </button>
-              <button type="button" className="bk-hint-btn" disabled={usedHints.type || !activePuzzle} onClick={() => useHint('type')} title="Spend 1 hint: reveal the unit type">
+              <button type="button" className="bk-hint-btn" disabled={usedHints.type || !activePuzzle} onClick={() => applyHint('type')} title="Spend 1 hint: reveal the unit type">
                 💡 Type{usedHints.type ? `: ${activePuzzle?.unit?.type ?? '—'}` : ''}
               </button>
               <span className="bk-hints-wallet">💡 {hintWallet}</span>
@@ -756,6 +761,9 @@ export default function BallKnowledge() {
                   <div className="bk-suggestion-menu" data-lenis-prevent>
                     {suggestions.length > 0 ? suggestions.map((unit) => (
                       <button type="button" key={unit.slug} className="bk-suggestion-option" onMouseDown={(e) => e.preventDefault()} onClick={() => pickSuggestion(unit.name)}>
+                        {imageMap[unit.slug]
+                          ? <img className="mg-sug-img" src={imageMap[unit.slug]} alt="" loading="lazy" />
+                          : <span className="mg-sug-img fallback" aria-hidden="true" />}
                         <span>{unit.name}</span><small>{unit.rarity}</small>
                       </button>
                     )) : <div className="bk-suggestion-empty">No matching units.</div>}

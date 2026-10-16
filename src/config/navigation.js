@@ -8,12 +8,12 @@ export const TOP_NAV_LINKS = [
 ];
 
 export const MOBILE_NAV_LINKS = [
-  { to: '/wiki', label: 'Wiki' },
-  { to: '/values', label: 'Values' },
-  { to: '/values/calculator', label: 'Calc' },
-  { to: '/minigames', label: 'Games' },
-  { to: '/achievements', label: 'Awards' },
-  { to: '/theme-editor', label: 'Theme' },
+  { to: '/wiki', label: 'Wiki', icon: '📖' },
+  { to: '/values', label: 'Values', icon: '💰' },
+  { to: '/values/calculator', label: 'Calc', icon: '🧮' },
+  { to: '/minigames', label: 'Games', icon: '🎮' },
+  { to: '/achievements', label: 'Awards', icon: '🏆' },
+  { to: '/theme-editor', label: 'Theme', icon: '🎨' },
 ];
 
 export const SHORTCUT_ROUTES = {

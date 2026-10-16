@@ -1,28 +1,30 @@
 .changelog-page {
-  max-width: 780px;
+  max-width: 840px;
   margin: 0 auto;
-  padding: 26px 18px 70px;
+  padding: 36px 20px 80px;
 }
 
 .changelog-hero h1 {
-  font-size: clamp(1.7rem, 4vw, 2.3rem);
-  margin-bottom: 6px;
+  font-size: clamp(1.85rem, 3.6vw, 2.5rem);
+  font-weight: 900;
+  letter-spacing: -0.032em;
+  margin-bottom: 8px;
 }
 
 .changelog-sub {
-  color: var(--text-dim, #bfbfbf);
-  line-height: 1.6;
-  max-width: 560px;
+  color: var(--text-dim);
+  line-height: 1.65;
+  max-width: 62ch;
 }
 
 .changelog-timeline {
-  margin-top: 26px;
+  margin-top: 28px;
   display: grid;
-  gap: 14px;
+  gap: 16px;
 }
 
 .changelog-entry {
-  padding: 16px 18px;
+  padding: 20px 22px;
 }
 
 .changelog-entry-head {
@@ -30,55 +32,60 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   font-size: 0.72rem;
 }
 
 .changelog-date {
-  color: var(--text-faint, #8a8a93);
+  color: var(--text-faint);
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
 }
 
 .changelog-tag {
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 2px 9px;
+  letter-spacing: 0.06em;
+  padding: 3px 10px;
   border-radius: 999px;
   border: 1px solid;
 }
 
 .changelog-version {
-  color: var(--text-dim, #bfbfbf);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
   font-weight: 600;
 }
 
 .changelog-entry h2 {
-  font-size: 1.05rem;
-  margin-bottom: 8px;
+  font-size: 1.08rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
 }
 
 .changelog-entry ul {
   margin: 0 0 0 4px;
+  padding: 0;
   display: grid;
-  gap: 5px;
+  gap: 6px;
   list-style: none;
 }
 
 .changelog-entry li {
   position: relative;
-  padding-left: 16px;
-  color: var(--text-dim, #bfbfbf);
-  line-height: 1.5;
-  font-size: 0.92rem;
+  padding-left: 18px;
+  color: var(--text-dim);
+  line-height: 1.55;
+  font-size: 0.9rem;
 }
 
 .changelog-entry li::before {
   content: '›';
   position: absolute;
   left: 0;
-  color: var(--accent, #4d9dff);
+  color: var(--accent);
   font-weight: 800;
 }

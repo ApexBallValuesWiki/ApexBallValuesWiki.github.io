@@ -18,7 +18,8 @@ export default defineConfig({
   server: {
     // Dev-only: allow testing with the production hostname mapped locally
     // (e.g. --host-resolver-rules) — never used in production builds.
-    allowedHosts: ['apexballvalueswiki.github.io'],
+    // '.e2b.app' covers the sandbox preview host.
+    allowedHosts: ['apexballvalueswiki.github.io', '.e2b.app'],
   },
   build: {
     // Split large third-party libraries into their own chunks so the main

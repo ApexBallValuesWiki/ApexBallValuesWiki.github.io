@@ -6,6 +6,7 @@ import { sortUnitsByRarityThenName } from '../utils/sortUnits';
 import { formatCompactNumber } from '../utils/formatNumber';
 import UnitIcon from './UnitIcon';
 import { useData } from '../context/DataContext';
+import { fuzzySuggest } from '../utils/fuzzySearch';
 import './UnitSearchPanel.css';
 
 export default function UnitSearchPanel({ basePath, autoFocus = true, units: propUnits = null }) {
@@ -16,6 +17,7 @@ export default function UnitSearchPanel({ basePath, autoFocus = true, units: pro
   const [viewMode, setViewMode] = useState('grid'); // grid | list
   const navigate = useNavigate();
   const inputRef = useRef(null);
+  const [suggestIdx, setSuggestIdx] = useState(-1);
 
   useEffect(() => {
     if (autoFocus) setTimeout(() => inputRef.current?.focus(), 100);
@@ -29,6 +31,10 @@ export default function UnitSearchPanel({ basePath, autoFocus = true, units: pro
       : units;
     return sortUnitsByRarityThenName(pool);
   }, [query, units]);
+
+  // Typo-tolerant quick suggestions (top 8) — "krampuss" still finds KrampusBall
+  const suggestions = useMemo(() => fuzzySuggest(query, units, 8), [query, units]);
+  const showSuggest = query.trim().length > 0 && suggestions.length > 0;
 
   // Grouped by rarity for display
   const groups = useMemo(() => {
@@ -46,6 +52,7 @@ export default function UnitSearchPanel({ basePath, autoFocus = true, units: pro
 
   useEffect(() => {
     setSelectedIdx(0);
+    setSuggestIdx(-1);
   }, [query]);
 
   return (
@@ -62,6 +69,12 @@ export default function UnitSearchPanel({ basePath, autoFocus = true, units: pro
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => {
+              if (showSuggest) {
+                if (e.key === 'ArrowDown') { e.preventDefault(); setSuggestIdx((i) => Math.min(i + 1, suggestions.length - 1)); return; }
+                if (e.key === 'ArrowUp') { e.preventDefault(); setSuggestIdx((i) => Math.max(i - 1, 0)); return; }
+                if (e.key === 'Enter' && suggestions[suggestIdx]) { e.preventDefault(); goTo(suggestions[suggestIdx]); return; }
+                if (e.key === 'Escape') { setSuggestIdx(-1); return; }
+              }
               if (e.key === 'ArrowDown') { e.preventDefault(); setSelectedIdx(i => Math.min(i + 1, flatResults.length - 1)); }
               if (e.key === 'ArrowUp') { e.preventDefault(); setSelectedIdx(i => Math.max(i - 1, 0)); }
               if (e.key === 'Enter' && flatResults[selectedIdx]) goTo(flatResults[selectedIdx]);
@@ -69,6 +82,25 @@ export default function UnitSearchPanel({ basePath, autoFocus = true, units: pro
           />
           {query && (
             <button className="usp-clear" onClick={() => setQuery('')}>✕</button>
+          )}
+          {showSuggest && (
+            <div className="usp-suggest" role="listbox" aria-label="Search suggestions">
+              {suggestions.map((u, i) => (
+                <button
+                  key={u.slug}
+                  type="button"
+                  role="option"
+                  aria-selected={i === suggestIdx}
+                  className={`usp-suggest-item${i === suggestIdx ? ' hl' : ''}`}
+                  onMouseEnter={() => setSuggestIdx(i)}
+                  onClick={() => goTo(u)}
+                >
+                  <span className="usp-suggest-name">{u.name}</span>
+                  {u._matchedByTypo && <span className="usp-suggest-typo">did you mean</span>}
+                  <span className="usp-suggest-rarity" style={{ color: getRarityGlow(u.rarity) }}>{u.rarity}</span>
+                </button>
+              ))}
+            </div>
           )}
         </div>
         <div className="usp-view-toggle">

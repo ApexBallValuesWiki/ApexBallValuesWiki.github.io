@@ -1,0 +1,77 @@
+.theme-cutout {
+  --cutout-tint: var(--accent, #ffffff);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  pointer-events: none;
+  isolation: isolate;
+  filter:
+    drop-shadow(0 24px 40px rgba(0, 0, 0, 0.88))
+    drop-shadow(0 0 32px color-mix(in srgb, var(--cutout-tint) 24%, transparent));
+  transition: transform 360ms var(--ease-out), filter 360ms var(--ease-out);
+}
+
+.theme-cutout.is-floating {
+  animation: apex-cutout-float calc(5.2s / var(--theme-speed, 1)) ease-in-out infinite alternate;
+}
+
+@keyframes apex-cutout-float {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(-0.8deg);
+  }
+  100% {
+    transform: translate3d(0, -10px, 0) rotate(1.2deg);
+  }
+}
+
+.theme-cutout-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  /* Pure metallic monochrome base matching the APEX logo */
+  filter: grayscale(1) contrast(1.22) brightness(1.16);
+}
+
+/* Alpha-masked theme color adaptation — tints only opaque pixels of the cutout */
+.theme-cutout-tint,
+.theme-cutout-color {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--cutout-tint);
+  mix-blend-mode: color;
+  opacity: 0.96;
+  -webkit-mask-image: var(--cutout-mask);
+  mask-image: var(--cutout-mask);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+/* Secondary soft-light pass so deep shadows also pick up rich theme color when a colored theme (e.g. Red) is active */
+.theme-cutout-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 30%,
+    color-mix(in srgb, var(--cutout-tint) 65%, #ffffff) 0%,
+    var(--cutout-tint) 70%
+  );
+  mix-blend-mode: soft-light;
+  opacity: 0.62;
+  -webkit-mask-image: var(--cutout-mask);
+  mask-image: var(--cutout-mask);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}

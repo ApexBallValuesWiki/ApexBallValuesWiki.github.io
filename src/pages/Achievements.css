@@ -8,7 +8,8 @@
 .ach-summary-count {
   font-size: 2rem;
   font-weight: 900;
-  color: #FFD700;
+  font-variant-numeric: tabular-nums;
+  color: #fbbf24;
 }
 
 .ach-summary-sep {
@@ -19,59 +20,75 @@
 .ach-summary-total {
   font-size: 1.2rem;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
   color: var(--text-dim);
 }
 
 .ach-summary-label {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--text-faint);
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   margin-left: 4px;
 }
 
 .ach-page {
-  max-width: 900px;
+  max-width: 980px;
   margin: 0 auto;
 }
 
 .ach-category {
-  margin-bottom: 30px;
+  margin-bottom: 34px;
 }
 
 .ach-cat-title {
-  font-size: 1rem;
-  font-weight: 900;
+  font-size: 0.86rem;
+  font-weight: 800;
   color: var(--text-dim);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
   margin-bottom: 14px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .ach-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
+  gap: 14px;
 }
 
 .ach-card {
   display: flex;
   gap: 14px;
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--bg-card);
-  transition: all 0.2s;
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 100%),
+    var(--bg-card, #050507);
+  box-shadow: var(--surface-refraction);
+  transition:
+    border-color 180ms var(--ease-out),
+    transform 180ms var(--ease-out),
+    box-shadow 180ms var(--ease-out);
+}
+
+.ach-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.24);
 }
 
 .ach-card.unlocked {
-  border-color: #FFD700;
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.05), transparent);
+  border-color: rgba(251, 191, 36, 0.55);
+  background:
+    linear-gradient(135deg, rgba(251, 191, 36, 0.06), transparent 65%),
+    var(--bg-card, #050507);
 }
 
 .ach-card.locked {
-  opacity: 0.7;
+  opacity: 0.72;
 }
 
 .ach-icon-wrap {
@@ -83,17 +100,17 @@
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
+  background: #08080c;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .ach-card.unlocked .ach-icon-wrap {
-  border-color: #FFD700;
-  box-shadow: 0 0 12px rgba(255, 215, 0, 0.2);
+  border-color: rgba(251, 191, 36, 0.65);
+  box-shadow: 0 0 16px rgba(251, 191, 36, 0.18);
 }
 
 .ach-icon {
-  font-size: 1.4rem;
+  font-size: 1.35rem;
 }
 
 .ach-check {
@@ -102,7 +119,7 @@
   right: -4px;
   width: 18px;
   height: 18px;
-  background: #FFD700;
+  background: #fbbf24;
   color: #000;
   border-radius: 50%;
   font-size: 0.6rem;
@@ -115,40 +132,43 @@
 .ach-info {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
   min-width: 0;
+  flex: 1;
 }
 
 .ach-name {
   font-size: 0.92rem;
-  font-weight: 900;
+  font-weight: 800;
+  letter-spacing: -0.015em;
   color: var(--text);
 }
 
 .ach-card.unlocked .ach-name {
-  color: #FFD700;
+  color: #fbbf24;
 }
 
 .ach-desc {
-  font-size: 0.75rem;
+  font-size: 0.76rem;
   color: var(--text-dim);
-  font-weight: 600;
+  font-weight: 500;
+  line-height: 1.45;
 }
 
 .ach-progress-bar {
   position: relative;
-  height: 16px;
+  height: 14px;
   background: rgba(255, 255, 255, 0.06);
   border-radius: 999px;
   overflow: hidden;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .ach-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #FFD700, #FFA500);
+  background: linear-gradient(90deg, #fbbf24, #f59e0b);
   border-radius: 999px;
-  transition: width 0.5s ease;
+  transition: width 400ms var(--ease-out);
 }
 
 .ach-progress-text {
@@ -156,14 +176,15 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 0.6rem;
-  font-weight: 900;
+  font-size: 0.58rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
   color: var(--text);
 }
 
 .ach-unlocked-date {
-  font-size: 0.65rem;
-  color: #FFD700;
+  font-size: 0.64rem;
+  color: #fbbf24;
   font-weight: 700;
   margin-top: 2px;
 }

@@ -1,46 +1,53 @@
 .global-bug-report {
   position: fixed;
-  left: 16px;
-  bottom: calc(env(safe-area-inset-bottom) + 16px);
+  right: 18px;
+  bottom: calc(env(safe-area-inset-bottom) + 18px);
   z-index: 94;
-  min-height: 42px;
+  min-height: 38px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 13px;
-  border: 1px solid color-mix(in srgb, var(--danger) 58%, var(--border));
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--danger) 13%, rgba(0, 0, 0, 0.94));
-  color: color-mix(in srgb, var(--danger) 74%, var(--text));
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  font-size: 0.7rem;
-  font-weight: 900;
-  letter-spacing: 0.05em;
+  padding: 8px 14px;
+  border: 1px solid rgba(248, 113, 113, 0.36);
+  border-radius: var(--radius-pill, 999px);
+  background: rgba(8, 8, 12, 0.9);
+  color: #fca5a5;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  text-decoration: none;
+  transition:
+    border-color 180ms var(--ease-out),
+    background-color 180ms var(--ease-out),
+    color 180ms var(--ease-out),
+    transform 150ms var(--ease-out),
+    box-shadow 180ms var(--ease-out);
 }
 
 .global-bug-report-icon {
-  width: 19px;
-  height: 19px;
+  width: 18px;
+  height: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: var(--danger);
-  color: #000;
-  font-size: 0.72rem;
+  background: var(--danger, #f87171);
+  color: #000000;
+  font-size: 0.68rem;
+  font-weight: 900;
   line-height: 1;
 }
 
 .global-bug-report:hover,
 .global-bug-report.active {
-  border-color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 22%, rgba(0, 0, 0, 0.94));
-  color: var(--text);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.68), 0 0 16px color-mix(in srgb, var(--danger) 25%, transparent);
+  border-color: var(--danger, #f87171);
+  background: rgba(248, 113, 113, 0.16);
+  color: #ffffff;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.8), 0 0 18px rgba(248, 113, 113, 0.22);
   transform: translateY(-2px);
 }
 
@@ -50,10 +57,10 @@
 
 @media (max-width: 760px) {
   .global-bug-report {
-    left: 12px;
-    bottom: calc(env(safe-area-inset-bottom) + 86px);
-    min-height: 38px;
-    padding: 8px 10px;
+    right: 12px;
+    bottom: calc(env(safe-area-inset-bottom) + 84px);
+    min-height: 36px;
+    padding: 7px 12px;
     font-size: 0.62rem;
   }
 }

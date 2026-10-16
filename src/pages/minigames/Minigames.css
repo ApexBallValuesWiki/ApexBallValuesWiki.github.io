@@ -4,94 +4,143 @@
 
 .mg-page {
   min-height: 100vh;
-  padding: 40px 18px 80px;
-  max-width: 1060px;
+  padding: 36px 28px 88px;
+  max-width: 1460px;
   margin: 0 auto;
 }
 
 .mg-hero {
-  margin-bottom: 26px;
+  margin-bottom: 30px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .mg-kicker {
-  font-size: 0.7rem;
-  font-weight: 900;
-  letter-spacing: 0.22em;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--accent, #4d9dff);
-  margin: 0 0 6px;
+  color: var(--text-dim);
+  margin: 0 0 10px;
 }
 
 .mg-hero h1 {
   margin: 0;
-  font-size: clamp(1.9rem, 4vw, 2.6rem);
+  font-size: clamp(1.95rem, 3.8vw, 2.7rem);
   font-weight: 900;
-  letter-spacing: 0.04em;
+  letter-spacing: -0.032em;
 }
 
 .mg-tagline {
-  margin: 8px 0 0;
-  color: var(--text-dim, #bfbfbf);
-  font-weight: 600;
-  font-size: 0.92rem;
+  margin: 10px 0 0;
+  color: var(--text-dim, #b8b8c2);
+  font-weight: 500;
+  font-size: 0.95rem;
 }
 
 .mg-time-note {
   margin: 6px 0 0;
-  color: var(--text-faint, #7a7a7a);
+  color: var(--text-faint, #72727e);
   font-size: 0.76rem;
 }
 
 /* Hub cards */
 .mg-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
 }
 
 .mg-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 20px;
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  gap: 12px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 18px;
-  background: var(--bg-card, rgba(255, 255, 255, 0.03));
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, transparent 100%),
+    var(--bg-card, #050507);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), var(--surface-refraction);
   text-decoration: none;
   color: inherit;
   overflow: hidden;
-  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    transform 180ms var(--ease-out),
+    border-color 180ms var(--ease-out),
+    box-shadow 180ms var(--ease-out);
 }
 
 .mg-card:hover {
-  transform: translateY(-3px);
-  border-color: color-mix(in srgb, var(--accent, #4d9dff) 55%, var(--border-strong, rgba(255, 255, 255, 0.25)));
-  box-shadow: 0 16px 40px color-mix(in srgb, var(--accent, #4d9dff) 14%, rgba(0, 0, 0, 0.45));
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.42);
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.75), var(--surface-refraction-strong);
+}
+
+.mg-card-cutout {
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  width: 165px;
+  height: 165px;
+  opacity: 0.22;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 240ms var(--ease-out), transform 280ms var(--ease-out);
+}
+
+.mg-card:hover .mg-card-cutout {
+  opacity: 0.4;
+  transform: scale(1.06) translateY(-4px);
+}
+
+.mg-card > *:not(.mg-card-cutout) {
+  position: relative;
+  z-index: 1;
+}
+
+.mg-card:active {
+  transform: scale(0.98);
 }
 
 .mg-card:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--accent, #4d9dff) 80%, white);
+  outline: 2px solid color-mix(in srgb, var(--accent, #ffffff) 80%, white);
   outline-offset: 3px;
 }
 
 .mg-card-icon {
-  font-size: 1.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #08080c;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 1.45rem;
   line-height: 1;
 }
 
 .mg-card h2 {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-weight: 900;
-  letter-spacing: 0.04em;
+  letter-spacing: -0.022em;
 }
 
 .mg-card p {
   margin: 0;
-  color: var(--text-dim, #bfbfbf);
-  font-size: 0.82rem;
-  font-weight: 600;
+  color: var(--text-dim, #b8b8c2);
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.55;
   flex: 1;
 }
 
@@ -102,23 +151,27 @@
 }
 
 .mg-chip {
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.025);
   border-radius: 999px;
   padding: 4px 10px;
   font-size: 0.66rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--text-faint, #7a7a7a);
+  color: var(--text-dim);
 }
 
 .mg-card-cta {
-  margin-top: 4px;
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
   font-size: 0.74rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent, #4d9dff);
+  color: var(--text);
 }
 
 /* Shared game panel */
@@ -554,7 +607,7 @@
   overflow-y: auto;
   background: rgba(6, 6, 6, 0.97);
   border: 1px solid var(--border-strong, rgba(255, 255, 255, 0.2));
-  border-radius: 12px;
+  border-radius: var(--radius, 16px);
   z-index: 40;
   padding: 6px;
   display: flex;
@@ -580,7 +633,15 @@
 }
 
 .ball-suggestion-option:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: color-mix(in srgb, var(--accent, #fff) 12%, transparent);
+}
+
+.ball-suggestion-option > span:not(.mg-sug-img) {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ball-suggestion-option small {
@@ -642,4 +703,21 @@
   .ball-again:hover {
     transform: none;
   }
+}
+
+
+/* Unit image beside the name in suggestion menus (Balling + Ball Knowledge). */
+.mg-sug-img {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  object-fit: contain;
+  border-radius: 8px;
+  background: var(--bg-elevated, #0a0a0a);
+  border: 1px solid var(--border, #1a1a1a);
+  padding: 1px;
+}
+.mg-sug-img.fallback {
+  background: radial-gradient(circle at 35% 30%, #fff 0%, #9a9a9a 60%, #222 100%);
+  border: none;
 }

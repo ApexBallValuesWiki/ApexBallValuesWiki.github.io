@@ -391,15 +391,17 @@ export function DataProvider({ children }) {
   }, [canSync, syncFromKV]);
 
   // Live polling while the tab is visible: published edits appear for every
-  // visitor within ~25s — no refresh, no realtime infrastructure needed. The
-  // version gate inside syncFromKV skips the re-apply when nothing changed.
+  // visitor within ~1 minute — no refresh, no realtime infrastructure needed.
+  // 60s (not 25s) keeps us far inside the Cloudflare free tier even with many
+  // concurrent visitors; the worker edge-caches /overrides for 60s to match.
+  // The version gate inside syncFromKV skips the re-apply when nothing changed.
   useEffect(() => {
     if (!canSync()) return undefined;
     const id = window.setInterval(() => {
       if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
         syncFromKV({ force: true });
       }
-    }, 25000);
+    }, 60000);
     return () => window.clearInterval(id);
   }, [canSync, syncFromKV]);
 

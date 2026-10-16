@@ -1,209 +1,201 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { APEX_KV_URL } from '../../utils/apexClient';
+import Dropdown from '../Dropdown';
+
+// BUG REPORTS — upgraded admin view: category + status filters, search,
+// duplicate-merge badges (worker folds identical reports), and bulk resolve.
+const CATEGORY_COLORS = {
+  'Wrong Data': '#ff5c5c',
+  'Wiki Error': '#c04dff',
+  'Site Bug': '#ffb63e',
+  Suggestion: '#42d392',
+  Other: '#7ff4ff',
+};
+const CATEGORY_FALLBACK = '#a7b0bd';
+
+function timeAgo(iso) {
+  try {
+    const ms = Date.now() - new Date(iso).getTime();
+    if (!Number.isFinite(ms)) return '';
+    const mins = Math.floor(ms / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const h = Math.floor(mins / 60);
+    if (h < 24) return `${h}h ago`;
+    return new Date(iso).toLocaleDateString();
+  } catch { return ''; }
+}
 
 export default function BugReportAdmin() {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
-  const [filter, setFilter] = useState('all'); // all, open, resolved
+  const [status, setStatus] = useState('open'); // all | open | resolved
+  const [category, setCategory] = useState('all');
+  const [q, setQ] = useState('');
+  const [busy, setBusy] = useState(false);
 
   async function loadReports() {
     setLoading(true);
     try {
       const response = await fetch(`${APEX_KV_URL}/bug-reports`);
       if (response.ok) {
-        let data = await response.json();
-        
-        // Sort by created_at desc (newest first)
+        const data = await response.json();
         data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-        if (filter === 'open') {
-          data = data.filter((r) => !r.resolved);
-        } else if (filter === 'resolved') {
-          data = data.filter((r) => r.resolved);
-        }
-
-        setReports(data || []);
+        setReports(Array.isArray(data) ? data : []);
         setMessage('');
       } else {
         const err = await response.json().catch(() => ({ error: 'Unknown error' }));
         setMessage(`Error loading bug reports: ${err.error || 'Server error'}`);
-        setReports([]);
       }
     } catch (e) {
-      setMessage(`Failed to load bug reports: ${e.message}`);
-      setReports([]);
+      setMessage(`Failed to load: ${e.message}`);
     }
     setLoading(false);
   }
 
-  useEffect(() => {
-    loadReports();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter]);
+  useEffect(() => { loadReports(); }, []);
 
-  async function markResolved(report) {
-    const savedEmail = localStorage.getItem('apex-admin-email-v1') || '';
-    const savedPasscode = localStorage.getItem('apex-admin-passcode-v1') || '';
+  const categories = useMemo(
+    () => [...new Set(reports.map((r) => r.category).filter(Boolean))],
+    [reports]
+  );
 
+  const filtered = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    return reports.filter((r) => {
+      if (status === 'open' && r.resolved) return false;
+      if (status === 'resolved' && !r.resolved) return false;
+      if (category !== 'all' && (r.category || 'Other') !== category) return false;
+      if (needle && !`${r.title || ''} ${r.description || ''} ${r.page_url || ''}`.toLowerCase().includes(needle)) return false;
+      return true;
+    });
+  }, [reports, status, category, q]);
+
+  const openCount = useMemo(() => filtered.filter((r) => !r.resolved).length, [filtered]);
+
+  async function resolve(id) {
+    setBusy(true);
     try {
       const response = await fetch(`${APEX_KV_URL}/bug-reports/resolve`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Admin-Email': savedEmail,
-          'X-Admin-Passcode': savedPasscode,
-        },
-        body: JSON.stringify({ id: report.id }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, resolved: true }),
       });
-
       if (response.ok) {
-        setMessage(`Marked "${report.title}" as resolved.`);
-        loadReports();
+        setReports((prev) => prev.map((r) => (r.id === id ? { ...r, resolved: true } : r)));
+        setMessage('Marked as resolved.');
       } else {
-        const err = await response.json().catch(() => ({ error: 'Server error' }));
+        const err = await response.json().catch(() => ({}));
         setMessage(`Failed to resolve: ${err.error || 'Server error'}`);
       }
     } catch (e) {
       setMessage(`Failed to resolve: ${e.message}`);
     }
+    setBusy(false);
   }
 
-  async function deleteReport(report) {
-    if (!window.confirm(`Delete bug report "${report.title}"?`)) return;
+  async function resolveAllOpen() {
+    const targets = filtered.filter((r) => !r.resolved).map((r) => r.id);
+    if (!targets.length) return;
+    if (!window.confirm(`Resolve ${targets.length} open report${targets.length > 1 ? 's' : ''}?`)) return;
+    setBusy(true);
+    let done = 0;
+    for (const id of targets) {
+      try {
+        const response = await fetch(`${APEX_KV_URL}/bug-reports/resolve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, resolved: true }),
+        });
+        if (response.ok) done += 1;
+      } catch { /* keep going */ }
+    }
+    await loadReports();
+    setMessage(`Resolved ${done}/${targets.length} reports.`);
+    setBusy(false);
+  }
 
-    const savedEmail = localStorage.getItem('apex-admin-email-v1') || '';
-    const savedPasscode = localStorage.getItem('apex-admin-passcode-v1') || '';
-
+  async function deleteReport(id) {
+    if (!window.confirm('Permanently delete this report?')) return;
+    setBusy(true);
     try {
       const response = await fetch(`${APEX_KV_URL}/bug-reports/delete`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Admin-Email': savedEmail,
-          'X-Admin-Passcode': savedPasscode,
-        },
-        body: JSON.stringify({ id: report.id }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
       });
-
       if (response.ok) {
-        setMessage(`Deleted "${report.title}".`);
-        loadReports();
+        setReports((prev) => prev.filter((r) => r.id !== id));
+        setMessage('Report deleted.');
       } else {
-        const err = await response.json().catch(() => ({ error: 'Server error' }));
+        const err = await response.json().catch(() => ({}));
         setMessage(`Failed to delete: ${err.error || 'Server error'}`);
       }
     } catch (e) {
       setMessage(`Failed to delete: ${e.message}`);
     }
+    setBusy(false);
   }
 
   return (
     <section className="card admin-bug-reports">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
-        <h3 style={{ margin: 0 }}>Bug Reports</h3>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            type="button"
-            className={filter === 'all' ? 'filled' : ''}
-            onClick={() => setFilter('all')}
-          >
-            All
-          </button>
-          <button
-            type="button"
-            className={filter === 'open' ? 'filled' : ''}
-            onClick={() => setFilter('open')}
-          >
-            Open
-          </button>
-          <button
-            type="button"
-            className={filter === 'resolved' ? 'filled' : ''}
-            onClick={() => setFilter('resolved')}
-          >
-            Resolved
-          </button>
+      <div className="bra-head">
+        <h3>🐛 Bug Reports <span className="bra-count">{filtered.length}</span></h3>
+        <div className="bra-filters">
+          <Dropdown compact className="bra-select" value={status} onChange={setStatus}
+            options={[{ value: 'open', label: 'Open' }, { value: 'resolved', label: 'Resolved' }, { value: 'all', label: 'All' }]}
+            ariaLabel="Filter by status" />
+          <Dropdown compact className="bra-select" value={category} onChange={setCategory}
+            options={[{ value: 'all', label: 'All categories' }, ...categories.map((c) => ({ value: c, label: c }))]}
+            ariaLabel="Filter by category" />
+          <input className="admin-search bra-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search reports…" aria-label="Search reports" />
+          <button type="button" onClick={loadReports} disabled={loading}>↻</button>
         </div>
       </div>
 
-      {message && (
-        <div className="pending-flag" style={{ marginBottom: 12 }}>
-          {message}
-        </div>
-      )}
+      {message && <div className="pending-flag bra-flag">{message}</div>}
 
       {loading ? (
-        <p style={{ color: 'var(--text-faint)' }}>Loading reports…</p>
-      ) : reports.length === 0 ? (
-        <p style={{ color: 'var(--text-faint)', fontStyle: 'italic' }}>
-          No bug reports found.
-        </p>
+        <p className="bra-muted">Loading reports…</p>
+      ) : filtered.length === 0 ? (
+        <p className="bra-muted">No reports match — inbox zero 🎉</p>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {reports.map((report) => (
-            <div
-              key={report.id}
-              className="card"
-              style={{
-                padding: 16,
-                opacity: report.resolved ? 0.7 : 1,
-                borderLeft: report.resolved ? '3px solid var(--text-faint)' : '3px solid var(--c-info)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
-                <div style={{ flex: 1, minWidth: 200 }}>
-                  <h4 style={{ margin: '0 0 6px' }}>
-                    {report.resolved && <span style={{ color: 'var(--text-faint)', marginRight: 6 }}>[Resolved]</span>}
-                    {report.title}
-                  </h4>
-                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: '0.8rem', color: 'var(--text-faint)', marginBottom: 8 }}>
-                    {report.category && <span>Category: {report.category}</span>}
-                    <span>{new Date(report.created_at).toLocaleString()}</span>
-                  </div>
-                  <p style={{ margin: '0 0 8px', color: 'var(--text-dim)', fontSize: '0.88rem' }}>
-                    {report.description}
-                  </p>
-                  {report.page_url && (
-                    <a
-                      href={report.page_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ fontSize: '0.78rem', color: 'var(--text-faint)' }}
-                    >
-                      {report.page_url}
-                    </a>
-                  )}
-                  {report.contact && (
-                    <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: 'var(--text-faint)' }}>
-                      Contact: {report.contact}
-                    </p>
-                  )}
-                  {report.browser && (
-                    <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: 'var(--text-faint)' }}>
-                      Browser/Device: {report.browser}
-                    </p>
-                  )}
-                </div>
-                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                  {!report.resolved && (
-                    <button type="button" className="filled" onClick={() => markResolved(report)}>
-                      Mark Resolved
-                    </button>
-                  )}
-                  <button type="button" onClick={() => deleteReport(report)}>
-                    Delete
-                  </button>
-                </div>
-              </div>
+        <>
+          {openCount > 1 && (
+            <div className="bra-bulk">
+              <span>{openCount} open in view</span>
+              <button type="button" className="filled" onClick={resolveAllOpen} disabled={busy}>✓ Resolve all open in view</button>
             </div>
-          ))}
-        </div>
+          )}
+          <div className="bra-list" data-lenis-prevent>
+            {filtered.map((report) => {
+              const cat = report.category || 'Other';
+              const color = CATEGORY_COLORS[cat] || CATEGORY_FALLBACK;
+              return (
+                <div key={report.id} className={`bra-row${report.resolved ? ' resolved' : ''}`}>
+                  <div className="bra-row-head">
+                    <span className="bra-cat" style={{ color, borderColor: `color-mix(in srgb, ${color} 45%, transparent)`, background: `color-mix(in srgb, ${color} 10%, transparent)` }}>{cat}</span>
+                    <strong className="bra-title">{report.title || 'Untitled'}</strong>
+                    {(report.count || 0) > 1 && <span className="bra-dupes" title="Identical reports merged automatically">⚡ ×{report.count} merged</span>}
+                    <span className="bra-time">{timeAgo(report.created_at)}</span>
+                  </div>
+                  {report.description && <p className="bra-desc">{report.description}</p>}
+                  <div className="bra-row-foot">
+                    {report.page_url && <a className="bra-link" href={report.page_url} target="_blank" rel="noreferrer">{report.page_url.replace(/^https?:\/\/[^/]+/, '')}</a>}
+                    {!report.resolved ? (
+                      <button type="button" onClick={() => resolve(report.id)} disabled={busy}>✓ Resolve</button>
+                    ) : (
+                      <span className="bra-status">✓ Resolved</span>
+                    )}
+                    <button type="button" className="bra-delete" onClick={() => deleteReport(report.id)} disabled={busy}>🗑️</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
-
-      <button type="button" onClick={loadReports} style={{ marginTop: 16 }}>
-        Refresh
-      </button>
     </section>
   );
 }

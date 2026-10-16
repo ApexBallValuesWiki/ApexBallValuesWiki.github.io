@@ -38,7 +38,6 @@ export default function Credits() {
   return (
     <main className="credits-page">
       <motion.section className="credits-hero" variants={fadeUp} initial="initial" animate="animate">
-        <p className="credits-kicker">Apex WIKI &amp; Values</p>
         <h1>Credits</h1>
         <p>
           The people behind the testing, feedback, and chaos that helped build the Apex WIKI &amp; Values experience.

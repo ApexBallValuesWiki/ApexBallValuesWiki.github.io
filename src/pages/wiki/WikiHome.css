@@ -1,50 +1,222 @@
 .wiki-intro {
   color: var(--text-dim);
-  max-width: 720px;
-  line-height: 1.6;
-  margin-bottom: 32px;
+  max-width: 68ch;
+  line-height: 1.65;
+  margin-bottom: 28px;
 }
 
-.wiki-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+/* ============================================================
+   EXPANDED RARITY TIER SHOWCASE GRID (ValuesHome & WikiHome)
+   ============================================================ */
+.hub-tier-section {
+  margin-top: 32px;
+}
+
+.hub-tier-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
   gap: 14px;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
 }
 
-@media (max-width: 520px) {
-  .wiki-stats {
-    grid-template-columns: 1fr;
+.hub-tier-head h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.2vw, 1.75rem);
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+.hub-tier-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hub-quick-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition:
+    border-color 160ms var(--ease-out),
+    color 160ms var(--ease-out),
+    background-color 160ms var(--ease-out),
+    transform 160ms var(--ease-out);
+}
+
+.hub-quick-link:hover {
+  border-color: var(--accent, #ffffff);
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent, #ffffff) 14%, transparent);
+  transform: translateY(-1px);
+}
+
+.hub-tier-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.hub-tier-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 176px;
+  padding: 22px 24px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(75% 85% at 88% 82%, color-mix(in srgb, var(--tier-glow, #ffffff) 14%, transparent), transparent 72%),
+    linear-gradient(165deg, #08080c 0%, #040407 58%, #000000 100%);
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.68),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition:
+    transform 200ms var(--ease-out),
+    border-color 200ms var(--ease-out),
+    box-shadow 200ms var(--ease-out);
+}
+
+.hub-tier-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--tier-glow, #ffffff) 52%, rgba(255, 255, 255, 0.3));
+  box-shadow:
+    0 22px 48px rgba(0, 0, 0, 0.82),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.hub-tier-cutout {
+  position: absolute;
+  right: -8px;
+  bottom: -10px;
+  width: 148px;
+  height: 148px;
+  opacity: 0.24;
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 240ms var(--ease-out), transform 280ms var(--ease-out);
+}
+
+.hub-tier-card:hover .hub-tier-cutout {
+  opacity: 0.44;
+  transform: scale(1.07) translateY(-4px);
+}
+
+.hub-tier-body {
+  position: relative;
+  z-index: 1;
+}
+
+.hub-tier-title-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 6px;
+}
+
+.hub-tier-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--tier-glow, #ffffff);
+}
+
+.hub-tier-title-row h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.hub-tier-count {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.hub-tier-body p {
+  margin: 0 0 18px;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+  max-width: 82%;
+}
+
+.hub-tier-links {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hub-tier-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  transition:
+    background-color 160ms var(--ease-out),
+    border-color 160ms var(--ease-out),
+    color 160ms var(--ease-out),
+    transform 160ms var(--ease-out);
+}
+
+.hub-tier-btn.primary {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--text);
+}
+
+.hub-tier-btn.primary:hover {
+  background: var(--tier-glow, #ffffff);
+  border-color: var(--tier-glow, #ffffff);
+  color: #000000;
+  transform: translateY(-1px);
+}
+
+.hub-tier-btn.shiny {
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid color-mix(in srgb, var(--tier-glow, #ffffff) 40%, rgba(255, 255, 255, 0.14));
+  color: var(--text-dim);
+}
+
+.hub-tier-btn.shiny:hover {
+  border-color: var(--tier-glow, #ffffff);
+  color: var(--text);
+  background: color-mix(in srgb, var(--tier-glow, #ffffff) 16%, #08080c);
+}
+
+@media (max-width: 1080px) {
+  .hub-tier-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-.wiki-stat {
-  padding: 18px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.wiki-stat:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
-}
-
-.wiki-stat:active {
-  transform: translateY(-1px) scale(0.995);
-}
-
-.wiki-stat-value {
-  font-size: 1.6rem;
-  font-weight: 800;
-}
-
-.wiki-stat-label {
-  color: var(--text-dim);
-  font-size: 0.8rem;
-  margin-top: 4px;
-}
-
-.wiki-stat-note {
-  color: var(--text-faint);
-  font-size: 0.7rem;
-  margin-top: 2px;
+@media (max-width: 640px) {
+  .hub-tier-grid {
+    grid-template-columns: 1fr;
+  }
 }

@@ -5,6 +5,7 @@ import PageIntro from '../../components/PageIntro';
 import { APEX_KV_URL } from '../../utils/apexClient';
 import { incrementStat } from '../../utils/achievements';
 import './BugReport.css';
+import Dropdown from '../../components/Dropdown';
 
 const BUG_CATEGORIES = [
   'Wrong Data',
@@ -154,23 +155,13 @@ export default function BugReport() {
 
           <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>Category</span>
-            <select
+            <Dropdown
               value={form.category}
-              onChange={(e) => updateField('category', e.target.value)}
-              style={{
-                padding: '10px 12px',
-                background: 'var(--bg-elevated)',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--radius)',
-                color: 'var(--text)',
-                fontSize: '0.95rem',
-              }}
-            >
-              <option value="">Select a category…</option>
-              {BUG_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
+              onChange={(v) => updateField('category', v)}
+              options={BUG_CATEGORIES.map((cat) => ({ value: cat, label: cat }))}
+              placeholder="Select a category…"
+              ariaLabel="Category"
+            />
           </label>
 
           <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>

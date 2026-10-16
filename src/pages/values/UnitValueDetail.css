@@ -1,56 +1,67 @@
-/* UnitValueDetail.css — Styles for values stat grid and demand/scarcity bars */
-
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 14px;
 }
 
 .stat-box {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm, 10px) !important;
-  padding: 16px 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, transparent 100%),
+    var(--bg-card, #050507);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: var(--radius, 14px) !important;
+  box-shadow: var(--surface-refraction);
+  padding: 18px 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 5px;
   text-align: center;
 }
 
 .stat-value {
-  font-size: 1.3rem;
-  font-weight: 800;
+  font-size: 1.38rem;
+  font-weight: 900;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.025em;
   color: var(--text);
 }
 
 .stat-label {
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.68rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   color: var(--text-faint);
 }
 
 .vud-bars {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   margin-top: 24px;
+  padding: 20px 24px;
+  border-radius: var(--radius-lg, 18px);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, transparent 100%),
+    var(--bg-card, #050507);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: var(--surface-refraction);
 }
 
 .vud-bar-row {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .vud-bar-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
   white-space: nowrap;
   gap: 8px;
@@ -60,34 +71,37 @@
 .vud-bar-label {
   color: var(--text-dim);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  font-size: 0.72rem;
+  font-weight: 800;
   flex-shrink: 0;
 }
 
 .vud-bar-tier {
-  font-size: clamp(0.65rem, 3.5vw, 0.85rem);
+  font-size: clamp(0.7rem, 3.2vw, 0.82rem);
   font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   white-space: nowrap;
   flex-shrink: 1;
   text-align: right;
 }
 
 .vud-bar-track {
-  height: 10px;
-  border-radius: var(--radius-pill, 999px) !important;
+  height: 8px;
+  border-radius: var(--radius-pill) !important;
   background: rgba(255, 255, 255, 0.07);
   overflow: hidden;
 }
 
 .vud-bar-fill {
   height: 100%;
-  border-radius: var(--radius-pill, 999px) !important;
+  border-radius: var(--radius-pill) !important;
 }
 
 .vud-updated {
-  margin: 10px 0 0;
-  font-size: 0.72rem;
-  font-weight: 800;
+  margin: 14px 0 0;
+  font-size: 0.74rem;
+  font-weight: 600;
   color: var(--text-faint);
 }

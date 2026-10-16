@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { loadStats as loadBonoStats } from '../../utils/ballonomics';
 import { loadStats as loadBallStats } from '../../utils/balling';
+import ThemeCutout from '../../components/ThemeCutout';
 import './Minigames.css';
 
 const BK_STATS_KEY = 'apex-ball-knowledge-stats-v1';
@@ -36,6 +37,7 @@ export default function MinigamesHome() {
     {
       to: '/minigames/ball-knowledge',
       icon: '🧠',
+      cutout: 'partyman',
       name: 'Ball Knowledge',
       blurb: 'Guess the unit from its upgrade clues. Four difficulties, daily puzzle.',
       chips: [`Streak ${bk.currentStreak ?? 0}`, `Wins ${bk.wins ?? 0}`, `Endless ${bkEndlessBest}`],
@@ -43,6 +45,7 @@ export default function MinigamesHome() {
     {
       to: '/minigames/ballonomics',
       icon: '📈',
+      cutout: 'king',
       name: 'Ballonomics',
       blurb: 'Both balls are shown — only the price is hidden. Is the mystery one worth more or less?',
       chips: [`Daily best ${bono.dailyBest ?? 0}/9`, `Endless best ${bono.endlessBest ?? 0}`, `Streak ${bono.currentStreak ?? 0}`],
@@ -50,6 +53,7 @@ export default function MinigamesHome() {
     {
       to: '/minigames/balling',
       icon: '🟪',
+      cutout: 'hacker',
       name: 'Balling',
       blurb: 'A unit hides behind pixels. Every wrong guess sharpens it — name it in time.',
       chips: [`Solves ${balling.solved ?? 0}`, `Best ${balling.bestPoints ?? 0} pts`, `Streak ${balling.currentStreak ?? 0}`],
@@ -59,7 +63,6 @@ export default function MinigamesHome() {
   return (
     <main className="mg-page">
       <motion.section className="mg-hero" variants={fadeUp} initial="initial" animate="animate">
-        <p className="mg-kicker">Arcade</p>
         <h1>MINIGAMES</h1>
         <p className="mg-tagline">Three daily games built on real Ball TD data — stats, values and unit art.</p>
         <p className="mg-time-note">Daily puzzles reset at 3PM EST, verified by global time.</p>
@@ -68,6 +71,7 @@ export default function MinigamesHome() {
       <motion.div className="mg-grid" variants={fadeUp} initial="initial" animate="animate" custom={0.08}>
         {games.map((game) => (
           <Link key={game.to} to={game.to} className="mg-card">
+            <ThemeCutout variant={game.cutout} className="mg-card-cutout" />
             <span className="mg-card-icon" aria-hidden="true">{game.icon}</span>
             <h2>{game.name}</h2>
             <p>{game.blurb}</p>

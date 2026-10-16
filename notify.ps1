@@ -5,15 +5,7 @@
 # It is read from, in order:
 #   1. the -Webhook parameter
 #   2. the APEX_DISCORD_WEBHOOK environment variable
-#   3. webhook.txt sitting next to this script  <-- recommended
-#
-# Create the webhook: Discord server -> Server Settings -> Integrations ->
-# Webhooks -> New Webhook -> Copy URL, then paste it into webhook.txt.
-# webhook.txt is gitignored - push.cmd can never commit it.
-#
-#   powershell -NoProfile -ExecutionPolicy Bypass -File notify.ps1
-#   powershell -NoProfile -ExecutionPolicy Bypass -File notify.ps1 -DryRun
-#       (prints the payload, sends nothing - safe to test)
+#   3. webhook.txt sitting next to this script or in the parent folder
 # =============================================================================
 
 param(
@@ -25,15 +17,26 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# --- resolve the webhook (env var -> webhook.txt) -----------------------------
+# --- resolve the webhook (env var -> webhook.txt in script dir or parent dir)
 if (-not $Webhook) { $Webhook = $env:APEX_DISCORD_WEBHOOK }
 if (-not $Webhook) {
   $txt = Join-Path $PSScriptRoot "webhook.txt"
   if (Test-Path $txt) { $Webhook = (Get-Content $txt -Raw).Trim() }
 }
+if (-not $Webhook) {
+  $parentDir = Split-Path $PSScriptRoot -Parent
+  if ($parentDir) {
+    $txtParent = Join-Path $parentDir "webhook.txt"
+    if (Test-Path $txtParent) { $Webhook = (Get-Content $txtParent -Raw).Trim() }
+  }
+}
+if (-not $Webhook) {
+  $childTxt = Join-Path $PSScriptRoot "apex-td-project\webhook.txt"
+  if (Test-Path $childTxt) { $Webhook = (Get-Content $childTxt -Raw).Trim() }
+}
 if (-not $Webhook -or $Webhook -notmatch "^https://") {
   Write-Output "No webhook configured - announce skipped."
-  Write-Output "To enable: create webhook.txt next to notify.ps1 with your Discord"
+  Write-Output "To enable: create webhook.txt next to push.cmd or notify.ps1 with your Discord"
   Write-Output "webhook URL (Discord -> Server Settings -> Integrations -> Webhooks)."
   exit 1
 }
@@ -41,7 +44,6 @@ if (-not $Webhook -or $Webhook -notmatch "^https://") {
 # --- helpers ------------------------------------------------------------------
 
 function Clamp([string]$Text, [int]$Max) {
-  # Discord rejects empty field values (HTTP 400) and values over 1024 chars.
   if ([string]::IsNullOrWhiteSpace($Text)) { return "-" }
   $Text = $Text.Trim()
   if ($Text.Length -le $Max) { return $Text }
@@ -52,8 +54,14 @@ function Clamp([string]$Text, [int]$Max) {
 
 $version = "?"
 try {
-  $pkg = Get-Content (Join-Path $PSScriptRoot "package.json") -Raw | ConvertFrom-Json
-  if ($pkg.version) { $version = $pkg.version }
+  $pkgPath = Join-Path $PSScriptRoot "package.json"
+  if (-not (Test-Path $pkgPath)) {
+    $pkgPath = Join-Path $PSScriptRoot "apex-td-project\package.json"
+  }
+  if (Test-Path $pkgPath) {
+    $pkg = Get-Content $pkgPath -Raw | ConvertFrom-Json
+    if ($pkg.version) { $version = $pkg.version }
+  }
 } catch {}
 
 $commit = ""

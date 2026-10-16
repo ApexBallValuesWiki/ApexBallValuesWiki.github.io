@@ -1,34 +1,72 @@
 .page-intro {
+  position: relative;
+  overflow: hidden;
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 20px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
+  padding: 24px 28px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(60% 95% at 88% 50%, color-mix(in srgb, var(--accent, #ffffff) 11%, transparent), transparent 72%),
+    linear-gradient(160deg, #09090e 0%, #040407 60%, #000000 100%);
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.page-intro-cutout {
+  position: absolute;
+  right: 18px;
+  top: -14px;
+  width: 176px;
+  height: 176px;
+  opacity: 0.24;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .page-intro h1 {
   margin: 0;
+  font-size: clamp(1.85rem, 3.2vw, 2.55rem);
+  font-weight: 900;
+  letter-spacing: -0.034em;
+  line-height: 1.08;
 }
 
 .page-intro-copy {
+  position: relative;
+  z-index: 1;
   min-width: min(100%, 420px);
-  max-width: 880px;
+  max-width: 68ch;
 }
 
 .page-intro-eyebrow {
-  margin: 0 0 8px;
-  color: var(--text-faint);
-  font-size: 0.74rem;
-  font-weight: 900;
-  letter-spacing: 0.14em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 4px 11px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--accent, #ffffff) 10%, rgba(255, 255, 255, 0.04));
+  border: 1px solid color-mix(in srgb, var(--accent, #ffffff) 28%, rgba(255, 255, 255, 0.1));
+  color: var(--text);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .page-intro-body {
-  margin-top: 12px;
+  margin-top: 10px;
   color: var(--text-dim);
+  font-size: 0.92rem;
+  font-weight: 500;
   line-height: 1.65;
+  max-width: 64ch;
 }
 
 .page-intro-body p {
@@ -36,6 +74,8 @@
 }
 
 .page-intro-actions {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -44,6 +84,15 @@
 
 @media (max-width: 760px) {
   .page-intro {
+    align-items: flex-start;
     gap: 14px;
+    padding: 20px;
+    margin-bottom: 22px;
+  }
+
+  .page-intro-cutout {
+    width: 120px;
+    height: 120px;
+    opacity: 0.16;
   }
 }

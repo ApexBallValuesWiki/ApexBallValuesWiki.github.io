@@ -27,7 +27,25 @@ export function setAdsEnabled(on) {
   const next = !!on;
   if (next === adsEnabled) return;
   adsEnabled = next;
+  // AdSense policy ("no ads on screens without publisher content"): when ads
+  // are disabled — maintenance on, gate screens — strip the loader script and
+  // any Google-injected ad units (incl. account-level Auto Ads) so nothing
+  // keeps serving on a contentless screen for the rest of the session.
+  if (!next) scrubAdCode();
   window.dispatchEvent(new CustomEvent('apex-ads-state'));
+}
+
+/** Best-effort removal of all Google ad artifacts from the document. */
+function scrubAdCode() {
+  try {
+    document.querySelectorAll('script[src*="pagead2.googlesyndication.com"]')
+      .forEach((s) => s.remove());
+    // Remove ad units Google injected itself. Our own slots live inside
+    // .apex-ad-slot-wrapper and are unmounted by React — never touch those.
+    document.querySelectorAll('ins.adsbygoogle, iframe[src*="googlesyndication"], iframe[src*="google_ads"]')
+      .forEach((el) => { if (!el.closest('.apex-ad-slot-wrapper')) el.remove(); });
+    injected = false; // allow a clean re-inject if ads are re-enabled later
+  } catch { /* best effort — never break the app over ad cleanup */ }
 }
 
 /** True only when: production host AND maintenance confirmed off. */

@@ -8,34 +8,26 @@ import { originTag } from '../utils/originTag';
 import UnitIcon from './UnitIcon';
 import './EntityGrid.css';
 
+const EASE_OUT = [0.23, 1, 0.32, 1];
+
 const gridVariants = {
   animate: {
-    transition: { staggerChildren: 0.045, delayChildren: 0.05 },
+    transition: { staggerChildren: 0.035, delayChildren: 0.04 },
   },
 };
 
 const cardVariants = {
-  initial: { opacity: 0, y: 18, scale: 0.94 },
+  initial: { opacity: 0, y: 16, scale: 0.96 },
   animate: {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.36, ease: EASE_OUT },
   },
 };
 
 const MotionLink = motion(Link);
 
-/**
- * Generic card grid for lists of units/items/maps/traits/skins.
- * `entities` items need at minimum: { slug, name, documented }.
- * `linkBase` e.g. "/wiki/units/Normie" -> links become `${linkBase}/${slug}`
- * `renderMeta(entity)` optional — return JSX for extra info (e.g. type badge, value).
- * `rarityAccent` optional — when true, entities are expected to have a
- * `.rarity` field and render as a bigger unit card: icon, name, glowing
- * rarity label, a quick stat readout (cooldown/range/damage/placement),
- * then meta badges — matching the Values cards.
- */
 export default function EntityGrid({ entities, linkBase, renderMeta, emptyLabel, rarityAccent }) {
   const highlighted = useScrollToHighlight();
 
@@ -52,6 +44,7 @@ export default function EntityGrid({ entities, linkBase, renderMeta, emptyLabel,
           const stats = getBaseStats(e);
           const isHighlighted = highlighted === e.slug;
           const targetUrl = `${linkBase}/${e.slug}`;
+          const tag = originTag(e);
 
           return (
             <MotionLink
@@ -64,32 +57,33 @@ export default function EntityGrid({ entities, linkBase, renderMeta, emptyLabel,
                 '--rarity-glow': glow,
               }}
               variants={cardVariants}
-              whileHover={{ y: -6, transition: { duration: 0.25, ease: 'easeOut' } }}
-              whileTap={{ scale: 0.975, transition: { duration: 0.12 } }}
+              whileHover={{ y: -4, transition: { duration: 0.18, ease: EASE_OUT } }}
+              whileTap={{ scale: 0.975, transition: { duration: 0.1 } }}
             >
               <div className="unit-card-stripe" />
               <div className="unit-card-header">
                 <div className="unit-card-icon-wrap">
-                  <UnitIcon slug={e.slug} name={e.name} glowColor={glow} shiny={isShinyRarity(e.rarity)} size={74} imageUrl={e.imageUrl} />
+                  <UnitIcon slug={e.slug} name={e.name} glowColor={glow} shiny={isShinyRarity(e.rarity)} size={72} imageUrl={e.imageUrl} />
                 </div>
                 <div className="unit-card-header-text">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <div className="unit-card-name">{e.name}</div>
-
-                  </div>
-                  <div className="unit-card-rarity" style={{ color: glow }}>
-                    {e.rarity}
+                  <div className="unit-card-name">{e.name}</div>
+                  <div className="unit-card-badges-inline">
+                    <div className="unit-card-rarity" style={{ color: glow }}>
+                      {e.rarity}
+                    </div>
+                    <span
+                      className="origin-tag"
+                      style={{
+                        color: tag.color,
+                        borderColor: `color-mix(in srgb, ${tag.color} 38%, transparent)`,
+                        background: `color-mix(in srgb, ${tag.color} 10%, transparent)`,
+                      }}
+                      title={`${tag.label} unit`}
+                    >
+                      {tag.label}
+                    </span>
                   </div>
                 </div>
-              </div>
-              <div className="unit-card-tag-row">
-                <span
-                  className="origin-tag"
-                  style={{ color: originTag(e).color, borderColor: `color-mix(in srgb, ${originTag(e).color} 45%, transparent)`, background: `color-mix(in srgb, ${originTag(e).color} 12%, transparent)` }}
-                  title={`${originTag(e).label} unit`}
-                >
-                  {originTag(e).label}
-                </span>
               </div>
 
               <div className="unit-card-body">
@@ -122,8 +116,8 @@ export default function EntityGrid({ entities, linkBase, renderMeta, emptyLabel,
                   </div>
                 )}
 
-                {!e.documented && <span className="badge dim" style={{ marginTop: 8 }}>Pending</span>}
-                {renderMeta && <div className="unit-card-meta" style={{ marginTop: 8 }}>{renderMeta(e)}</div>}
+                {!e.documented && <span className="badge dim" style={{ marginTop: 6, alignSelf: 'flex-start' }}>Pending</span>}
+                {renderMeta && <div className="unit-card-meta" style={{ marginTop: 6 }}>{renderMeta(e)}</div>}
               </div>
             </MotionLink>
           );
@@ -138,43 +132,45 @@ export default function EntityGrid({ entities, linkBase, renderMeta, emptyLabel,
         const isMap = linkBase.includes('maps');
         const isCrate = linkBase.includes('crates') || linkBase.includes('Crates');
         const imageUrl = e.image || e.imageUrl || e.image_url || null;
-        
+        const initials = String(e.name || '?').slice(0, 2).toUpperCase();
+
         return (
           <MotionLink
             key={e.slug}
             to={`${linkBase}/${e.slug}`}
             className="entity-card card entity-card-accented"
-            style={{ padding: 0, overflow: 'hidden' }}
             variants={cardVariants}
-            whileHover={{ y: -4, transition: { duration: 0.25, ease: 'easeOut' } }}
-            whileTap={{ scale: 0.97, transition: { duration: 0.12 } }}
+            whileHover={{ y: -3, transition: { duration: 0.18, ease: EASE_OUT } }}
+            whileTap={{ scale: 0.975, transition: { duration: 0.1 } }}
           >
-            <div className="entity-card-image-wrap" style={{ height: 130, background: '#12121c', position: 'relative', overflow: 'hidden', borderBottom: '1px solid var(--border, rgba(255,255,255,0.12))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="entity-card-image-wrap">
               {imageUrl ? (
-                <img src={imageUrl} alt={e.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={imageUrl} alt={e.name} className="entity-card-img" />
               ) : (
-                <span style={{ color: 'var(--text-faint, #666)', fontSize: '0.82rem', fontFamily: 'var(--font)' }}>🏞️ [Map Image Here]</span>
+                <div className="entity-card-placeholder" aria-hidden="true">
+                  <span className="entity-card-monogram">{initials}</span>
+                </div>
               )}
-
             </div>
 
-            <div className="entity-card-inner" style={{ padding: '12px 14px' }}>
-              <div className="entity-card-top" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span className="entity-name" style={{ fontWeight: 800, fontSize: '1rem', fontFamily: 'var(--font)' }}>{e.name}</span>
-                {!e.documented && <span className="badge dim entity-pending" style={{ fontSize: '0.68rem', padding: '1px 6px' }}>Pending</span>}
+            <div className="entity-card-inner">
+              <div className="entity-card-top">
+                <span className="entity-name">{e.name}</span>
+                {!e.documented && <span className="badge dim entity-pending">Pending</span>}
               </div>
-              
-              <div className="entity-card-meta" style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 6, fontSize: '0.78rem', color: 'var(--text-dim)' }}>
+
+              <div className="entity-card-meta">
                 {isMap && e.difficulty && (
-                  <span className="badge" style={{ background: 'rgba(255,170,0,0.15)', color: '#ffaa00', border: '1px solid rgba(255,170,0,0.3)', padding: '2px 8px', borderRadius: '4px', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.68rem' }}>
+                  <span className="badge entity-difficulty-badge">
                     {e.difficulty}
                   </span>
                 )}
                 {isCrate && e.obtain && (
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dim, #bfbfbf)' }}>
+                  <span className="entity-obtain-note">
                     Obtain: <strong>{typeof e.obtain === 'object' ? (e.obtain.method || e.obtain.source || '') : e.obtain}</strong>
                   </span>
                 )}
+                {renderMeta && renderMeta(e)}
               </div>
             </div>
           </MotionLink>

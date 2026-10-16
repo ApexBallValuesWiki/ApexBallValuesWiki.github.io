@@ -1,49 +1,61 @@
 .bk-page {
   width: 100%;
-  max-width: 1040px;
+  max-width: 1080px;
   margin: 0 auto;
-  padding: 72px 24px 100px;
+  padding: 56px 24px 96px;
 }
 
 .bk-hero {
   text-align: center;
-  margin-bottom: 34px;
+  margin-bottom: 32px;
 }
 
 .bk-kicker {
-  margin: 0 0 8px;
-  color: var(--text-faint);
-  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 0 0 12px;
+  color: var(--text-dim);
+  font-size: 0.68rem;
   font-weight: 800;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .bk-hero h1 {
   margin: 0;
-  font-size: clamp(2.2rem, 6vw, 4.6rem);
-  line-height: 1;
-  text-shadow: 0 0 calc(34px * var(--theme-vfx, 1)) color-mix(in srgb, var(--text) 35%, transparent);
+  font-size: clamp(2.1rem, 5.2vw, 3.8rem);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
 }
 
 .bk-tagline {
-  margin: 14px 0 0;
+  margin: 12px 0 0;
   color: var(--text);
-  font-size: clamp(1rem, 2.4vw, 1.35rem);
-  font-weight: 800;
+  font-size: clamp(0.98rem, 2.1vw, 1.2rem);
+  font-weight: 700;
 }
 
 .bk-time-note {
-  margin: 10px auto 0;
-  max-width: 620px;
+  margin: 8px auto 0;
+  max-width: 60ch;
   color: var(--text-faint);
-  font-size: 0.86rem;
+  font-size: 0.84rem;
   line-height: 1.6;
 }
 
 .bk-panel {
-  padding: 24px;
-  background: rgba(0, 0, 0, 0.88);
+  padding: 26px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, transparent 100%),
+    var(--bg-card, #050507);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.65), var(--surface-refraction);
 }
 
 .bk-panel h1,
@@ -170,14 +182,14 @@
   left: 0;
   right: 0;
   z-index: 250;
-  max-height: 112px;
+  max-height: 224px;
   overflow-y: auto;
   overscroll-behavior: contain;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   padding: 5px;
   border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   background: rgba(0, 0, 0, 0.98);
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.75), 0 0 22px color-mix(in srgb, var(--accent) 14%, transparent);
 }
@@ -201,10 +213,11 @@
 .bk-suggestion-option:hover,
 .bk-suggestion-option:focus-visible {
   outline: none;
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
-.bk-suggestion-option span {
+.bk-suggestion-option > span:not(.mg-sug-img) {
+  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -637,4 +650,21 @@
 
 .bk-guess-form .bk-suggestion-menu {
   z-index: 999;
+}
+
+
+/* Unit image beside the name in the suggestion menu (shared with Balling). */
+.mg-sug-img {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  object-fit: contain;
+  border-radius: 8px;
+  background: var(--bg-elevated, #0a0a0a);
+  border: 1px solid var(--border, #1a1a1a);
+  padding: 1px;
+}
+.mg-sug-img.fallback {
+  background: radial-gradient(circle at 35% 30%, #fff 0%, #9a9a9a 60%, #222 100%);
+  border: none;
 }

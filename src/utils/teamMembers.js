@@ -8,6 +8,7 @@ export const TEAM_MEMBERS = {
   'bananatempest25@gmail.com': { name: 'Nemuiito', roleKey: 'admin', roleLabel: 'Admin', icon: '🎩' },
   'johnmustard129@gmail.com': { name: 'Silly Goober', roleKey: 'admin', roleLabel: 'Admin', icon: '🎩' },
   'isaacconnan@gmail.com': { name: 'Isaac', roleKey: 'admin', roleLabel: 'Admin', icon: '🎩' },
+  'bigbig4780@gmail.com': { name: 'Gameranton2010', roleKey: 'value_editor', roleLabel: 'Value Editor', icon: '💹' },
 };
 
 export function getTeamMember(email) {

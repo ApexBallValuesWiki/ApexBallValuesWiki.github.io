@@ -1,82 +1,198 @@
 .unit-explorer {
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: var(--bg-card);
+  --matrix-accent: var(--accent, #ffffff);
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  background:
+    radial-gradient(60% 80% at 50% 42%, color-mix(in srgb, var(--matrix-accent) 13%, transparent), transparent 72%),
+    linear-gradient(165deg, #09090f 0%, #040407 55%, #000000 100%);
+  box-shadow:
+    0 28px 68px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
   overflow: hidden;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
+/* Top Matrix Command Bar */
 .ue-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  background: var(--bg-elevated);
-  border-bottom: 1px solid var(--border);
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 14px 22px;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .ue-status {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .ue-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--c-success);
-  box-shadow: 0 0 8px var(--c-success);
-  animation: pulse-dot 2s ease-in-out infinite;
+  background: var(--matrix-accent);
+  box-shadow: 0 0 12px var(--matrix-accent);
+  animation: pulse-dot 2.2s ease-in-out infinite;
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.88); }
 }
 
 .ue-title {
   font-size: 0.72rem;
   font-weight: 900;
-  color: var(--text-dim);
+  color: var(--text);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.1em;
 }
 
-.ue-auto {
+.ue-matrix-tag {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--matrix-accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--matrix-accent) 38%, transparent);
+  color: var(--text);
+}
+
+/* Integrated Matrix Search Input */
+.ue-search-box {
+  flex: 1;
+  min-width: 210px;
+  max-width: 380px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-dim);
+  transition: border-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
+}
+
+.ue-search-box:focus-within {
+  border-color: var(--matrix-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--matrix-accent) 20%, transparent);
+  color: var(--text);
+}
+
+.ue-search-input {
+  flex: 1;
+  min-width: 0;
+  border: none !important;
+  background: transparent !important;
+  padding: 2px 0 !important;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.ue-search-input::placeholder {
+  color: var(--text-faint);
+  font-weight: 600;
+}
+
+.ue-search-clear {
+  min-height: 20px;
+  padding: 0 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-faint);
+  font-size: 0.72rem;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.ue-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ue-auto-btn {
+  min-height: 32px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-dim);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.ue-reroll-top {
+  min-height: 32px;
+  padding: 5px 13px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--matrix-accent) 48%, rgba(255, 255, 255, 0.2));
+  background: color-mix(in srgb, var(--matrix-accent) 14%, #08080c);
+  color: var(--text);
   font-size: 0.68rem;
   font-weight: 800;
-  color: var(--text-faint);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
 }
 
+.ue-reroll-top:hover {
+  background: var(--matrix-accent);
+  color: #000000;
+}
+
+/* Rarity Filter Ribbon */
 .ue-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
+  padding: 12px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(0, 0, 0, 0.35);
 }
 
 .ue-filter {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
-  border: 1px solid var(--border);
+  gap: 6px;
+  min-height: 30px;
+  padding: 5px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 999px;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.02);
   color: var(--text-dim);
   font-family: inherit;
   font-size: 0.68rem;
   font-weight: 800;
+  letter-spacing: 0.03em;
   cursor: pointer;
-  transition: all 0.15s;
+  box-shadow: none;
+  transition:
+    border-color 160ms var(--ease-out),
+    color 160ms var(--ease-out),
+    background-color 160ms var(--ease-out),
+    transform 140ms var(--ease-out);
 }
 
-.ue-filter.active, .ue-filter:hover {
+.ue-filter.active,
+.ue-filter:hover {
   border-color: var(--filter-color, var(--accent));
   color: var(--text);
-  background: color-mix(in srgb, var(--filter-color, var(--accent)) 12%, transparent);
+  background: color-mix(in srgb, var(--filter-color, var(--accent)) 16%, transparent);
 }
 
 .ue-filter-dot {
@@ -85,110 +201,374 @@
   border-radius: 50%;
 }
 
-.ue-featured {
+/* ============================================================
+   Editorial Showcase Stage (Nike 270 / Air Jordan Reference)
+   ============================================================ */
+.ue-stage {
+  position: relative;
+  min-height: 350px;
+  padding: 28px 32px 24px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 16px;
-  border-left: 3px solid;
-  margin: 12px;
-  border-radius: 12px;
-  background: var(--bg-elevated);
+  justify-content: center;
+  overflow: hidden;
+}
+
+.ue-stage-ribbon {
+  position: absolute;
+  right: -8%;
+  bottom: -30%;
+  width: 64%;
+  height: 150%;
+  background: linear-gradient(
+    135deg,
+    transparent 30%,
+    color-mix(in srgb, var(--matrix-accent) 18%, transparent) 50%,
+    transparent 70%
+  );
+  transform: rotate(-20deg) skewX(-14deg);
+  filter: blur(20px);
+  pointer-events: none;
+}
+
+.ue-stage-cutout-bg {
+  position: absolute;
+  right: 11%;
+  top: 12%;
+  width: 240px;
+  height: 240px;
+  opacity: 0.16;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Left & Right Side Preview Nodes (Like Nike Air Max 270 Left/Right Previews) */
+.ue-side-preview {
+  position: absolute;
+  top: 32%;
+  transform: translateY(-50%);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  box-shadow: none;
+  opacity: 0.68;
+  transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out);
+}
+
+.ue-side-preview:hover {
+  opacity: 1;
+  transform: translateY(-54%) scale(1.06);
+  background: transparent;
+  box-shadow: none;
+}
+
+.ue-side-preview.prev {
+  left: 24px;
+}
+
+.ue-side-preview.next {
+  right: 24px;
+}
+
+.ue-side-icon-wrap {
+  padding: 4px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ue-side-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.ue-side-stem {
+  width: 1px;
+  height: 28px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent);
+}
+
+.ue-side-name {
+  font-size: 0.64rem;
+  font-weight: 800;
+  color: var(--text-dim);
+  max-width: 92px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Centerpiece Featured Container */
+.ue-featured {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  min-height: 290px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Giant Background Watermark Typography */
+.ue-giant-watermark {
+  position: absolute;
+  inset: 0 80px 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+
+.ue-watermark-main {
+  font-size: clamp(3.2rem, 7.2vw, 6.4rem);
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -0.045em;
+  line-height: 0.9;
+  color: rgba(255, 255, 255, 0.065);
+  white-space: nowrap;
+}
+
+.ue-watermark-sub {
+  font-size: clamp(1rem, 2.2vw, 1.65rem);
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.22em;
+  color: color-mix(in srgb, var(--matrix-accent) 30%, transparent);
+  margin-top: 6px;
+}
+
+/* Floating Center Unit Pedestal */
+.ue-center-pedestal {
+  position: relative;
+  z-index: 2;
+  margin: 14px auto 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ue-orbital-ring {
+  position: absolute;
+  width: 164px;
+  height: 164px;
+  border-radius: 50%;
+  border: 1px dashed color-mix(in srgb, var(--matrix-accent) 42%, transparent);
+  box-shadow: 0 0 40px color-mix(in srgb, var(--matrix-accent) 16%, transparent);
+  animation: ue-orbit-spin calc(18s / var(--theme-speed, 1)) linear infinite;
+  pointer-events: none;
+}
+
+@keyframes ue-orbit-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .ue-featured-icon {
-  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+  animation: apex-cutout-float calc(4.2s / var(--theme-speed, 1)) ease-in-out infinite alternate;
+}
+
+/* Bottom Editorial Bar (Left Title/Price + Right Controls) */
+.ue-editorial-bar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .ue-featured-info {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   min-width: 0;
 }
 
 .ue-featured-label {
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.12em;
 }
 
 .ue-featured-name {
-  margin: 4px 0;
-  font-size: 1.1rem;
+  margin: 0;
+  font-size: clamp(1.55rem, 2.8vw, 2.2rem);
   font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
   color: var(--text);
 }
 
+.ue-featured-price-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
 .ue-featured-value {
-  font-size: 0.82rem;
-  font-weight: 800;
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.ue-meta-pill {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-dim);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .ue-featured-actions {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  align-items: flex-end;
+  gap: 8px;
   flex-shrink: 0;
 }
 
+.ue-index-counter {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.ue-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .ue-reroll {
-  padding: 8px 14px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--bg-card);
-  color: var(--text-dim);
+  min-height: 42px;
+  width: 42px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: #08080c;
+  color: var(--text);
   font-size: 1rem;
   cursor: pointer;
-  transition: all 0.15s;
 }
 
 .ue-reroll:hover {
-  border-color: var(--accent);
-  color: var(--text);
+  border-color: var(--matrix-accent);
+  transform: translateY(-2px) rotate(12deg);
 }
 
 .ue-launch {
-  padding: 8px 16px;
-  border: 1px solid var(--accent);
-  border-radius: 10px;
-  background: var(--accent);
-  color: var(--accent-inverse);
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 22px;
+  border: 1px solid var(--matrix-accent);
+  border-radius: 12px;
+  background: var(--matrix-accent);
+  color: #000000;
   font-family: inherit;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   text-decoration: none;
-  text-align: center;
-  transition: all 0.15s;
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--matrix-accent) 28%, transparent);
+  transition: transform 160ms var(--ease-out), box-shadow 180ms var(--ease-out), filter 180ms var(--ease-out);
 }
 
 .ue-launch:hover {
-  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 40%, transparent);
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  color: #000000;
+  box-shadow: 0 14px 32px color-mix(in srgb, var(--matrix-accent) 40%, transparent);
 }
 
+.ue-launch-arrow {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.ue-empty-matrix {
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--text-dim);
+  font-weight: 700;
+}
+
+/* Bottom Quick Links */
 .ue-links {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 12px 16px;
-  border-top: 1px solid var(--border);
+  padding: 14px 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .ue-link {
-  padding: 6px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: transparent;
+  padding: 6px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.025);
   color: var(--text-dim);
   font-family: inherit;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   text-decoration: none;
-  transition: all 0.15s;
+  transition: border-color 160ms var(--ease-out), color 160ms var(--ease-out), background-color 160ms var(--ease-out);
 }
 
 .ue-link:hover {
-  border-color: var(--accent);
+  border-color: var(--matrix-accent);
   color: var(--text);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  background: color-mix(in srgb, var(--matrix-accent) 12%, transparent);
+}
+
+@media (max-width: 780px) {
+  .ue-side-preview {
+    display: none;
+  }
+
+  .ue-stage {
+    padding: 20px 18px;
+  }
+
+  .ue-giant-watermark {
+    inset: 0 10px 70px;
+  }
 }

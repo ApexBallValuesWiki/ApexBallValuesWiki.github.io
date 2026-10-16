@@ -1,19 +1,17 @@
 /* ============================================================
    BACKGROUND PATTERNS — grid, dots, lines
    Painted on the .holo-bg layer (the fixed backdrop that covers the
-   page). Painting them on <body> never showed: the opaque holo backdrop
-   sits on top of the body background, which is why the pattern option
-   "didn't change anything". Line color is customizable via Pattern Color.
+   page). Subtle architectural opacity so pure #000000 remains dominant.
    ============================================================ */
 [data-bg-pattern="grid"] .holo-bg {
   background-image:
-    linear-gradient(color-mix(in srgb, var(--bg-pattern-color, #fff) 26%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--bg-pattern-color, #fff) 26%, transparent) 1px, transparent 1px);
-  background-size: 60px 60px;
+    linear-gradient(color-mix(in srgb, var(--bg-pattern-color, #fff) 6.5%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--bg-pattern-color, #fff) 6.5%, transparent) 1px, transparent 1px);
+  background-size: 64px 64px;
 }
 
 [data-bg-pattern="dots"] .holo-bg {
-  background-image: radial-gradient(circle, color-mix(in srgb, var(--bg-pattern-color, #fff) 34%, transparent) 1.5px, transparent 1.5px);
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--bg-pattern-color, #fff) 14%, transparent) 1.25px, transparent 1.25px);
   background-size: 32px 32px;
 }
 
@@ -22,8 +20,8 @@
     45deg,
     transparent,
     transparent 40px,
-    color-mix(in srgb, var(--bg-pattern-color, #fff) 13%, transparent) 40px,
-    color-mix(in srgb, var(--bg-pattern-color, #fff) 13%, transparent) 41px
+    color-mix(in srgb, var(--bg-pattern-color, #fff) 6%, transparent) 40px,
+    color-mix(in srgb, var(--bg-pattern-color, #fff) 6%, transparent) 41px
   );
 }
 
@@ -46,8 +44,6 @@
 
 /* ============================================================
    COLORBLIND MODE — remaps EVERY status color sitewide
-   (the --c-* vars drive success/danger/info/warning/purple across
-   the whole UI, so these modes finally apply everywhere)
    ============================================================ */
 [data-colorblind="protanopia"] {
   --c-success: #0077bb !important;
@@ -83,8 +79,7 @@
 }
 
 /* ============================================================
-   HIGH CONTRAST — a complete, coherent theme (solid blacks,
-   pure white text, strong borders, vivid status colors)
+   HIGH CONTRAST
    ============================================================ */
 [data-high-contrast="true"] {
   --bg: #000000 !important;
@@ -164,9 +159,8 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
-
 /* ============================================================
-   SMOOTH SCROLLING — every scrollable element glides
+   SMOOTH SCROLLING
    ============================================================ */
 html {
   scroll-behavior: smooth;
@@ -183,8 +177,7 @@ textarea,
 }
 
 /* ============================================================
-   MOTION — gentle sitewide animations (transform/opacity only).
-   Automatically disabled when Animation Speed = None.
+   MOTION
    ============================================================ */
 @keyframes apex-fade-up {
   from { opacity: 0; transform: translateY(10px); }
@@ -192,7 +185,7 @@ textarea,
 }
 
 @keyframes apex-pop {
-  from { opacity: 0; transform: scale(0.94); }
+  from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
 }
 
@@ -203,7 +196,7 @@ textarea,
 
 @keyframes apex-pulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  50% { transform: scale(1.04); }
 }
 
 @keyframes apex-shimmer {
@@ -213,30 +206,34 @@ textarea,
 
 .admin-stat-card,
 .log-stat {
-  animation: apex-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: apex-fade-up 0.4s var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)) both;
 }
-.admin-stat-card:nth-child(2), .log-stat:nth-child(2) { animation-delay: 0.05s; }
-.admin-stat-card:nth-child(3), .log-stat:nth-child(3) { animation-delay: 0.1s; }
-.admin-stat-card:nth-child(4), .log-stat:nth-child(4) { animation-delay: 0.15s; }
-.admin-stat-card:nth-child(5), .log-stat:nth-child(5) { animation-delay: 0.2s; }
-.admin-stat-card:nth-child(6), .log-stat:nth-child(6) { animation-delay: 0.25s; }
-.admin-stat-card:nth-child(7), .log-stat:nth-child(7) { animation-delay: 0.3s; }
-.admin-stat-card:nth-child(8), .log-stat:nth-child(8) { animation-delay: 0.35s; }
+.admin-stat-card:nth-child(2), .log-stat:nth-child(2) { animation-delay: 0.04s; }
+.admin-stat-card:nth-child(3), .log-stat:nth-child(3) { animation-delay: 0.08s; }
+.admin-stat-card:nth-child(4), .log-stat:nth-child(4) { animation-delay: 0.12s; }
+.admin-stat-card:nth-child(5), .log-stat:nth-child(5) { animation-delay: 0.16s; }
+.admin-stat-card:nth-child(6), .log-stat:nth-child(6) { animation-delay: 0.2s; }
+.admin-stat-card:nth-child(7), .log-stat:nth-child(7) { animation-delay: 0.24s; }
+.admin-stat-card:nth-child(8), .log-stat:nth-child(8) { animation-delay: 0.28s; }
 
 .admin-log-entry {
-  animation: apex-fade-up 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: apex-fade-up 0.32s var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)) both;
 }
 
 .announcement-banner,
 .ann-preview {
-  animation: apex-slide-down 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: apex-slide-down 0.32s var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)) both;
 }
 
 .admin-quick-btn,
 .admin-chip,
 .ann-chip,
 .log-tab {
-  transition: transform 0.14s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  transition:
+    transform 150ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)),
+    border-color 150ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)),
+    background-color 150ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)),
+    color 150ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
 }
 .admin-quick-btn:hover,
 .ann-chip:hover,

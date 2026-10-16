@@ -8,6 +8,7 @@ import { useLiveValues } from '../../hooks/useLiveValues';
 import { evaluateTrade, valueFromGems, valueFromCoins, gemsFromValue, coinsFromValue } from '../../utils/calculator';
 import { encodeState, decodeState, loadFromLocalStorage, saveToLocalStorage } from '../../utils/tradePersistence';
 import UnitIcon from '../../components/UnitIcon';
+import ThemeCutout from '../../components/ThemeCutout';
 import { getUnitIcon } from '../../data/unitIcons';
 import ValueEntryPicker from '../../components/ValueEntryPicker';
 import { CURRENCIES, CURRENCY_BY_SLUG, clampQuantity, isCurrencySlug } from '../../data/currency';
@@ -367,6 +368,11 @@ export default function TradeCalculator() {
   return (
     <PageShell sidebarTitle="VALUES" navTree={VALUES_NAV}>
       <div className="calc-page-head">
+        <ThemeCutout
+          variant="king"
+          floating
+          className="calc-head-cutout"
+        />
         <div>
           <h1>Trade Calculator</h1>
           <p className="crumb">Values / Trade Calculator</p>
