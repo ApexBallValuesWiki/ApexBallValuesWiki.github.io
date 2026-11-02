@@ -1,6 +1,7 @@
 import React from 'react';
 import ThemeCutout from '../ThemeCutout';
 import { getDisplayName } from '../../utils/teamMembers';
+import { openAdminGuide } from './AdminGuide';
 
 const ROLE_EMOJI = {
   owner: '👑',
@@ -58,8 +59,8 @@ export default function AdminCommandHeader({
       <div className="admin-topbar-left">
         <div className="admin-brand-cluster">
           <span className="admin-live-dot" aria-hidden="true" />
-          <span className="admin-topbar-title">⚡ APEX COMMAND CENTER</span>
-          <span className="admin-kv-pill">CLOUDFLARE KV SYNC</span>
+          <span className="admin-topbar-title">APEX Editor</span>
+          <span className="admin-kv-pill" title="Edits are saved to the shared database and appear on both sites">LIVE SYNC</span>
         </div>
         <span className="admin-topbar-user">
           {getDisplayName(email, true)} {ROLE_EMOJI[role] || '🔧'}{' '}
@@ -73,8 +74,9 @@ export default function AdminCommandHeader({
           type="button"
           className={`admin-cmd-pill ${activeView === 'dashboard' ? 'active' : ''}`}
           onClick={() => setActiveView('dashboard')}
+          title="Start here: status, quick start guide and team access"
         >
-          📊 Overview
+          🏠 Home
         </button>
         {valueAllowed && (
           <button
@@ -85,6 +87,7 @@ export default function AdminCommandHeader({
               setActiveView('values');
               setActiveTool('values');
             }}
+          title="Edit trade values one unit at a time"
           >
             💰 Values
           </button>
@@ -98,8 +101,9 @@ export default function AdminCommandHeader({
               setActiveView('values');
               setActiveTool('values');
             }}
+          title="Spreadsheet view: edit many values in a table at once"
           >
-            📋 Matrix Sheet
+            📋 Spreadsheet
           </button>
         )}
         {wikiAllowed && (
@@ -110,6 +114,7 @@ export default function AdminCommandHeader({
               setActiveView('wiki');
               setActiveTool('wiki');
             }}
+          title="Edit unit stats, descriptions and images"
           >
             📖 WIKI
           </button>
@@ -118,8 +123,9 @@ export default function AdminCommandHeader({
           type="button"
           className={`admin-cmd-pill ${activeView === 'logs' ? 'active' : ''}`}
           onClick={() => setActiveView('logs')}
+          title="See every change, who made it, and restore older values"
         >
-          🕒 Blame & Logs
+          🕒 History
         </button>
       </div>
 
@@ -202,7 +208,10 @@ export default function AdminCommandHeader({
             )}
           </div>
         )}
-        <button type="button" className="admin-topbar-btn" onClick={onResetPassword}>
+        <button type="button" className="admin-topbar-btn" onClick={openAdminGuide} title="Show the beginner quick start guide" aria-label="Show help guide">
+          ❓ Help
+        </button>
+        <button type="button" className="admin-topbar-btn" onClick={onResetPassword} title="Change your own passcode">
           🔒 Password
         </button>
         <button type="button" className="admin-topbar-btn danger" onClick={onSignOut}>

@@ -20,6 +20,7 @@ import { incrementStat } from '../../utils/achievements';
 import './Minigames.css';
 import { hintBalance, spendHint, grantHint, HINTS_EVENT } from '../../utils/hints';
 import { useWikiImageOverrides } from '../../hooks/useWikiImageOverrides';
+import Autocomplete from '../../components/Autocomplete';
 
 const STATS_KEY = 'apex-balling-stats-v1';
 const USER_SEED_KEY = 'apex-balling-user-seed-v1';
@@ -83,7 +84,6 @@ export default function Balling() {
   const [stageIndex, setStageIndex] = useState(0);
   const [guess, setGuess] = useState('');
   const [quickChain, setQuickChain] = useState(0);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [shareMessage, setShareMessage] = useState('');
   const [stats, setStats] = useState(() => loadStats(STATS_KEY));
@@ -234,7 +234,6 @@ export default function Balling() {
       if (stageIndex === 0) incrementStat('balling_pixel_perfect', 1);
       setMessage(`Spotted it at ${PIXEL_STAGES[stageIndex] || 'full'}px — ${stagePoints(stageIndex)} points.`);
       setGuess('');
-      setDropdownOpen(false);
       return;
     }
 
@@ -264,7 +263,6 @@ export default function Balling() {
       setMessage(`Not ${match.name} — sharpening to ${pxNow}px. ${remaining} ${remaining === 1 ? 'guess' : 'guesses'} left.`);
     }
     setGuess('');
-    setDropdownOpen(false);
   }
 
   function startQuick() {
@@ -277,7 +275,6 @@ export default function Balling() {
     setGuess('');
     setMessage('');
     setShareMessage('');
-    setDropdownOpen(false);
   }
 
   function nextQuick() {
@@ -407,15 +404,8 @@ export default function Balling() {
 
             <form className="ball-guess-form" onSubmit={submitGuess}>
               <div className="ball-guess-row">
-                <input
-                  value={guess}
-                  onChange={(e) => { setGuess(e.target.value); setDropdownOpen(true); }}
-                  onFocus={() => setDropdownOpen(true)}
-                  onBlur={() => setTimeout(() => setDropdownOpen(false), 120)}
-                  placeholder="Name that ball…"
-                  autoComplete="off"
-                  aria-label="Your guess"
-                />
+                <Autocomplete className="ball-combobox" ariaLabel="Your guess" value={guess} onChange={setGuess}
+                  onSelect={(option) => setGuess(option.label)} options={suggestions.map((entry) => ({ value: entry.slug, label: entry.name, icon: imageMap[entry.slug] }))} placeholder="Name that ball…" />
                 <button type="submit">Guess</button>
                 <button
                   type="button"
@@ -426,24 +416,7 @@ export default function Balling() {
                 >
                   💡 {hints}
                 </button>
-                {dropdownOpen && (
-                  <div className="ball-suggestion-menu" data-lenis-prevent>
-                    {suggestions.length > 0 ? suggestions.map((entry) => (
-                      <button
-                        type="button"
-                        key={entry.slug}
-                        className="ball-suggestion-option"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => { setGuess(entry.name); setDropdownOpen(false); }}
-                      >
-                        {imageMap[entry.slug]
-                          ? <img className="mg-sug-img" src={imageMap[entry.slug]} alt="" loading="lazy" />
-                          : <span className="mg-sug-img fallback" aria-hidden="true" />}
-                        <span>{entry.name}</span>
-                      </button>
-                    )) : <div className="ball-suggestion-empty">No matching units.</div>}
-                  </div>
-                )}
+
               </div>
             </form>
           </>

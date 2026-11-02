@@ -7,7 +7,18 @@ import { useData } from '../context/DataContext';
 import UnitValueCard from '../components/UnitValueCard';
 import UnitIcon from '../components/UnitIcon';
 import { formatCompactNumber, formatFullNumber } from '../utils/formatNumber';
-import { loadUXSettings, saveUXSettings, applyUXSettings, BG_PATTERNS, COLORBLIND_MODES, FONT_SIZES } from '../utils/uxSettings';
+import {
+  loadUXSettings,
+  saveUXSettings,
+  applyUXSettings,
+  BG_PATTERNS,
+  SURFACE_STYLES,
+  CARD_RADII,
+  COLORBLIND_MODES,
+  FONT_SIZES,
+  systemReducedMotion,
+} from '../utils/uxSettings';
+import { motionPauseReason } from '../utils/motionPreference';
 import { incrementStat } from '../utils/achievements';
 import { REWARD_MODES, getUnlockedRewards, isRewardAllowed, remainingFor } from '../utils/themeUnlocks';
 import './ThemeStudio.css';
@@ -40,10 +51,10 @@ const COLOR_FIELDS = [
 // NOTE: animation speed is NOT a theme effect anymore — one slider in
 // UX & Accessibility controls every animation site-wide.
 const EFFECT_FIELDS = [
-  ['glow', 'Glow', 0, 0.75, 0.01],
+  ['glow', 'Card glow', 0, 0.75, 0.01],
   ['scanlines', 'Scanlines', 0, 0.35, 0.01],
-  ['grid', 'Grid', 0, 0.22, 0.01],
-  ['vfx', 'VFX Power', 0, 2, 0.05],
+  ['grid', 'Background grid', 0, 0.22, 0.01],
+  ['vfx', 'Effect strength', 0, 2, 0.05],
 ];
 
 function hsvToHex(h, s, v) {
@@ -66,7 +77,15 @@ function hsvToHex(h, s, v) {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
+const SECTION_TABS = [
+  { id: 'colors', label: '🎨 Colors', hint: 'Pick a theme, adjust accent colours and effect strength.' },
+  { id: 'motion', label: '✨ Motion', hint: 'Smooth scrolling, animation speed and the desktop motion override.' },
+  { id: 'access', label: '♿ Accessibility', hint: 'Text size, contrast and colourblind support.' },
+  { id: 'advanced', label: '⚙️ Advanced', hint: 'Glass, corners, background pattern, rewards and sharing.' },
+];
+
 export default function ThemeStudio() {
+  const [activeSection, setActiveSection] = useState('colors');
   const { unitValues } = useData();
   const [theme, setTheme] = useState(() => loadTheme());
   const [importText, setImportText] = useState('');
@@ -108,11 +127,12 @@ export default function ThemeStudio() {
   function randomizeTheme() {
     const hue = Math.floor(Math.random() * 360);
     const baseHue = (hue + 40) % 360;
-    const acc = `hsl(${hue} 90% 62%)`;
-    const bg = `hsl(${baseHue} 30% 4%)`;
-    const elev = `hsl(${baseHue} 28% 9%)`;
-    const card = `hsl(${baseHue} 28% 6%)`;
-    const border = `hsl(${baseHue} 32% 24%)`;
+    // Theme serialization accepts hex colors, so generate valid hex here.
+    const acc = hsvToHex(hue / 360, 0.9, 0.95);
+    const bg = hsvToHex(baseHue / 360, 0.3, 0.04);
+    const elev = hsvToHex(baseHue / 360, 0.28, 0.09);
+    const card = hsvToHex(baseHue / 360, 0.28, 0.06);
+    const border = hsvToHex(baseHue / 360, 0.32, 0.24);
     setTheme(prev => ({ ...prev, colors: { ...prev.colors, accent: acc, bg, bgElevated: elev, bgCard: card, bgCardHover: elev, border } }));
     showStatus('Randomized! Tweak any color below.');
   }
@@ -278,10 +298,10 @@ export default function ThemeStudio() {
 
   return (
     <PageShell sidebarTitle="THEME STUDIO" navTree={[]}>
-      <PageIntro eyebrow="CUSTOMIZE TESTING" title="Theme Studio">
+      <PageIntro title="Theme Studio" cutoutVariant="forest">
         <p>
-          Design your personal holographic experience. Every color, glow intensity, and visual
-          effect transforms live across all tables, unit cards, and trade tools.
+          Customize your site colors, glow intensity, and visual effects. All unit cutouts and
+          interface accents adapt live to your chosen theme.
         </p>
       </PageIntro>
 
@@ -297,12 +317,27 @@ export default function ThemeStudio() {
       )}
 
       <div className="theme-studio-page">
+        <div className="theme-studio-tabs" role="tablist" aria-label="Theme editor sections">
+          {SECTION_TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={activeSection === tab.id}
+              className={activeSection === tab.id ? 'active' : ''}
+              onClick={() => setActiveSection(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <p className="theme-studio-tabs-hint">{SECTION_TABS.find((t) => t.id === activeSection)?.hint}</p>
         <div className="theme-studio-grid">
-          {/* LEFT: CONTROLS */}
-          <div className="theme-studio-controls">
+          {/* LEFT: CONTROLS — CSS shows only the selected section */}
+          <div className="theme-studio-controls" data-section={activeSection}>
             {/* PRESETS */}
-            <div className="theme-section-card">
-              <h2>🎨 Preset Catalog</h2>
+            <div className="theme-section-card theme-section-colors">
+              <h2>Pick a theme</h2>
               <p className="theme-card-hint">Tap a theme to recolor the whole site. Your effect sliders and accessibility settings are never touched.</p>
               <div className="theme-presets-grid">
                 {THEME_PRESETS.map((p) => {
@@ -323,8 +358,8 @@ export default function ThemeStudio() {
             </div>
 
             {/* COLOR HARMONY RANDOMIZER & ACTIONS */}
-            <div className="theme-section-card">
-              <h2>🎲 Generator &amp; Sharing</h2>
+            <div className="theme-section-card theme-section-advanced">
+              <h2>Share your theme</h2>
               <p className="theme-card-hint">Roll a harmonious palette or export your theme to share.</p>
               <div className="theme-actions-bar">
                 <button type="button" className="theme-btn primary" onClick={handleRandomHarmony}>
@@ -353,8 +388,8 @@ export default function ThemeStudio() {
             </div>
 
             {/* VFX SLIDERS */}
-            <div className="theme-section-card">
-              <h2>✨ Holographic VFX</h2>
+            <div className="theme-section-card theme-section-colors">
+              <h2>Effects</h2>
               <p className="theme-card-hint">Dial in how strong the background effects feel. Live everywhere on the site.</p>
               <div className="theme-sliders-list">
                 {EFFECT_FIELDS.map(([key, label, min, max, step]) => (
@@ -377,8 +412,8 @@ export default function ThemeStudio() {
             </div>
 
             {/* REWARD THEMES */}
-            <div className="theme-section-card">
-              <h2>🏆 Reward Themes</h2>
+            <div className="theme-section-card theme-section-advanced">
+              <h2>Reward effects</h2>
               <p className="theme-card-hint">Special looks earned by completing achievement sets — still fully customizable. Team admins unlock everything.</p>
               <div className="theme-presets-grid">
                 {REWARD_MODES.map((mode) => {
@@ -461,25 +496,77 @@ export default function ThemeStudio() {
                         <p className="theme-card-hint" style={{ margin: '6px 0 0' }}>Pick or type any emoji — particles get painted in your Reward Color.</p>
                       </div>
                     )}
-                    {mode.id === 'retro' && (
-                      <div className="theme-slider-item">
-                        <div className="theme-slider-head"><span>Retro Font</span></div>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <button type="button" className={theme.rewards.pixelFont ? 'preset-chip active' : 'preset-chip'} onClick={() => handleRewardChange('pixelFont', true)}>On</button>
-                          <button type="button" className={!theme.rewards.pixelFont ? 'preset-chip active' : 'preset-chip'} onClick={() => handleRewardChange('pixelFont', false)}>Off</button>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 );
               })()}
             </div>
 
-            {/* UX SETTINGS */}
-            <div className="theme-section-card">
-              <h2>🧩 UX &amp; Accessibility</h2>
-              <p className="theme-card-hint">Personal settings — they apply to every theme and never reset.</p>
+            {/* SURFACE / GEOMETRY — advanced only */}
+            <div className="theme-section-card theme-section-advanced">
+              <h2>Cards &amp; background</h2>
+              <p className="theme-card-hint">Card material, glass, corner shape, cursor glow and background pattern. All text stays in Montserrat.</p>
               <div className="theme-sliders-list">
+                <div className="theme-slider-item">
+                  <div className="theme-slider-head"><span>Surface Material</span></div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {SURFACE_STYLES.map((s) => (
+                      <button
+                        key={s.value}
+                        type="button"
+                        className={(uxSettings.surfaceStyle || 'obsidian') === s.value ? 'preset-chip active' : 'preset-chip'}
+                        onClick={() => updateUX('surfaceStyle', s.value)}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="theme-slider-item">
+                  <div className="theme-slider-head"><span>Glass Opacity</span><strong>{Math.round((uxSettings.glassOpacity ?? 0.75) * 100)}%</strong></div>
+                  <input aria-label="Glass opacity" type="range" min={0.35} max={0.95} step={0.05} value={uxSettings.glassOpacity ?? 0.75} onChange={(e) => updateUX('glassOpacity', Number(e.target.value))} />
+                  <p className="theme-card-hint">Applies to Liquid Glass surfaces.</p>
+                </div>
+                <div className="theme-slider-item">
+                  <div className="theme-slider-head"><span>Glass Blur</span><strong>{uxSettings.glassBlur ?? 12}px</strong></div>
+                  <input aria-label="Glass blur" type="range" min={0} max={24} step={1} value={uxSettings.glassBlur ?? 12} onChange={(e) => updateUX('glassBlur', Number(e.target.value))} />
+                  <p className="theme-card-hint">Reduced automatically on touch devices for performance.</p>
+                </div>
+                <div className="theme-slider-item">
+                  <div className="theme-slider-head"><span>Hero Accent Tint</span><strong>{Math.round((uxSettings.heroTint ?? 0.16) * 100)}%</strong></div>
+                  <input aria-label="Hero accent tint" type="range" min={0} max={0.4} step={0.02} value={uxSettings.heroTint ?? 0.16} onChange={(e) => updateUX('heroTint', Number(e.target.value))} />
+                </div>
+                <div className="theme-slider-item">
+                  <div className="theme-slider-head"><span>Corner Geometry</span></div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {CARD_RADII.map((r) => (
+                      <button
+                        key={r.value}
+                        type="button"
+                        className={(uxSettings.cardRadius || 'sculpted') === r.value ? 'preset-chip active' : 'preset-chip'}
+                        onClick={() => updateUX('cardRadius', r.value)}
+                      >
+                        {r.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="theme-slider-item">
+                  <div className="theme-slider-head">
+                    <span>Cursor Glow Intensity</span>
+                    <strong>{Math.round((uxSettings.cursorGlow ?? 0.24) * 100)}%</strong>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={0.75}
+                    step={0.02}
+                    value={uxSettings.cursorGlow ?? 0.24}
+                    onChange={(e) => updateUX('cursorGlow', Number(e.target.value))}
+                  />
+                </div>
+
                 <div className="theme-slider-item">
                   <div className="theme-slider-head"><span>Background Pattern</span></div>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -499,6 +586,55 @@ export default function ThemeStudio() {
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* MOTION — the desktop override lives here. */}
+            <div className="theme-section-card theme-section-motion">
+              <h2>Motion &amp; scrolling</h2>
+              <p className="theme-card-hint">Buttery animations on desktop, native momentum on touch. If your computer asks sites to reduce motion, choose “Force smooth motion” below.</p>
+              <div className="theme-sliders-list">
+                <div className="theme-slider-item">
+                  <div className="theme-slider-head"><span>Motion mode</span><strong>{uxSettings.motionOverride === 'on' ? 'Forced on' : uxSettings.motionOverride === 'off' ? 'Forced off' : 'Automatic'}</strong></div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {[
+                      { value: 'auto', label: 'Automatic' },
+                      { value: 'on', label: 'Force smooth motion' },
+                      { value: 'off', label: 'Always reduce' },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        aria-label={`Motion mode: ${option.label}`}
+                        className={(uxSettings.motionOverride || 'auto') === option.value ? 'preset-chip active' : 'preset-chip'}
+                        onClick={() => {
+                          const next = { ...uxSettings, motionOverride: option.value };
+                          if (option.value === 'on') {
+                            next.reducedMotion = false;
+                            next.smoothScroll = true;
+                            if (!Number(next.animSpeed)) next.animSpeed = 1;
+                          }
+                          setUXSettings(next);
+                        }}
+                      >{option.label}</button>
+                    ))}
+                  </div>
+                  <p className="theme-card-hint">
+                    {motionPauseReason(uxSettings, systemReducedMotion())
+                      ? `Currently paused: ${motionPauseReason(uxSettings, systemReducedMotion())}`
+                      : 'Motion is active. Changes apply immediately.'}
+                  </p>
+                </div>
+                <div className="theme-slider-item">
+                  <div className="theme-slider-head"><span>PC Smooth Scrolling</span><strong>{uxSettings.smoothScroll !== false ? 'ON' : 'OFF'}</strong></div>
+                  <button type="button" className={uxSettings.smoothScroll !== false ? 'preset-chip active' : 'preset-chip'} onClick={() => updateUX('smoothScroll', uxSettings.smoothScroll === false)}> {uxSettings.smoothScroll !== false ? 'Enabled' : 'Disabled'} </button>
+                  <p className="theme-card-hint">Mouse and trackpad only. Touch, reduced motion and animations-off always stay native — no scroll-jacking.</p>
+                </div>
+                <div className="theme-slider-item">
+                  <div className="theme-slider-head"><span>PC Scroll Ease</span><strong>{Number(uxSettings.scrollEase ?? 1).toFixed(1)}×</strong></div>
+                  <input aria-label="PC scroll ease" type="range" min={0.6} max={1.5} step={0.1} value={Number(uxSettings.scrollEase ?? 1)} onChange={(e) => updateUX('scrollEase', Number(e.target.value))} />
+                  <p className="theme-card-hint">Lower is crisper, higher glides longer. Applies instantly on desktop.</p>
+                </div>
                 <div className="theme-slider-item">
                   <div className="theme-slider-head">
                     <span>Animation Speed</span>
@@ -514,6 +650,14 @@ export default function ThemeStudio() {
                   />
                   <div className="theme-slider-ticks"><span>Off</span><span>0.75×</span><span>1.5×</span></div>
                 </div>
+              </div>
+            </div>
+
+            {/* ACCESSIBILITY */}
+            <div className="theme-section-card theme-section-access">
+              <h2>Reading &amp; accessibility</h2>
+              <p className="theme-card-hint">These settings are stored on this device and never sent anywhere.</p>
+              <div className="theme-sliders-list">
                 <div className="theme-slider-item">
                   <div className="theme-slider-head"><span>Font Size</span></div>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -523,7 +667,7 @@ export default function ThemeStudio() {
                   </div>
                 </div>
                 <div className="theme-slider-item">
-                  <div className="theme-slider-head"><span>Colorblind Mode</span></div>
+                  <div className="theme-slider-head"><span>Colourblind Mode</span></div>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {COLORBLIND_MODES.map(c => (
                       <button key={c.value} type="button" className={uxSettings.colorblind === c.value ? 'preset-chip active' : 'preset-chip'} onClick={() => updateUX('colorblind', c.value)}>{c.label}</button>
@@ -538,8 +682,8 @@ export default function ThemeStudio() {
             </div>
 
             {/* GRANULAR COLOR PICKERS */}
-            <div className="theme-section-card">
-              <h2>🌈 Granular Color Palette</h2>
+            <div className="theme-section-card theme-section-colors">
+              <h2>Fine-tune colours</h2>
               <p className="theme-card-hint">Fine-tune any single color. Typing a hex works too.</p>
               <div className="theme-quick-row">
                 <span className="theme-quick-label">Quick Accent</span>

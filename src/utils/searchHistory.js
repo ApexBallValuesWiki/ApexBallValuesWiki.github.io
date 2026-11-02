@@ -2,10 +2,13 @@
  * Search history — recent searches and suggestions
  */
 
+import { localStatsAllowed } from './privacyChoices';
+
 const RECENT_KEY = 'apex-recent-searches-v1';
 const MAX_RECENT = 8;
 
 export function loadRecentSearches() {
+  if (!localStatsAllowed()) return [];
   try {
     const raw = localStorage.getItem(RECENT_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
@@ -14,6 +17,7 @@ export function loadRecentSearches() {
 }
 
 export function saveRecentSearch(query) {
+  if (!localStatsAllowed()) return;
   if (!query || !query.trim()) return;
   const q = query.trim();
   try {

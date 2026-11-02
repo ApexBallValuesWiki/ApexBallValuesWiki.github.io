@@ -1,9 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { isOfflineValuesMode, setOfflineValuesMode, isBrowserOnline, OFFLINE_VALUES_EVENT } from '../utils/offlineValues';
 import { UNIT_VALUES as STATIC_UNIT_VALUES, CONSUMABLE_VALUES as STATIC_CONSUMABLE_VALUES } from '../data/values';
 import { ALL_UNITS, createShinyUnit } from '../data/units';
 import { isSpecialBaseValue } from '../utils/adminForms';
+import { withUnitDisplayName } from '../utils/unitNames';
 import { computeTradeValue } from '../utils/calculator';
-import { APEX_KV_URL, fetchKvBundle } from '../utils/apexClient';
+import { APEX_KV_URL, fetchKvBundle, fetchBundleMeta } from '../utils/apexClient';
+import { startLiveStatus, ensureLiveStatus, subscribeLiveStatus, refreshLiveStatus } from '../utils/liveStatus';
 
 // Cross-tab live sync: one tab's poll refreshes every open tab.
 let liveChannel = null;
@@ -15,6 +18,7 @@ function apexLiveChannel() {
 import { rowToWikiOverride, mergeWikiOverride } from '../utils/wikiOverrides';
 import { loadLocalValueOverrides, loadLocalWikiOverrides, loadLocalMapOverrides, loadLocalCrateOverrides, loadLocalMaterialOverrides, loadLocalDeletedOverrides, loadLocalDeletedUnits, markLocalUnitDeleted, unmarkLocalUnitDeleted } from '../utils/localOverrides';
 import { PUBLIC_LIVE_SYNC_ENABLED } from '../config/egressControl';
+import { resolveImageUrl } from '../utils/localAssets';
 import staticOverridesJson from '../data/overrides/staticOverrides.json';
 import { ALL_MAPS } from '../data/maps';
 import { CRATES, MATERIALS } from '../data/items';
@@ -123,7 +127,7 @@ function bundleToWikiRows(data = {}) {
     slug,
     name: wiki.name,
     rarity: wiki.rarity,
-    image_url: wiki.image_url ?? wiki.imageUrl,
+    image_url: resolveImageUrl(wiki.image_url ?? wiki.imageUrl),
     description: wiki.description,
     type: wiki.type,
     raw_type: wiki.raw_type ?? wiki.rawType,
@@ -245,6 +249,28 @@ export function DataProvider({ children }) {
   const [wikiLoading, setWikiLoading] = useState(false);
   const [error, setError] = useState(null);
   const [wikiError, setWikiError] = useState(null);
+  // OFFLINE Values mode — persistent, visitor-switchable, no live data calls.
+  const [offlineMode, setOfflineModeState] = useState(() => isOfflineValuesMode());
+  const [browserOnline, setBrowserOnline] = useState(() => isBrowserOnline());
+  const [bundleSource, setBundleSource] = useState('baked');
+  const setOfflineMode = useCallback((enabled) => {
+    const next = setOfflineValuesMode(enabled);
+    setOfflineModeState(next);
+    return next;
+  }, []);
+  useEffect(() => {
+    const onPreference = (event) => setOfflineModeState(!!event?.detail?.enabled);
+    const onOnline = () => setBrowserOnline(true);
+    const onOffline = () => setBrowserOnline(false);
+    window.addEventListener(OFFLINE_VALUES_EVENT, onPreference);
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+    return () => {
+      window.removeEventListener(OFFLINE_VALUES_EVENT, onPreference);
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('offline', onOffline);
+    };
+  }, []);
   const [localValueOverrides, setLocalValueOverrides] = useState(() => loadLocalValueOverrides());
   const [localWikiOverrides, setLocalWikiOverrides] = useState(() => loadLocalWikiOverrides());
   const [localMapOverrides, setLocalMapOverrides] = useState(() => loadLocalMapOverrides());
@@ -304,9 +330,9 @@ export function DataProvider({ children }) {
 
   const lastVersionRef = useRef(null);
 
-  const applyBundle = useCallback((data) => {
+  const applyBundle = useCallback((data, metaVersion = null) => {
     if (!data) return;
-    const version = typeof data.__v === 'number' ? data.__v : null;
+    const version = typeof data.__v === 'number' ? data.__v : metaVersion;
     const changed = version === null || lastVersionRef.current === null || version !== lastVersionRef.current;
     lastVersionRef.current = version;
 
@@ -334,18 +360,45 @@ export function DataProvider({ children }) {
 
   const syncFromKV = useCallback(async ({ force = false, applyAnyway = false } = {}) => {
     if (!canSync()) return;
+    if (offlineMode || !browserOnline) return; // OFFLINE Values mode: baked + cache only
     const now = Date.now();
     if (!force && (inFlightRef.current || now - lastFetchRef.current < 15000)) return;
     inFlightRef.current = true;
     lastFetchRef.current = now;
     try {
+      // ONE shared database: probes are ~80 bytes, so polling every minute is
+      // cheap. An editor publishing on the Test Realm bumps __v and BOTH
+      // realms pick up the change within ~60s without re-downloading 7.5 MB.
+      // The consolidated /status poll already carries the bundle version,
+      // so no extra request is needed on the hot path. Legacy workers (or a
+      // slow first load) still use the tiny standalone version probe.
+      let meta = null;
+      if (!applyAnyway) {
+        const status = await ensureLiveStatus(1000);
+        meta = status && typeof status.v === 'number'
+          ? { version: status.v, updatedAt: status.at }
+          : await fetchBundleMeta();
+      }
+      if (meta && lastVersionRef.current !== null && meta.version === lastVersionRef.current) {
+        setError(null);
+        setWikiError(null);
+        return;
+      }
+
       let data = await fetchKvBundle();
-      if (!data) data = await fetchBakedBundle();
+      let source = data && !data.__unchanged ? 'live' : bundleSource;
+      if (data?.__unchanged) {
+        if (meta && typeof meta.version === 'number') lastVersionRef.current = meta.version;
+        setError(null);
+        return;
+      }
+      if (!data) { data = await fetchBakedBundle(); source = 'baked'; }
       if (data) {
-        const v = typeof data.__v === 'number' ? data.__v : null;
+        setBundleSource(source);
+        const v = typeof data.__v === 'number' ? data.__v : (meta?.version ?? null);
         const unchanged = v !== null && v === lastVersionRef.current;
         if (!unchanged || applyAnyway) {
-          applyBundle(data);
+          applyBundle(data, meta?.version ?? null);
         }
         setError(null);
         setWikiError(null);
@@ -358,7 +411,7 @@ export function DataProvider({ children }) {
     } finally {
       inFlightRef.current = false;
     }
-  }, [applyBundle, canSync]);
+  }, [applyBundle, canSync, offlineMode, browserOnline, bundleSource]);
 
   // Stable public API — AdminHome calls these after publishing edits.
   const refresh = useCallback(async () => syncFromKV({ force: true, applyAnyway: true }), [syncFromKV]);
@@ -377,7 +430,7 @@ export function DataProvider({ children }) {
     const onWake = () => {
       if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
       if (Date.now() - lastFetchRef.current > 60000) {
-        syncFromKV({ force: true });
+        syncFromKV();
       }
     };
     window.addEventListener('focus', onWake);
@@ -390,20 +443,23 @@ export function DataProvider({ children }) {
     };
   }, [canSync, syncFromKV]);
 
-  // Live polling while the tab is visible: published edits appear for every
-  // visitor within ~1 minute — no refresh, no realtime infrastructure needed.
-  // 60s (not 25s) keeps us far inside the Cloudflare free tier even with many
-  // concurrent visitors; the worker edge-caches /overrides for 60s to match.
-  // The version gate inside syncFromKV skips the re-apply when nothing changed.
+  // ONE consolidated 60s poll (version + maintenance + announcements) is
+  // owned by liveStatus. DataContext only reacts when the version changes;
+  // the multi-megabyte bundle is fetched only on an actual editor publish.
   useEffect(() => {
-    if (!canSync()) return undefined;
-    const id = window.setInterval(() => {
-      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
-        syncFromKV({ force: true });
-      }
-    }, 60000);
-    return () => window.clearInterval(id);
-  }, [canSync, syncFromKV]);
+    if (!canSync() || offlineMode || !browserOnline) return undefined;
+    startLiveStatus();
+    return subscribeLiveStatus((status) => {
+      if (typeof status?.v !== 'number' || status.v !== lastVersionRef.current) syncFromKV();
+    });
+  }, [canSync, syncFromKV, offlineMode, browserOnline]);
+
+  // Switching OFFLINE Values back off immediately re-syncs the live bundle.
+  const wasOfflineRef = useRef(offlineMode);
+  useEffect(() => {
+    if (wasOfflineRef.current && !offlineMode && browserOnline) syncFromKV({ force: true });
+    wasOfflineRef.current = offlineMode;
+  }, [offlineMode, browserOnline, syncFromKV]);
 
   // Other tabs refreshed already: pull the new data here too (instant).
   useEffect(() => {
@@ -411,7 +467,7 @@ export function DataProvider({ children }) {
     if (!ch) return undefined;
     const onMsg = (event) => {
       if (event?.data?.type === 'apex-sync' && event.data.version !== lastVersionRef.current) {
-        syncFromKV({ force: true });
+        syncFromKV();
       }
     };
     ch.addEventListener('message', onMsg);
@@ -486,7 +542,7 @@ export function DataProvider({ children }) {
     }
     const deleted = new Set(localDeleted?.wiki || []);
     const visible = bases.filter((unit) => !deleted.has(unit.slug) && !isUnitDeleted(unit.slug));
-    return [...visible, ...visible.map(createShinyUnit)];
+    return [...visible, ...visible.map(createShinyUnit)].map(withUnitDisplayName);
   }, [wikiRows, localWikiOverrides, staticSlugs, localDeleted, isUnitDeleted]);
 
   // Editor-created maps: map rows whose slug is outside the static map list.
@@ -576,7 +632,9 @@ export function DataProvider({ children }) {
       demand: null, scarcity: null, trend: null, tradeValue: null, hasValue: false,
     }));
     const list = [...STATIC_UNIT_VALUES.map(mergeWiki), ...createdValueEntries.map(mergeWiki)];
-    return list.filter((u) => !localDeleted?.wiki?.includes(u.slug) && !localDeleted?.value?.includes(u.slug) && !isUnitDeleted(u.slug));
+    return list
+      .filter((u) => !localDeleted?.wiki?.includes(u.slug) && !localDeleted?.value?.includes(u.slug) && !isUnitDeleted(u.slug))
+      .map(withUnitDisplayName);
   }, [rowsBySlug, createdUnits, localValueOverrides, getWikiOverride, localDeleted, isUnitDeleted]);
 
   const consumableValues = useMemo(
@@ -611,7 +669,7 @@ export function DataProvider({ children }) {
       ...item,
       ...merged,
       unlockRequirement: merged.unlock_requirement ?? merged.unlockRequirement ?? item.unlockRequirement,
-      image: merged.image_url ?? merged.imageUrl ?? item.image,
+      image: resolveImageUrl(merged.image_url ?? merged.imageUrl ?? item.image),
       documented: true,
     };
   }), [mapRows, localMapOverrides, createdMaps]);
@@ -623,7 +681,7 @@ export function DataProvider({ children }) {
     return {
       ...item,
       ...merged,
-      imageUrl: merged.image_url ?? merged.imageUrl ?? item.imageUrl,
+      imageUrl: resolveImageUrl(merged.image_url ?? merged.imageUrl ?? item.imageUrl),
       documented: true,
     };
   }), [crateRows, localCrateOverrides]);
@@ -654,6 +712,10 @@ export function DataProvider({ children }) {
       wikiLoading,
       error,
       wikiError,
+      offlineMode,
+      setOfflineMode,
+      browserOnline,
+      dataSource: (offlineMode || !browserOnline) ? 'offline' : bundleSource,
       refresh,
       refreshWiki,
       refreshContent,
@@ -683,6 +745,10 @@ export function DataProvider({ children }) {
       wikiLoading,
       error,
       wikiError,
+      offlineMode,
+      setOfflineMode,
+      browserOnline,
+      bundleSource,
       refresh,
     ]
   );

@@ -2,6 +2,7 @@ import { UNIT_RARITIES } from './taxonomy';
 import { GENERATED_UNITS } from './generated/units.generated';
 import { slugify } from '../utils/slug';
 import { normalizeAttacks } from '../utils/attacks';
+import { withUnitDisplayName } from '../utils/unitNames';
 
 // UNITS DATABASE
 // Data is sourced from the community "Ball TD Units stat sheet", parsed by
@@ -1623,8 +1624,11 @@ export const EXTRA_STATIC_SHINY_UNITS = [
   }
 ];
 
-export const BASE_UNITS = [...GENERATED_UNITS.map(applyOverrides), ...EXTRA_STATIC_UNITS.map(applyOverrides)];
-export const SHINY_UNITS = [...BASE_UNITS.map(createShinyUnit), ...EXTRA_STATIC_SHINY_UNITS.map(applyOverrides)];
+// Generate shiny names from the ORIGINAL base names so display-name fixes
+// never leak into a variant's name; the shiny list is normalised afterwards.
+const RAW_BASE_UNITS = [...GENERATED_UNITS.map(applyOverrides), ...EXTRA_STATIC_UNITS.map(applyOverrides)];
+export const BASE_UNITS = RAW_BASE_UNITS.map(withUnitDisplayName);
+export const SHINY_UNITS = [...RAW_BASE_UNITS.map(createShinyUnit), ...EXTRA_STATIC_SHINY_UNITS.map(applyOverrides)].map(withUnitDisplayName);
 export const ALL_UNITS = [...BASE_UNITS, ...SHINY_UNITS];
 
 export const UNITS_BY_RARITY = Object.fromEntries(

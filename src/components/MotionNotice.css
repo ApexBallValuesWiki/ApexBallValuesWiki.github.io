@@ -1,0 +1,40 @@
+/* Small corner chip — never a full-page overlay, never a click blocker. */
+.apex-motion-notice {
+  position: fixed;
+  right: 14px;
+  top: 74px;
+  z-index: 11000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(360px, calc(100vw - 28px));
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(12, 12, 17, 0.96);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-family: var(--font, 'Montserrat', system-ui, sans-serif);
+  animation: apex-motion-notice-in 420ms cubic-bezier(.2, .7, .2, 1) both;
+}
+@keyframes apex-motion-notice-in {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to { opacity: 1; transform: none; }
+}
+.apex-motion-notice-icon { font-size: 18px; flex: none; }
+.apex-motion-notice-copy { flex: 1; min-width: 0; }
+.apex-motion-notice-copy strong { display: block; font-size: 11.5px; font-weight: 800; }
+.apex-motion-notice-copy small { display: block; font-size: 10px; line-height: 1.35; color: #9e9eac; }
+.apex-motion-notice-cta {
+  flex: none; cursor: pointer; border: 0; border-radius: 9px; padding: 7px 10px;
+  background: #fff; color: #000; font-size: 10.5px; font-weight: 800;
+  white-space: nowrap;
+  transition: transform 200ms var(--ease-out), opacity 200ms var(--ease-out);
+}
+.apex-motion-notice-cta:hover { transform: translateY(-1px); opacity: 0.9; }
+.apex-motion-notice-x {
+  flex: none; cursor: pointer; border: 0; background: none; color: #8e8e9c;
+  font-size: 11px; padding: 4px;
+}
+html[data-motion="off"] .apex-motion-notice { animation: none; }
+@media (max-width: 600px) { .apex-motion-notice { width: calc(100vw - 24px); right: 12px; top: 66px; } }

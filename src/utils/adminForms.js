@@ -62,7 +62,7 @@ export function getFallbackValueData(slug) {
 export function valueRowToForm(row, slug) {
   const fallback = getFallbackValueData(slug);
   return {
-    baseValue: row?.base_value ?? fallback.baseValue ?? 1,
+    baseValue: row?.base_value ?? row?.baseValue ?? fallback.baseValue ?? 1,
     baseValueMax: row?.base_value_max ?? row?.baseValueMax ?? fallback.baseValueMax ?? '',
     gems: row?.gems ?? fallback.gems ?? 0,
     gemsMax: row?.gems_max ?? row?.gemsMax ?? fallback.gemsMax ?? '',

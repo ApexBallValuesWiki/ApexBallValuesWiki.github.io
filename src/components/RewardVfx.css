@@ -57,9 +57,8 @@
 }
 
 @keyframes reward-aurora-shift {
-  0% { filter: hue-rotate(0deg) saturate(1); transform: translateY(0); }
-  50% { filter: hue-rotate(14deg) saturate(1.08); }
-  100% { filter: hue-rotate(-10deg) saturate(1); transform: translateY(-12px); }
+  from { opacity: 0.88; transform: translate3d(0, 0, 0); }
+  to { opacity: 1; transform: translate3d(0, -12px, 0); }
 }
 
 /* --- Gilded cards for premium/admin (the wiki's real card surfaces) -------- */
@@ -87,7 +86,7 @@ html[data-reward='admin'] h1 {
 
 /* --- Retro Ball (Balling) ---------------------------------------------------
    Blocky UI: zero radii, chunky borders with hard offset shadows, and the
-   classic arcade font Press Start 2P (opt-in via the font toggle). */
+   arcade-inspired styling that keeps the site font consistent. */
 html[data-reward='retro'] *,
 html[data-reward='retro'] *::before,
 html[data-reward='retro'] *::after {
@@ -121,12 +120,12 @@ html[data-reward='retro'][data-retro-font='on'] .home-card,
 html[data-reward='retro'][data-retro-font='on'] .unit-card,
 html[data-reward='retro'][data-retro-font='on'] .theme-section-card,
 html[data-reward='retro'][data-retro-font='on'] .ach-card {
-  font-family: 'Press Start 2P', 'Courier New', 'Lucida Console', monospace;
+  font-family: var(--font);
   font-weight: 400;
   letter-spacing: 0.02em;
 }
 
-/* Press Start 2P runs ~2x wider than Montserrat — soften sizes a touch so
+/* Reserved legacy retro sizing — soften sizes a touch so
    opt-in retro text stays on the card instead of overflowing it. */
 html[data-reward='retro'][data-retro-font='on'] body {
   font-size: 0.88em;
@@ -141,9 +140,8 @@ html[data-reward='retro'][data-retro-font='on'] .ach-desc {
 }
 
 /* --- Motion safety --------------------------------------------------------- */
-@media (prefers-reduced-motion: reduce) {
-  .reward-money-canvas,
-  .reward-aurora {
+@media (prefers-reduced-motion: reduce) {html:not([data-motion="on"]) .reward-money-canvas, html:not([data-motion="on"]) .reward-aurora {
     animation: none;
   }
 }
+

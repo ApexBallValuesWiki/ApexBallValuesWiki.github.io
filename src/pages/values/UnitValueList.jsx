@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { useParams, Navigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import PageShell from '../../components/PageShell';
 import UnitValueCard from '../../components/UnitValueCard';
 import ThemeCutout, { getCutoutForRarity } from '../../components/ThemeCutout';
@@ -11,10 +10,6 @@ import { useLiveValues } from '../../hooks/useLiveValues';
 import { decodeRouteParam, encodeRouteParam } from '../../utils/routeParams';
 import '../../components/EntityGrid.css';
 import './ValueUnitsList.css';
-
-const gridVariants = {
-  animate: { transition: { staggerChildren: 0.035, delayChildren: 0.02 } },
-};
 
 export default function ValueUnitsList() {
   const params = useParams();
@@ -42,7 +37,6 @@ export default function ValueUnitsList() {
       <div className="rarity-list-header" style={{ '--rarity-accent': rarityGlow }}>
         <ThemeCutout
           variant={getCutoutForRarity(rarity)}
-          tintColor={rarityGlow}
           floating
           className="rarity-list-cutout"
         />
@@ -52,7 +46,7 @@ export default function ValueUnitsList() {
             <span className="rarity-list-dot" aria-hidden="true" />
             <h1>{rarity}</h1>
           </div>
-          <p className="rarity-list-sub">{units.length} units indexed in this tier</p>
+          <p className="rarity-list-sub">{units.length} units</p>
         </div>
         <div className="rarity-list-actions">
           {hasCounterpart && (
@@ -77,13 +71,7 @@ export default function ValueUnitsList() {
       {units.length === 0 ? (
         <div className="empty-state">No {rarity} units yet.</div>
       ) : (
-        <motion.div
-          key={`values-${rarity}`}
-          className="uv-grid"
-          variants={gridVariants}
-          initial="initial"
-          animate="animate"
-        >
+        <div key={`values-${rarity}`} className="uv-grid">
           {units.map((u) => (
             <UnitValueCard
               key={u.slug}
@@ -92,7 +80,7 @@ export default function ValueUnitsList() {
               highlighted={highlighted === u.slug}
             />
           ))}
-        </motion.div>
+        </div>
       )}
     </PageShell>
   );

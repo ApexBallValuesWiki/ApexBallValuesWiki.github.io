@@ -1,0 +1,1 @@
+release: 2026-11-02.5 WIKI card polish, unit display names, hero tint and calculator suffixes

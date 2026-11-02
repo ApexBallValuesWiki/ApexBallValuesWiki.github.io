@@ -9,7 +9,7 @@ import { getTeamMember } from '../../utils/teamMembers';
 const RANGES = [
   { id: '7d', label: '7 days', ms: 7 * 86400000 },
   { id: '30d', label: '30 days', ms: 30 * 86400000 },
-  { id: 'all', label: 'All time', ms: Infinity },
+  { id: 'all', label: 'All retained', ms: Infinity },
 ];
 
 const SECTION_COLORS = {
@@ -25,12 +25,15 @@ function dayKey(iso) {
 export default function EditorLeaderboard() {
   const [entries, setEntries] = useState([]);
   const [range, setRange] = useState('30d');
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     let alive = true;
     (async () => {
-      const rows = await fetchChangeLog();
-      if (alive) setEntries(rows);
+      try {
+        const rows = await fetchChangeLog({ strict: true });
+        if (alive) setEntries(rows);
+      } catch { if (alive) setLoadError(true); }
     })();
     return () => { alive = false; };
   }, []);
@@ -68,9 +71,9 @@ export default function EditorLeaderboard() {
           ))}
         </div>
       </div>
-      <p className="elb-sub">Computed live from the shared change feed — every publish counts.</p>
+      <p className="elb-sub">Based on up to 200 retained shared changes, not an all-time total. Some publications may not have been recorded.</p>
 
-      {stats.list.length === 0 ? (
+      {loadError ? <div className="elb-empty">The shared change feed is unavailable.</div> : stats.list.length === 0 ? (
         <div className="elb-empty">No edits recorded in this period yet. Get publishing! ✏️</div>
       ) : (
         <>

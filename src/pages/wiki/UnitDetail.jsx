@@ -8,7 +8,6 @@ import { useData } from '../../context/DataContext';
 import { getRarityGlow, isShinyRarity } from '../../data/taxonomy';
 import ShinyToggle from '../../components/ShinyToggle';
 import UnitIcon from '../../components/UnitIcon';
-import UnitTags from '../../components/UnitTags';
 import ThemeCutout, { getCutoutForRarity } from '../../components/ThemeCutout';
 import { mergeWikiOverride, useWikiUnitOverride } from '../../hooks/useWikiUnitOverride';
 import { decodeRouteParam } from '../../utils/routeParams';
@@ -164,7 +163,6 @@ export default function UnitDetail() {
       >
         <ThemeCutout
           variant={getCutoutForRarity(unit.rarity)}
-          tintColor={rarityGlow}
           floating
           className="unit-header-cutout"
         />
@@ -187,7 +185,6 @@ export default function UnitDetail() {
               {unit.unavailableData && <motion.span className="badge dim" variants={itemVariants}>No Upgrade Data</motion.span>}
             </motion.div>
             <div className="unit-tags-row">
-              <UnitTags unit={unit} />
             </div>
             {unit.liveWikiOverride && <p className="pending-flag" style={{ marginTop: 10 }}>Live WIKI override applied.</p>}
             {wikiOverrideError && <p className="pending-flag" style={{ marginTop: 10 }}>Live WIKI override could not load.</p>}

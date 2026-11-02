@@ -1,4 +1,9 @@
 .site-header {
+  /* This navigation surface is always dark, even with the Daylight theme. */
+  --text: #f6faff;
+  --text-dim: #c2ced8;
+  --text-faint: #9cacba;
+  --accent-inverse: #060a10;
   position: sticky;
   top: var(--announcement-height, 0px);
   transition: top 220ms var(--ease-out);
@@ -7,7 +12,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding: 12px 32px;
+  padding: 11px clamp(14px, 1.8vw, 28px);
   background: rgba(0, 0, 0, 0.86);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
@@ -194,4 +199,19 @@
   .main-nav {
     display: none;
   }
+}
+
+/* Quiet navigation on the editorial landing page; the other routes retain
+   their established navigation appearance. */
+.site-header-home { box-shadow: none; }
+.site-header-home .main-nav { gap: clamp(3px, .7vw, 12px); padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.site-header-home .nav-item { padding: 7px 9px; border-radius: 0; font-weight: 700; letter-spacing: .025em; }
+.site-header-home .nav-item:hover { background: transparent; }
+.site-header-home .nav-item:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+/* Keep the full navigation and search reachable between phone and desktop. */
+@media (min-width: 761px) and (max-width: 1000px) {
+  .site-header { gap: 8px; padding-inline: 14px; }
+  .brand-text-dim { display: none; }
+  .main-nav, .site-header-home .main-nav { gap: 0; }
+  .nav-item, .site-header-home .nav-item { padding-inline: 6px; font-size: .65rem; }
 }

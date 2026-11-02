@@ -1,20 +1,28 @@
 // ============================================================================
-// StatMeta — shared icons + hover explanations for the value stat terms used
-// across the wiki (unit cards, values list, value detail). Labels render with
-// a "?" help cursor and a small CSS tooltip (see .term-tip in index.css).
+// StatMeta — shared icons + compact hover/focus tooltips for the stat labels
+// used across the wiki (unit cards, values list, value detail). No glossary
+// page, no click-to-pin popovers: just a short, redesigned tooltip (see
+// .term-tip in index.css).
 // ============================================================================
 
 export const TERM_TIPS = {
-  value: 'What the unit is worth in a trade — the base value the APEX team assigns from real trades and market data.',
-  gems: 'The price of the unit paid in gems — the main trading currency.',
-  coins: 'The price of the unit paid in coins.',
-  demand: 'How wanted the unit is right now. High demand = easy to trade away; low demand = harder to find buyers.',
-  scarcity: 'How rare the unit is in circulation. Scarcer units are harder to obtain.',
-  status: "The unit's market trend — rising, stable, dropping or fluctuating.",
-  damage: 'How much damage the unit deals per attack.',
-  cooldown: 'Seconds between the unit\'s attacks.',
-  range: 'How far the unit can reach with its attacks.',
-  placement: 'How many of this unit you can place.',
+  value: 'Estimated trade worth, set by the APEX team.',
+  gems: 'Price in gems — the main trading currency.',
+  coins: 'Price in coins.',
+  demand: 'How wanted the unit is right now.',
+  scarcity: 'How rare it is in circulation.',
+  status: 'Current market trend.',
+  damage: 'Damage dealt per attack.',
+  cooldown: 'Seconds between attacks.',
+  range: 'Attack reach.',
+  placement: 'How many you can place.',
+  dps: 'Damage per second — overall attacking power.',
+  costPerDps: 'Cash paid per point of DPS. Lower is better value.',
+  upgradeCost: 'In-game cash to reach this upgrade level.',
+  tradeValue: 'Estimated trade worth in gems.',
+  rarity: 'The unit tier, from Normie through Omegas.',
+  shiny: 'A special 1.5× damage variant.',
+  budget: 'Maximum spend. Try 20M, 300M or 1B.',
 };
 
 // Minimal stroke icons (16x16, currentColor) — one per stat term.
@@ -108,14 +116,19 @@ export function StatIcon({ name, size = 12, className = 'stat-icon' }) {
 }
 
 /**
- * A stat label with its icon, help cursor and hover explanation.
+ * A stat label with its icon and a short hover/focus tooltip.
  *   <TermTip term="gems">Gems</TermTip>
  */
 export function TermTip({ term, children, className = '' }) {
   const tip = TERM_TIPS[term];
   if (!tip) return <span className={className}>{children}</span>;
   return (
-    <span className={`term-tip ${className}`.trim()} data-tip={tip} tabIndex={0}>
+    <span
+      className={`term-tip ${className}`.trim()}
+      data-tip={tip}
+      tabIndex={0}
+      aria-label={`${children} — ${tip}`}
+    >
       <StatIcon name={term} />
       {children}
     </span>

@@ -1,26 +1,48 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.dirname(__dirname);
 
-// Read generated units data to fill in missing name/rarity
-function loadGeneratedUnits() {
+// Read generated units data to fill in missing name/rarity. Importing the
+// ESM module directly replaces the old array-extraction hack.
+async function loadGeneratedUnits() {
   try {
     const filePath = path.join(ROOT, 'src', 'data', 'generated', 'units.generated.js');
-    const content = fs.readFileSync(filePath, 'utf-8');
-    // Extract the ALL_UNITS array using eval (safe - this is our own generated file)
-    const match = content.match(/export const GENERATED_UNITS\s*=\s*(\[[\s\S]*?\]);/);
-    if (match) {
-      return eval(match[1]);
-    }
+    const module = await import(pathToFileURL(filePath).href);
+    return Array.isArray(module.GENERATED_UNITS) ? module.GENERATED_UNITS : [];
   } catch (e) {
     console.warn('Could not load generated units:', e.message);
   }
   return [];
 }
-const ALL_UNITS = loadGeneratedUnits();
+const ALL_UNITS = await loadGeneratedUnits();
+
+const SUPABASE_PREFIX = 'https://rfeoicbcprziqlcmbjgi.supabase.co/storage/v1/object/public/';
+function localImageName(url) {
+  const rest = String(url).slice(SUPABASE_PREFIX.length).split('?')[0];
+  return rest.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(-160);
+}
+function localizeImages(value) {
+  if (typeof value === 'string') {
+    return value.startsWith(SUPABASE_PREFIX) ? `/images/units/${localImageName(value)}` : value;
+  }
+  if (Array.isArray(value)) return value.map(localizeImages);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, localizeImages(v)]));
+  }
+  return value;
+}
+
+// Builds can run before the worker privacy update is deployed. Strip staff
+// identifiers recursively instead of baking them into publicly served files.
+const PRIVATE_KEYS = new Set(['updated_by', 'updatedBy', 'created_by', 'createdBy', 'changed_by', 'changedBy', 'editor_email', 'editorEmail', 'author_email', 'authorEmail', 'email', 'sentBy', 'by']);
+function publicData(value) {
+  if (Array.isArray(value)) return value.map(publicData);
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.entries(value).filter(([key]) => !PRIVATE_KEYS.has(key)).map(([key, item]) => [key, publicData(item)]));
+}
 
 // APEX BUILD-TIME DATA BAKE (SUPABASE FULLY DEPRECATED)
 // Pulls the ENTIRE live database (values, WIKI, maps & crates overrides) from
@@ -166,6 +188,9 @@ async function main() {
     }
 
     const out = {
+      // Keep the baked snapshot versioned so /status and /overrides/version
+      // agree even before the first editor publish (bundleMeta may be empty).
+      __v: typeof bundle?.__v === 'number' ? bundle.__v : 1,
       timestamp: new Date().toISOString(),
       valueOverrides,
       wikiOverrides,
@@ -196,7 +221,7 @@ async function main() {
     }
 
     fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-    fs.writeFileSync(targetPath, JSON.stringify(out, null, 2), 'utf-8');
+    fs.writeFileSync(targetPath, JSON.stringify(localizeImages(publicData(out))), 'utf-8');
     console.log(`\x1b[32m✅ Successfully baked data from Cloudflare KV! Wrote ${Object.keys(valueOverrides).length} value, ${Object.keys(wikiOverrides).length} WIKI, ${Object.keys(mapOverrides).length} map and ${Object.keys(crateOverrides).length} crate overrides to ${targetPath}\x1b[0m`);
   } catch (error) {
     console.error('\x1b[31m⚠️ Error baking data from Cloudflare KV, using existing fallback staticOverrides.json\x1b[0m');

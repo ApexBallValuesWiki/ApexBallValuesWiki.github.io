@@ -1,4 +1,5 @@
 import staticOverridesJson from '../data/overrides/staticOverrides.json';
+import { withUnitDisplayName } from './unitNames';
 
 function cleanEmpty(value) {
   return value === '' || value === null ? undefined : value;
@@ -39,5 +40,5 @@ export function mergeWikiOverride(unit, override) {
   // Keep `categories` in sync with an overridden `category` so every consumer
   // (tag badges, unobtainable checks, filters) sees the admin's edit.
   if (cleanOverride.category) cleanOverride.categories = [cleanOverride.category];
-  return { ...unit, ...cleanOverride };
+  return withUnitDisplayName({ ...unit, ...cleanOverride });
 }

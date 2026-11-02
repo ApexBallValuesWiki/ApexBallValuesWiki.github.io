@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { DEMAND_COLORS, DEMAND_LABELS, SCARCITY_COLORS, SCARCITY_LABELS, UNIT_RARITIES, getRarityGlow } from '../../data/taxonomy';
 import './SpreadsheetMode.css';
 import Dropdown from '../Dropdown';
+import { makeSpreadsheetRow } from '../../utils/spreadsheetValues';
+import { parseCompactValue, formatSiteNumber } from '../../utils/formatNumber';
+import { resolveImageUrl } from '../../utils/localAssets';
 
 // SPREADSHEET MODE — bulk value editing. Design goals (v2):
 //   * calm, themed, uncluttered: rarity lives INSIDE the unit cell, optional
@@ -23,6 +25,7 @@ const ALL_COLS = [
   { key: 'demand', label: 'Demand', type: 'chip', options: DEMAND_LABELS, colors: DEMAND_COLORS },
   { key: 'scarcity', label: 'Scarcity', type: 'chip', options: SCARCITY_LABELS, colors: SCARCITY_COLORS },
   { key: 'trend', label: 'Trend', type: 'chip', options: TREND_OPTIONS, colors: TREND_COLORS },
+  { key: 'notes', label: 'Notes', type: 'text', optional: true },
 ];
 const DEFAULT_KEYS = ['base_value', 'base_value_max', 'gems', 'coins', 'demand', 'scarcity', 'trend'];
 
@@ -37,123 +40,65 @@ function useIsMobile() {
   return mobile;
 }
 
-// Compact colored chip that opens a floating theme-styled picker. Fixed
-// positioning means the menu is never clipped by the table's scroll area.
-function ChipSelect({ value, options, colors = {}, onChange, title }) {
-  const btnRef = useRef(null);
-  const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState(null);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const place = () => {
-      const r = btnRef.current?.getBoundingClientRect();
-      if (r) setPos({ top: Math.min(r.bottom + 6, window.innerHeight - 260), left: Math.max(8, Math.min(r.left - 30, window.innerWidth - 210)) });
-    };
-    place();
-    const onDown = (e) => { if (!e.target.closest('.sms-chipmenu, .sms-chip')) setOpen(false); };
-    const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
-    document.addEventListener('mousedown', onDown);
-    document.addEventListener('keydown', onKey);
-    window.addEventListener('scroll', place, true);
-    window.addEventListener('resize', place);
-    return () => {
-      document.removeEventListener('mousedown', onDown);
-      document.removeEventListener('keydown', onKey);
-      window.removeEventListener('scroll', place, true);
-      window.removeEventListener('resize', place);
-    };
-  }, [open]);
-
-  const color = value ? colors[value] || '#cfd6e4' : 'var(--text-faint)';
-
-  return (
-    <>
-      <button
-        ref={btnRef}
-        type="button"
-        className={`sms-chip${value ? '' : ' empty'}${open ? ' open' : ''}`}
-        style={{ color, borderColor: `color-mix(in srgb, ${color} 45%, transparent)`, background: `color-mix(in srgb, ${color} 10%, transparent)` }}
-        onClick={() => setOpen((o) => !o)}
-        title={title}
-      >
-        {value || '—'}
-      </button>
-      {open && pos && createPortal(
-        <div className="sms-chipmenu" style={pos} role="listbox" aria-label={title} data-lenis-prevent>
-          <button type="button" className={value ? '' : 'on'} onClick={() => { onChange(''); setOpen(false); }}>— none</button>
-          {options.map((o) => (
-            <button
-              key={o}
-              type="button"
-              className={o === value ? 'on' : ''}
-              style={o === value ? { color: colors[o], borderColor: `color-mix(in srgb, ${colors[o] || '#fff'} 55%, transparent)` } : undefined}
-              onClick={() => { onChange(o); setOpen(false); }}
-            >
-              {o}
-            </button>
-          ))}
-        </div>,
-        document.body
-      )}
-    </>
-  );
+// Status cells use the same accessible dropdown as the rest of the site.
+function ChipSelect({ value, options, colors = {}, onChange, title, disabled }) {
+  return <Dropdown compact className="sms-chip-dropdown" value={value ?? ''} onChange={onChange}
+    options={[{ value: '', label: '— none' }, ...options.map((v) => ({ value: v, label: v }))]}
+    accent={colors[value]} ariaLabel={title} disabled={disabled} />;
 }
 
 function NumCell({ rowIdx, col, value, disabled, onChange, onKey }) {
+  const [focused, setFocused] = useState(false);
+  const numeric = col.type === 'num' && value !== '' && value != null && parseCompactValue(value) !== null;
+  const display = !focused && numeric ? formatSiteNumber(parseCompactValue(value)) : (value ?? '');
   return (
     <input
       data-cell={`${rowIdx}:${col.key}`}
-      className="sms-input sms-input-num"
-      inputMode="numeric"
-      value={value ?? ''}
+      className={`sms-input${col.type === 'num' ? ' sms-input-num' : ''}`}
+      inputMode={col.type === 'num' ? 'text' : undefined}
+      value={display}
       disabled={disabled}
-      onFocus={(e) => e.target.select?.()}
-      onChange={(e) => onChange(col.key, e.target.value)}
+      onFocus={(e) => { setFocused(true); e.target.select?.(); }}
+      onBlur={() => setFocused(false)}
+      onChange={(e) => {
+        const parsed = col.type === 'num' ? parseCompactValue(e.target.value) : null;
+        onChange(col.key, parsed !== null ? String(parsed) : e.target.value);
+      }}
       onKeyDown={(e) => onKey(e, rowIdx, col.key)}
       aria-label={col.label}
+      title={numeric ? `${formatSiteNumber(parseCompactValue(value), { full: true })} — K/M/B/T accepted` : undefined}
     />
   );
 }
 
-export default function SpreadsheetMode({ units, valueRows, onSaveRows, saving, canEdit }) {
+export default function SpreadsheetMode({ units, valueRows, onSaveRows, saving, canEdit, edits: sharedEdits, setEdits: setSharedEdits }) {
   const isMobile = useIsMobile();
   const [query, setQuery] = useState('');
   const [rarity, setRarity] = useState('All');
   const [visibleKeys, setVisibleKeys] = useState(() => new Set(DEFAULT_KEYS));
   const [showCols, setShowCols] = useState(false);
-  const [edits, setEdits] = useState({}); // slug -> { col: value }
+  const [localEdits, setLocalEdits] = useState({});
+  const edits = sharedEdits ?? localEdits; // slug -> { col: value }
+  const setEdits = setSharedEdits ?? setLocalEdits;
+  const [committing, setCommitting] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const colsRef = useRef(null);
   const tableRef = useRef(null);
 
   const cols = ALL_COLS.filter((c) => visibleKeys.has(c.key));
 
-  const rows = useMemo(() => {
-    const bySlug = new Map((valueRows || []).map((r) => [r.slug, r || {}]));
-    const q = query.trim().toLowerCase();
-    return (units || [])
-      .filter((u) => (rarity === 'All' ? true : u.rarity === rarity))
-      .filter((u) => (q ? String(u.name || '').toLowerCase().includes(q) || String(u.slug || '').includes(q) : true))
-      .map((u) => {
-        const v = bySlug.get(u.slug) || {};
-        return {
-          slug: u.slug,
-          name: u.name,
-          rarity: u.rarity,
-          imageUrl: u.imageUrl || u.image_url || null,
-          base_value: v.base_value ?? v.baseValue ?? '',
-          base_value_max: v.base_value_max ?? v.baseValueMax ?? '',
-          gems: v.gems ?? '',
-          gems_max: v.gems_max ?? v.gemsMax ?? '',
-          coins: v.coins ?? '',
-          coins_max: v.coins_max ?? v.coinsMax ?? '',
-          demand: v.demand || '',
-          scarcity: v.scarcity || '',
-          trend: v.trend || 'stable',
-        };
-      })
+  // Build the unfiltered index first: a row edited before changing the search
+  // must still carry its complete values when Save All is pressed.
+  const allRows = useMemo(() => {
+    const bySlug = new Map((valueRows || []).map((row) => [row.slug, row]));
+    return (units || []).map((unit) => makeSpreadsheetRow(unit, bySlug.get(unit.slug)))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [units, valueRows, query, rarity]);
+  }, [units, valueRows]);
+  const rows = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return allRows.filter((u) => (rarity === 'All' || u.rarity === rarity) &&
+      (!q || String(u.name || '').toLowerCase().includes(q) || String(u.slug || '').toLowerCase().includes(q)));
+  }, [allRows, query, rarity]);
 
   const dirtySlugs = useMemo(() => Object.keys(edits).filter((s) => Object.keys(edits[s] || {}).length), [edits]);
   const dirtyCount = dirtySlugs.length;
@@ -178,11 +123,18 @@ export default function SpreadsheetMode({ units, valueRows, onSaveRows, saving, 
   async function saveAll() {
     if (!dirtyCount || !onSaveRows) return;
     const changed = dirtySlugs.map((slug) => {
-      const base = rows.find((r) => r.slug === slug) || {};
-      return { slug, name: base.name, form: { ...base, ...edits[slug] } };
+      const base = allRows.find((r) => r.slug === slug);
+      return base ? { slug, name: base.name, form: { ...base, ...edits[slug] }, changes: { ...edits[slug] } } : null;
     });
-    const ok = await onSaveRows(changed);
-    if (ok) setEdits({});
+    if (changed.some((row) => !row)) { setSaveError('A modified unit is no longer available. Refresh before saving.'); return; }
+    setCommitting(true);
+    setSaveError('');
+    try {
+      const ok = await onSaveRows(changed);
+      if (ok) setEdits({});
+    } catch (error) {
+      setSaveError(error?.message || 'Could not save these changes. Your edits are still here.');
+    } finally { setCommitting(false); }
   }
 
   // close the columns popover on outside click
@@ -202,17 +154,18 @@ export default function SpreadsheetMode({ units, valueRows, onSaveRows, saving, 
 
   const renderChip = (row, col) => (
     <ChipSelect
-      value={cellValue(row, col) || (col.key === 'trend' ? 'stable' : '')}
+      value={cellValue(row, col.key) ?? ''}
       options={col.options}
       colors={col.colors}
       onChange={(v) => setCell(row.slug, col.key, v)}
       title={`${col.label} for ${row.name}`}
+      disabled={!canEdit || saving || committing}
     />
   );
 
 function UnitAvatar({ imageUrl }) {
   return imageUrl
-    ? <img className="sms-unit-img" src={imageUrl} alt="" loading="lazy" decoding="async" />
+    ? <img className="sms-unit-img" src={resolveImageUrl(imageUrl)} alt="" loading="lazy" decoding="async" />
     : <span className="sms-unit-img fallback" aria-hidden="true" />;
 }
 
@@ -250,12 +203,13 @@ function UnitAvatar({ imageUrl }) {
         </div>
       </div>
 
+      {saveError && <p className="sms-error" role="alert">{saveError}</p>}
       {dirtyCount > 0 && (
         <div className="sms-actionbar" role="status">
           <strong>✏️ {dirtyCount} modified</strong>
           <span className="sms-actionbar-spacer" />
-          <button type="button" onClick={() => setEdits({})}>Discard</button>
-          <button type="button" className="filled" onClick={saveAll} disabled={saving || !canEdit}>{saving ? 'Publishing…' : `💾 Save All (${dirtyCount})`}</button>
+          <button type="button" disabled={saving || committing} onClick={() => setEdits({})}>Discard</button>
+          <button type="button" className="filled" onClick={saveAll} disabled={saving || committing || !canEdit}>{saving || committing ? 'Saving…' : `💾 Save All (${dirtyCount})`}</button>
         </div>
       )}
 
@@ -270,14 +224,14 @@ function UnitAvatar({ imageUrl }) {
                 <span className="sms-card-rarity" style={{ color: getRarityGlow(row.rarity) }}>{row.rarity}</span>
               </div>
               <div className="sms-card-grid">
-                {cols.filter((c) => c.type === 'num').map((c) => (
+                {cols.filter((c) => c.type !== 'chip').map((c) => (
                   <label key={c.key} className="sms-card-field">
                     <span>{c.label}</span>
                     <input
                       className="sms-input"
-                      inputMode="numeric"
-                      value={cellValue(row, c) ?? ''}
-                      disabled={!canEdit}
+                      inputMode={c.type === 'num' ? 'text' : undefined}
+                      value={cellValue(row, c.key) ?? ''}
+                      disabled={!canEdit || saving || committing}
                       onChange={(e) => setCell(row.slug, c.key, e.target.value)}
                       aria-label={`${c.label} for ${row.name}`}
                     />
@@ -317,9 +271,9 @@ function UnitAvatar({ imageUrl }) {
                     </span>
                   </td>
                   {cols.map((c) => (
-                    <td key={c.key} className={c.type === 'num' ? 'sms-td-num' : 'sms-td-chip'}>
-                      {c.type === 'num' ? (
-                        <NumCell rowIdx={idx} col={c} value={cellValue(row, c)} disabled={!canEdit}
+                    <td key={c.key} className={c.type === 'chip' ? 'sms-td-chip' : 'sms-td-num'}>
+                      {c.type !== 'chip' ? (
+                        <NumCell rowIdx={idx} col={c} value={cellValue(row, c.key)} disabled={!canEdit || saving || committing}
                           onChange={(k, v) => setCell(row.slug, k, v)} onKey={handleKey} />
                       ) : renderChip(row, c)}
                     </td>
@@ -336,8 +290,8 @@ function UnitAvatar({ imageUrl }) {
       {isMobile && dirtyCount > 0 && (
         <div className="sms-mobile-save">
           <span>{dirtyCount} modified</span>
-          <button type="button" onClick={() => setEdits({})}>Discard</button>
-          <button type="button" className="filled" onClick={saveAll} disabled={saving || !canEdit}>{saving ? 'Publishing…' : `💾 Save ${dirtyCount}`}</button>
+          <button type="button" disabled={saving || committing} onClick={() => setEdits({})}>Discard</button>
+          <button type="button" className="filled" onClick={saveAll} disabled={saving || committing || !canEdit}>{saving || committing ? 'Saving…' : `💾 Save ${dirtyCount}`}</button>
         </div>
       )}
     </section>

@@ -1,9 +1,9 @@
 import { memo, useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
 import { getUnitIcon } from '../data/unitIcons';
 import { getCachedWikiImage, onWikiImageCacheChange } from '../utils/wikiImageCache';
 import { useData } from '../context/DataContext';
 import './UnitIcon.css';
+import { resolveImageUrl } from '../utils/localAssets';
 
 function UnitIcon({ slug, name, glowColor, shiny = false, size = 64, imageUrl = null }) {
   const { getWikiOverride } = useData();
@@ -27,25 +27,23 @@ function UnitIcon({ slug, name, glowColor, shiny = false, size = 64, imageUrl = 
   );
 
   return (
-    <motion.div
+    <div
       className="unit-icon"
       style={{
         width: size,
         height: size,
         '--icon-glow': glowColor || 'rgba(255,255,255,0.35)',
       }}
-      whileHover={{ scale: 1.05 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
     >
       <div className="unit-icon-glow" />
       <div className="unit-icon-squircle">
         {icon ? (
-          <img src={icon} alt={name} className="unit-icon-img" loading="lazy" decoding="async" />
+          <img src={resolveImageUrl(icon)} alt={name} className="unit-icon-img" loading="lazy" decoding="async" />
         ) : (
           <div className="unit-icon-fallback">{name?.[0] ?? '?'}</div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
 

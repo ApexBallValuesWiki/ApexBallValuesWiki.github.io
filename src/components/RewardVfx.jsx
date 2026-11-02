@@ -11,7 +11,7 @@ import './RewardVfx.css';
 //   ballonomics -> a real money grid: coins + gems procedurally drawn on a
 //                  canvas lattice that matches the site's 140px background
 //                  grid (same drift), tinted with the reward color
-//   retro       -> blocky UI + optional Press Start 2P font (pure CSS)
+//   retro       -> blocky arcade UI (pure CSS; typography stays Montserrat)
 //   premium     -> animated aurora backdrop + gilded cards
 //   admin       -> the APEX Team exclusive: prestige rain with crown glyphs
 // Particles are PAINTABLE (reward color) and the glyph is customizable,
@@ -64,7 +64,7 @@ export default function RewardVfx() {
   useEffect(() => {
     const root = document.documentElement;
     root.dataset.reward = mode;
-    root.dataset.retroFont = mode === 'retro' && rewards.pixelFont ? 'on' : 'off';
+    root.dataset.retroFont = 'off'; // All text remains Montserrat, including retro effects.
     root.style.setProperty('--reward-color', rewards.color);
     // Precompute the glow rgba — color-mix() is rejected inside text-shadow.
     const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(rewards.color || '');

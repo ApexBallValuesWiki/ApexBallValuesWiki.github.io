@@ -206,3 +206,6 @@
     gap: 14px;
   }
 }
+
+/* DPS + $/DPS use the exact same .unit-card-stat widgets as Damage/Cooldown/
+   Range/Placement — no separate row, no divider, no extra styling. */

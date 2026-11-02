@@ -1,43 +1,22 @@
-// Global-time verification for daily minigames (extracted from the
-// Ball Knowledge pattern): the daily puzzle must NOT trust the PC clock,
-// so we verify time against public UTC endpoints and tick from
-// performance.now() between checks.
-
-async function fetchJsonWithTimeout(url, timeoutMs = 7000) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, { cache: 'no-store', signal: controller.signal });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } finally {
-    clearTimeout(timeout);
-  }
-}
+// Daily-minigame clock. The worker exposes a same-origin UTC endpoint so no
+// third-party time service receives a visitor's IP address. If the worker is
+// unreachable we degrade to the device clock instead of breaking the games.
+import { APEX_KV_URL } from './apexClient';
 
 export async function fetchGlobalTimeMs() {
-  const endpoints = [
-    {
-      label: 'WorldTimeAPI UTC',
-      url: 'https://worldtimeapi.org/api/timezone/Etc/UTC',
-      parse: (data) => (Number.isFinite(data.unixtime) ? data.unixtime * 1000 : Date.parse(data.utc_datetime)),
-    },
-    {
-      label: 'TimeAPI UTC',
-      url: 'https://timeapi.io/api/time/current/zone?timeZone=UTC',
-      parse: (data) => Date.parse(`${data.dateTime || data.date || data.time}Z`),
-    },
-  ];
-
-  let lastError = null;
-  for (const endpoint of endpoints) {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+    let response = null;
     try {
-      const data = await fetchJsonWithTimeout(endpoint.url);
-      const ms = endpoint.parse(data);
-      if (Number.isFinite(ms)) return { ms, source: endpoint.label };
-    } catch (error) {
-      lastError = error;
+      response = await fetch(`${APEX_KV_URL}/time`, { cache: 'no-store', signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
     }
-  }
-  throw lastError || new Error('Unable to verify global time');
+    if (response?.ok) {
+      const data = await response.json();
+      if (Number.isFinite(data?.ms)) return { ms: data.ms, source: 'APEX worker (UTC)' };
+    }
+  } catch { /* fall through to the local clock */ }
+  return { ms: Date.now(), source: 'Device clock (fallback)' };
 }

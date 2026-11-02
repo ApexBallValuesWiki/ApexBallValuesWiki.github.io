@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { formatSiteNumber } from '../utils/formatNumber';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getRarityGlow, isShinyRarity } from '../data/taxonomy';
 import UnitIcon from './UnitIcon';
@@ -44,7 +45,7 @@ export default function CardZoomOverlay({ unit, children }) {
               <h3 className="card-zoom-name" style={{ color: glow }}>{unit.name}</h3>
               <span className="card-zoom-rarity" style={{ color: glow }}>{unit.rarity}</span>
               {unit.tradeValue && (
-                <span className="card-zoom-value">{unit.tradeValue}</span>
+                <span className="card-zoom-value">{formatSiteNumber(unit.tradeValue)}</span>
               )}
             </div>
           </motion.div>

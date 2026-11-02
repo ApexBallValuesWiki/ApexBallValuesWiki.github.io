@@ -6,7 +6,7 @@ import { VALUES_NAV } from '../../config/navigation';
 export default function ValuesUnitSearch() {
   return (
     <PageShell sidebarTitle="VALUES" navTree={VALUES_NAV}>
-      <PageIntro eyebrow="Values / Units" title="Search Units">
+      <PageIntro title="Search Unit Values" cutoutVariant="poseidon">
         <p>Find any unit value page by rarity and highlight the matching card.</p>
       </PageIntro>
 

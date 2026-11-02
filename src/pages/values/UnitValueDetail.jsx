@@ -91,7 +91,6 @@ export default function UnitValueDetail() {
       >
         <ThemeCutout
           variant={getCutoutForRarity(unit.rarity)}
-          tintColor={glow}
           floating
           className="unit-header-cutout"
         />

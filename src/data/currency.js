@@ -1,5 +1,6 @@
 import gemsIcon from '../assets/currency/gems.png';
 import coinsIcon from '../assets/currency/coins.png';
+import { parseCompactValue } from '../utils/formatNumber';
 
 // Trade-calculator currencies (Gems / Coins). They behave like units inside
 // the calculator's add-picker: pinned at the top of the dropdown, picked by
@@ -33,7 +34,12 @@ export const UNIT_QTY_CAP = 9999;
 export const MAX_CURRENCY_AMOUNT = Number.MAX_SAFE_INTEGER;
 
 export function clampQuantity(slug, raw) {
+  if (isCurrencySlug(slug)) {
+    // Gems and coins accept K / M / B / T shortcuts, e.g. "20M".
+    const parsed = parseCompactValue(raw);
+    const n = Math.floor(parsed ?? 0);
+    return Math.min(MAX_CURRENCY_AMOUNT, Math.max(0, n));
+  }
   const n = Math.floor(Number(raw) || 0);
-  if (isCurrencySlug(slug)) return Math.min(MAX_CURRENCY_AMOUNT, Math.max(0, n));
   return Math.min(UNIT_QTY_CAP, Math.max(1, n));
 }

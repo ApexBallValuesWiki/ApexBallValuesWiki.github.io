@@ -19,10 +19,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - run: npm ci
+      # Fail the deploy rather than shipping a broken build.
+      - run: npm run lint
+      - run: npm test
       # User/org pages repos (OWNER.github.io) serve from the site ROOT, so the
       # build base must be "/" there; project repos serve from /<repo>/.
       - name: Compute Pages base path + site URL
@@ -35,7 +40,10 @@ jobs:
             echo "site=https://$OWNER.github.io" >> "$GITHUB_OUTPUT"
           else
             echo "base=/$REPO/" >> "$GITHUB_OUTPUT"
-            echo "site=https://$OWNER.github.io/$REPO" >> "$GITHUB_OUTPUT"
+            # SITE_URL is the ORIGIN only. prerender-core appends
+            # VITE_BASE_PATH itself; including the repo here doubled the
+            # canonical URL: /Apex-Ball-TD-WIKI/Apex-Ball-TD-WIKI/...
+            echo "site=https://$OWNER.github.io" >> "$GITHUB_OUTPUT"
           fi
       # Social cards stay gitignored (regenerable artifacts) — build them in
       # CI so every deploy ships og:image previews without committing ~30 MB
@@ -45,6 +53,7 @@ jobs:
         env:
           VITE_BASE_PATH: ${{ steps.pages.outputs.base }}
           VITE_SITE_URL: ${{ steps.pages.outputs.site }}
+          VITE_ADS_ENABLED: ${{ vars.VITE_ADS_ENABLED }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

@@ -6,6 +6,7 @@ import { getRarityGlow, isShinyRarity } from '../../data/taxonomy';
 import UnitIcon from '../../components/UnitIcon';
 import PageShell from '../../components/PageShell';
 import PageIntro from '../../components/PageIntro';
+import { WIKI_NAV } from '../../config/navigation';
 import { formatCompactNumber } from '../../utils/formatNumber';
 import './UnitCompareV2.css';
 
@@ -37,9 +38,9 @@ export default function UnitCompareV2() {
   }, [searchB, allUnits]);
 
   return (
-    <PageShell sidebarTitle="WIKI" navTree={[]}>
-      <PageIntro eyebrow="WIKI" title="Unit Comparison">
-        <p>Compare two units side by side with visual stat charts.</p>
+    <PageShell sidebarTitle="WIKI" navTree={WIKI_NAV}>
+      <PageIntro title="Unit Comparison" cutoutVariant="hacker">
+        <p>Select any two units to compare their stats, upgrades, and trade values side by side.</p>
       </PageIntro>
 
       <div className="compare-v2">

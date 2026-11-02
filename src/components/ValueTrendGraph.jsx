@@ -66,9 +66,10 @@ export function getValueHistory(slug) {
 }
 
 export function formatCompact(n) {
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  const clean = (v) => v.toFixed(2).replace(/\.?0+$/, '');
+  if (n >= 1_000_000_000) return `${clean(n / 1_000_000_000)}B`;
+  if (n >= 1_000_000) return `${clean(n / 1_000_000)}M`;
+  if (n >= 1_000) return `${clean(n / 1_000)}K`;
   return String(Math.round(n));
 }
 

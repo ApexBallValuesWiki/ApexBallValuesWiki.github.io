@@ -58,5 +58,5 @@
   font-size: 0.82rem;
   font-weight: 800;
   color: var(--text-dim);
-  font-family: ui-monospace, monospace;
+  font-family: var(--font);
 }

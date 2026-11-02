@@ -1,63 +1,65 @@
-import { useEffect, useState } from 'react';
-import { areAdsAllowed, ensureAdSenseScript } from '../utils/ads';
+import { useEffect, useRef, useState } from 'react';
+import {
+  AD_CLIENT,
+  AD_SLOTS,
+  areAdsAllowed,
+  ensureAdSenseScript,
+  adSenseScriptLoaded,
+} from '../utils/ads';
+import { PRIVACY_CHANGE_EVENT } from '../utils/privacyChoices';
 
-// Ad container for Google AdSense. Renders NOTHING unless:
-//  - the site is the production host (never the Test Realm / localhost), and
-//  - the AdSense loader is available.
-// See src/utils/ads.js — this guard exists to comply with the AdSense
-// "no ads on screens without publisher content" policy.
-export default function AdSlot({ slotId, ready = true }) {
+// One placement per page, one push per DOM node. Waiting for the library's
+// load event and never reusing a slot ID prevents the "TagError: X/Y" that
+// the old build reproduced on every production page.
+// TFAT=1 is a conservative child-treatment signal, NOT parental consent or a
+// replacement for a certified CMP. Ads are disabled in this build.
+export default function AdSlot({ placement = 'home', ready = true }) {
+  const slotId = AD_SLOTS[placement] || null;
   const [allowed, setAllowed] = useState(false);
+  const pushedRef = useRef(false);
 
   useEffect(() => {
-    // AdSense policy: only after maintenance is confirmed off AND the host is
-    // production AND the parent page says its content is on screen.
-    if (!areAdsAllowed() || !ready) return undefined;
-    // Small settle delay: never race the first paint of page content.
-    const t = window.setTimeout(() => {
-      ensureAdSenseScript();
-      setAllowed(true);
-    }, 1200);
-    const onState = () => { if (!areAdsAllowed()) setAllowed(false); };
-    window.addEventListener('apex-ads-state', onState);
-    return () => { window.clearTimeout(t); window.removeEventListener('apex-ads-state', onState); };
-  }, [ready]);
+    const update = () => {
+      const ok = Boolean(areAdsAllowed() && ready && slotId);
+      setAllowed(ok);
+      if (!ok) pushedRef.current = false;
+      if (ok) ensureAdSenseScript();
+    };
+    window.addEventListener('apex-ads-state', update);
+    window.addEventListener(PRIVACY_CHANGE_EVENT, update);
+    window.addEventListener('apex-ads-script-loaded', update);
+    update();
+    return () => {
+      window.removeEventListener('apex-ads-state', update);
+      window.removeEventListener(PRIVACY_CHANGE_EVENT, update);
+      window.removeEventListener('apex-ads-script-loaded', update);
+    };
+  }, [ready, slotId]);
 
   useEffect(() => {
-    if (!allowed || !slotId) return;
+    if (!allowed || !slotId || !areAdsAllowed() || !adSenseScriptLoaded() || pushedRef.current) return;
+    pushedRef.current = true;
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch (e) {
-      console.error('AdSense failed to push slot:', e);
+    } catch (error) {
+      pushedRef.current = false;
+      console.error('AdSense failed to push slot:', error);
     }
   }, [allowed, slotId]);
 
   if (!allowed) return null;
-
   return (
-    <div
-      className="apex-ad-slot-wrapper"
-      style={{
-        margin: '54px auto',
-        textAlign: 'center',
-        width: '100%',
-        minHeight: '100px',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        background: 'rgba(255,255,255,0.01)',
-        border: '1px dashed rgba(255,255,255,0.04)',
-        borderRadius: '16px',
-      }}
-    >
+    <aside className="apex-ad-slot-wrapper" aria-label="Advertisement" style={{ margin: '64px auto', textAlign: 'center', width: '100%' }}>
+      <span style={{ display: 'block', marginBottom: 12, fontSize: 11, color: 'var(--text-dim)' }}>Advertisement</span>
       <ins
         className="adsbygoogle"
         style={{ display: 'block' }}
-        data-ad-client="ca-pub-2832011907708910"
+        data-ad-client={AD_CLIENT}
         data-ad-slot={slotId}
         data-ad-format="auto"
         data-full-width-responsive="true"
+        data-tag-for-age-treatment="1"
       />
-    </div>
+    </aside>
   );
 }

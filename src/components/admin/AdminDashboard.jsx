@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { fetchActiveAnnouncements, fetchWorkerVersion } from '../../utils/apexClient';
 import { EXPECTED_WORKER_VERSION } from '../../config/workerVersion';
 import ThemeCutout from '../ThemeCutout';
+import AdminGuide from './AdminGuide';
+import AdminTeamPanel from './AdminTeamPanel';
 
 const EDIT_ICONS = { values: '💰', wiki: '📖', map: '🗺️', crate: '📦', material: '🧪', skin: '🎨', system: '⚙️' };
 
@@ -41,66 +43,51 @@ export default function AdminDashboard({
 
   return (
     <div className="admin-dashboard-shell">
-      {/* Command Center Editorial Hero Banner */}
+      {/* Plain-language welcome. The old "Mission Control" banner used jargon
+          a first-time editor could not act on; the guide below does the teaching. */}
       <motion.section
         className="admin-hero-banner card"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.28 }}
       >
-        <ThemeCutout
-          variant="overlord"
-          floating
-          className="admin-hero-cutout"
-        />
+        <ThemeCutout variant="overlord" floating className="admin-hero-cutout" />
         <div className="admin-hero-copy">
-          <span className="admin-kicker">MISSION CONTROL · REAL-TIME KV SYNC</span>
-          <h2>APEX DATABASE COMMAND CENTER</h2>
+          <span className="admin-kicker">WELCOME TO THE EDITOR</span>
+          <h2>Edit what visitors see</h2>
           <p className="admin-muted">
-            Publish instant trade valuations, sync 1.5× Shiny unit variants, manage live site announcements, and audit team edits across Staging &amp; Production.
+            Changes you save here appear on both the Test Realm and the live site within about a minute. Pick a section below, find a unit, edit it, and press Save.
           </p>
         </div>
         <div className="admin-quick-actions">
-          {wikiAllowed && (
-            <button type="button" className="admin-quick-btn primary" onClick={() => onNavigate('create')}>
-              ✨ Create Entity
-            </button>
-          )}
           {valueAllowed && (
-            <button type="button" className="admin-quick-btn" onClick={() => onNavigate('values')}>
-              💰 Values Editor
+            <button type="button" className="admin-quick-btn primary" onClick={() => onNavigate('values')} title="Change trade values, demand and scarcity">
+              💰 Edit values
             </button>
           )}
           {wikiAllowed && (
-            <button type="button" className="admin-quick-btn" onClick={() => onNavigate('wiki')}>
-              📖 WIKI Editor
+            <button type="button" className="admin-quick-btn" onClick={() => onNavigate('wiki')} title="Change unit stats, descriptions and images">
+              📖 Edit WIKI
             </button>
           )}
           {wikiAllowed && (
-            <button type="button" className="admin-quick-btn" onClick={() => onNavigate('maps')}>
-              🗺️ Maps
+            <button type="button" className="admin-quick-btn" onClick={() => onNavigate('create')} title="Add a brand-new unit, map, crate or material">
+              ✨ Add new
             </button>
           )}
-          {wikiAllowed && (
-            <button type="button" className="admin-quick-btn" onClick={() => onNavigate('crates')}>
-              📦 Crates
-            </button>
-          )}
-          {wikiAllowed && (
-            <button type="button" className="admin-quick-btn" onClick={() => onNavigate('materials')}>
-              🧪 Materials
-            </button>
-          )}
-          {canManage && (
-            <button type="button" className="admin-quick-btn" onClick={() => onNavigate('announcements')}>
-              📢 Announcements
-            </button>
-          )}
-          <button type="button" className="admin-quick-btn" onClick={() => onNavigate('logs')}>
-            📈 Blame &amp; Logs
+          <button type="button" className="admin-quick-btn" onClick={() => onNavigate('logs')} title="See who changed what, and restore older values">
+            🕒 Change history
           </button>
+          {canManage && (
+            <button type="button" className="admin-quick-btn" onClick={() => onNavigate('announcements')} title="Show a banner message on the site">
+              📢 Site banner
+            </button>
+          )}
         </div>
       </motion.section>
+
+      <AdminGuide role={role} valueAllowed={valueAllowed} wikiAllowed={wikiAllowed} />
+      <AdminTeamPanel role={role} />
 
       {/* Telemetry Stat Grid */}
       <motion.div
@@ -131,8 +118,8 @@ export default function AdminDashboard({
         </div>
         <div className="admin-stat-card">
           <div className="admin-stat-icon">⚡</div>
-          <div className="admin-stat-value">{edits24h}</div>
-          <div className="admin-stat-label">Edits (24h)</div>
+          <div className="admin-stat-value">{edits24h ?? '—'}</div>
+          <div className="admin-stat-label" title="Counted from the latest 200 shared changes; older entries may not be included.">Recent shared changes (24h)</div>
         </div>
         <div className="admin-stat-card">
           <div className="admin-stat-icon">📢</div>
@@ -158,7 +145,8 @@ export default function AdminDashboard({
         {/* System controls */}
         <section className="card" style={{ padding: '20px' }}>
           <div className="admin-section-head">
-            <h2>🛠️ System Infrastructure</h2>
+            <h2>🛠️ Site status</h2>
+            <p className="admin-muted" style={{ margin: '4px 0 0', fontSize: '11.5px' }}>Whether the site is open, which server version is running, and who can get in.</p>
           </div>
           <div
             style={{
@@ -258,7 +246,8 @@ export default function AdminDashboard({
         {/* Recent activity */}
         <section className="card" style={{ padding: '20px' }}>
           <div className="admin-section-head">
-            <h2>🕒 Your Recent Activity</h2>
+            <h2>🕒 Units you edited lately</h2>
+            <p className="admin-muted" style={{ margin: '4px 0 0', fontSize: '11.5px' }}>Click one to jump back to that editor.</p>
           </div>
           {recentEdits && recentEdits.length ? (
             <div>

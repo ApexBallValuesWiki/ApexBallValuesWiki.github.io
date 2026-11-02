@@ -1,0 +1,50 @@
+.invite-page {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: #fff;
+  font-family: var(--font, 'Montserrat', system-ui, sans-serif);
+  background:
+    radial-gradient(700px 420px at 50% -10%, color-mix(in srgb, var(--accent, #fff) 10%, transparent), transparent 70%),
+    #050507;
+}
+.invite-card {
+  width: min(520px, 100%);
+  padding: 34px 32px 30px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,.15);
+  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,0) 60%), #0a0a0f;
+  box-shadow: 0 28px 72px rgba(0,0,0,.7);
+}
+.invite-badge {
+  display: inline-block; padding: 5px 11px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.05);
+  font-size: 10px; font-weight: 800; letter-spacing: .14em; color: #b6b6c2;
+  margin-bottom: 16px;
+}
+.invite-card h1 { margin: 0 0 10px; font-size: 25px; font-weight: 900; letter-spacing: -.035em; }
+.invite-muted { margin: 0 0 20px; color: #a5a5b2; font-size: 13px; line-height: 1.65; }
+.invite-muted strong { color: #fff; }
+.invite-error { margin: 0 0 12px; padding: 10px 12px; border-radius: 9px; background: rgba(248,113,113,.12); border: 1px solid rgba(248,113,113,.35); color: #fca5a5; font-size: 12.5px; font-weight: 700; }
+
+.invite-passcode-block {
+  display: grid; gap: 10px; padding: 16px; margin-bottom: 18px;
+  border-radius: 13px; border: 1px solid rgba(255,255,255,.14); background: #000;
+}
+.invite-passcode-label { font-size: 10px; font-weight: 800; letter-spacing: .14em; color: #8f8f9e; }
+.invite-passcode {
+  display: block; font-size: clamp(13px, 2.5vw, 17px); font-weight: 800; letter-spacing: .04em;
+  color: #fff; word-break: break-all; user-select: all; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.invite-copy, .invite-cta {
+  justify-self: start; border: 0; cursor: pointer; border-radius: 9px;
+  padding: 10px 15px; font-size: 12px; font-weight: 800; font-family: inherit;
+  background: #fff; color: #000; text-decoration: none;
+}
+.invite-copy { background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.2); }
+.invite-cta { display: inline-block; margin-top: 4px; }
+.invite-secondary { display: inline-block; margin-top: 18px; font-size: 12px; color: #a5a5b2; text-decoration: underline; text-underline-offset: 3px; }
+.invite-steps { margin: 0 0 20px; padding-left: 20px; color: #a5a5b2; font-size: 12px; line-height: 1.8; }
+.invite-steps li { padding-left: 4px; }

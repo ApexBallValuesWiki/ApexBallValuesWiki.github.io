@@ -6,20 +6,31 @@ import ThemeCutout, { getCutoutForRarity } from '../../components/ThemeCutout';
 import { getRarityGlow } from '../../data/taxonomy';
 import { UNITS_BY_RARITY } from '../../data/units';
 import { WIKI_NAV } from '../../config/navigation';
+// Decorative site icons only; unit records keep their existing artwork.
+import compareIcon from '../../assets/units/provided/golemball.png';
+import searchIcon from '../../assets/units/provided/mummyball.png';
+import omegaIcon from '../../assets/units/provided/omegaknight-omk.png';
+import shinyIcon from '../../assets/units/provided/wukongball.png';
 import './WikiHome.css';
 
 const TIER_CARDS = [
-  { rarity: 'Omegas', label: 'Omegas', desc: 'Endgame apex towers with full ability & upgrade breakdowns' },
-  { rarity: 'Transcendents', label: 'Transcendents', desc: 'Ascended towers, passives & multi-stage upgrade paths' },
-  { rarity: 'Mythics', label: 'Mythics', desc: 'High-DPS carries, AoE specialists & synergy units' },
-  { rarity: 'Legendaries', label: 'Legendaries', desc: 'Core mid-to-late game towers & economy boosters' },
-  { rarity: 'Awesome', label: 'Awesome', desc: 'Specialized elemental, slow & tactical towers' },
-  { rarity: 'Rares', label: 'Rares', desc: 'Reliable early wave defense & support units' },
-  { rarity: 'Odds', label: 'Odds', desc: 'Uncommon starter units & early progression stats' },
-  { rarity: 'Normie', label: 'Normie', desc: 'Base towers, starter loadouts & classic units' },
-  { rarity: '???', label: '???', desc: 'Hidden, event-exclusive & unobtainable units' },
+  'Omegas',
+  'Transcendents',
+  'Mythics',
+  'Legendaries',
+  'Awesome',
+  'Rares',
+  'Odds',
+  'Normie',
+  '???',
 ];
 
+const WIKI_PORTALS = [
+  { to: '/wiki/compare', icon: compareIcon, label: 'Compare Units', sub: 'Side-by-side level stats & cost' },
+  { to: '/wiki/units/search', icon: searchIcon, label: 'Unit Search', sub: 'Filter by role, passives & DPS' },
+  { to: '/wiki/units/Omegas', icon: omegaIcon, label: 'Omega Stat Sheets', sub: 'Endgame upgrade paths & scaling' },
+  { to: '/wiki/units/Shiny%20Omegas', icon: shinyIcon, label: 'Shiny Index', sub: 'Shiny variants & stat multipliers' },
+];
 export default function WikiHome() {
   return (
     <PageShell sidebarTitle="WIKI" navTree={WIKI_NAV}>
@@ -31,12 +42,6 @@ export default function WikiHome() {
             <Link to="/wiki/units/search" className="hero-btn primary">
               Search Units →
             </Link>
-            <Link to="/wiki/compare" className="hero-btn secondary">
-              Compare Units
-            </Link>
-            <Link to="/wiki/leaderboards" className="hero-btn secondary">
-              Leaderboards
-            </Link>
           </div>
         }
       >
@@ -47,49 +52,53 @@ export default function WikiHome() {
         </p>
       </PageIntro>
 
+      {/* Distinct WIKI-Only World & Tool Portals Strip */}
+      <section className="wiki-portals-strip" aria-label="WIKI Categories">
+        {WIKI_PORTALS.map((p) => (
+          <Link key={p.to} to={p.to} className="wiki-portal-tile">
+            <span className="wiki-portal-icon" aria-hidden="true"><ThemeCutout as="span" src={p.icon} className="wiki-portal-art" /></span>
+            <div className="wiki-portal-text">
+              <strong>{p.label}</strong>
+              <span>{p.sub}</span>
+            </div>
+          </Link>
+        ))}
+      </section>
+
       <UnitExplorer mode="wiki" />
 
-      {/* Expanded Rarity Tier WIKI Directories */}
       <section className="hub-tier-section" aria-label="WIKI Unit Rarity Tiers">
         <div className="hub-tier-head">
-          <h2>Browse WIKI by Rarity &amp; Category</h2>
-          <div className="hub-tier-actions">
-            <Link to="/wiki/maps" className="hub-quick-link">🗺️ Maps</Link>
-            <Link to="/wiki/crates" className="hub-quick-link">📦 Crates</Link>
-            <Link to="/wiki/items" className="hub-quick-link">🧪 Materials</Link>
-            <Link to="/wiki/traits" className="hub-quick-link">⚡ Traits</Link>
-            <Link to="/wiki/skins" className="hub-quick-link">🎨 Skins</Link>
-          </div>
+          <h2>Browse WIKI by Rarity</h2>
         </div>
 
         <div className="hub-tier-grid">
-          {TIER_CARDS.map((t) => {
-            const glow = getRarityGlow(t.rarity);
-            const count = (UNITS_BY_RARITY[t.rarity] || []).length;
-            const shinyRarity = `Shiny ${t.rarity}`;
+          {TIER_CARDS.map((rarity) => {
+            const glow = getRarityGlow(rarity);
+            const count = (UNITS_BY_RARITY[rarity] || []).length;
+            const shinyRarity = `Shiny ${rarity}`;
             const shinyCount = (UNITS_BY_RARITY[shinyRarity] || []).length;
             return (
               <div
-                key={t.rarity}
-                className="hub-tier-card"
+                key={rarity}
+                className="hub-tier-card wiki-blueprint-card"
                 style={{ '--tier-glow': glow }}
               >
                 <ThemeCutout
-                  variant={getCutoutForRarity(t.rarity)}
-                  tintColor={glow}
+                  variant={getCutoutForRarity(rarity)}
                   className="hub-tier-cutout"
+                  tintColor={glow}
                 />
                 <div className="hub-tier-body">
                   <div className="hub-tier-title-row">
                     <span className="hub-tier-dot" style={{ background: glow }} />
-                    <h3>{t.label}</h3>
+                    <h3>{rarity}</h3>
                     <span className="hub-tier-count">{count}</span>
                   </div>
-                  <p>{t.desc}</p>
                 </div>
                 <div className="hub-tier-links">
                   <Link
-                    to={`/wiki/units/${encodeURIComponent(t.rarity)}`}
+                    to={`/wiki/units/${encodeURIComponent(rarity)}`}
                     className="hub-tier-btn primary"
                   >
                     Base ({count}) →

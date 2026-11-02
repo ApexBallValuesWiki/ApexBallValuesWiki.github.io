@@ -2,14 +2,14 @@
   display: flex;
   flex: 1;
   min-height: 0;
-  max-width: 1920px;
+  max-width: 100%;
   width: 100%;
-  margin: 0 auto;
+  margin: 0;
 }
 
 .page-content {
   flex: 1;
-  padding: 36px 44px 88px;
+  padding: clamp(20px, 2.2vw, 38px) clamp(16px, 2.4vw, 42px) 88px;
   min-width: 0;
 }
 

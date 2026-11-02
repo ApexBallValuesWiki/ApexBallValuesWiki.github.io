@@ -1,14 +1,15 @@
 /**
  * Achievement System — tracks progress and unlocks badges
  */
+import { localStatsAllowed } from './privacyChoices';
 
 const ACHIEVEMENTS_KEY = 'apex-achievements-v1';
 const PROGRESS_KEY = 'apex-achievement-progress-v1';
 
 // All trackable pages for Explorer achievement
 const ALL_PAGES = [
-  '/', '/wiki', '/wiki/units/Normie', '/wiki/maps', '/wiki/crates',
-  '/values', '/values/units/Normie', '/values/calculator', '/values/crates',
+  '/', '/wiki', '/wiki/units/Normie', '/wiki/compare',
+  '/values', '/values/units/Normie', '/values/calculator',
   '/minigames', '/minigames/ball-knowledge', '/minigames/ballonomics', '/minigames/balling',
   '/achievements', '/credits',
 ];
@@ -193,6 +194,7 @@ export function getAchievements() {
 
 // Track a page visit
 export function trackPageVisit(path) {
+  if (!localStatsAllowed()) return;
   const progress = loadProgress();
   if (!progress.visited_pages) progress.visited_pages = [];
   const cleanPath = path.split('?')[0].split('#')[0];
@@ -205,6 +207,7 @@ export function trackPageVisit(path) {
 
 // Track daily visit and streak
 export function trackDailyVisit() {
+  if (!localStatsAllowed()) return;
   const progress = loadProgress();
   const today = new Date().toISOString().slice(0, 10);
 

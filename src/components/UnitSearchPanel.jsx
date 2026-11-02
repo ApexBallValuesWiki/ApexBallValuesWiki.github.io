@@ -1,7 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { UNIT_RARITIES, getRarityGlow, isShinyRarity, DEMAND_COLORS, SCARCITY_COLORS } from '../data/taxonomy';
+import { getRarityGlow, isShinyRarity } from '../data/taxonomy';
 import { sortUnitsByRarityThenName } from '../utils/sortUnits';
 import { formatCompactNumber } from '../utils/formatNumber';
 import UnitIcon from './UnitIcon';
@@ -132,12 +131,10 @@ export default function UnitSearchPanel({ basePath, autoFocus = true, units: pro
                   {units.map((unit) => {
                     const unitGlow = getRarityGlow(unit.rarity);
                     return (
-                      <motion.button
+                      <button
                         key={unit.slug}
                         className="usp-card"
                         onClick={() => goTo(unit)}
-                        whileHover={{ y: -3, scale: 1.02 }}
-                        whileTap={{ scale: 0.97 }}
                         style={{ borderColor: `${unitGlow}33` }}
                       >
                         <UnitIcon slug={unit.slug} name={unit.name} glowColor={unitGlow} shiny={isShinyRarity(unit.rarity)} size={48} />
@@ -146,7 +143,7 @@ export default function UnitSearchPanel({ basePath, autoFocus = true, units: pro
                         {unit.hasValue && (
                           <span className="usp-card-value">{formatCompactNumber(unit.tradeValue)}</span>
                         )}
-                      </motion.button>
+                      </button>
                     );
                   })}
                 </div>
@@ -160,14 +157,11 @@ export default function UnitSearchPanel({ basePath, autoFocus = true, units: pro
               const unitGlow = getRarityGlow(unit.rarity);
               const isSelected = i === selectedIdx;
               return (
-                <motion.button
+                <button
                   key={unit.slug}
                   className={`usp-row ${isSelected ? 'selected' : ''}`}
                   onClick={() => goTo(unit)}
                   onMouseEnter={() => setSelectedIdx(i)}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: Math.min(i * 0.02, 0.5) }}
                 >
                   <UnitIcon slug={unit.slug} name={unit.name} glowColor={unitGlow} shiny={isShinyRarity(unit.rarity)} size={36} />
                   <div className="usp-row-info">
@@ -178,7 +172,7 @@ export default function UnitSearchPanel({ basePath, autoFocus = true, units: pro
                     <span className="usp-row-value">{formatCompactNumber(unit.tradeValue)}</span>
                   )}
                   <span className="usp-row-arrow">→</span>
-                </motion.button>
+                </button>
               );
             })}
           </div>

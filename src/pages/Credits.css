@@ -50,8 +50,14 @@
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 22px;
+  grid-template-columns: repeat(5, minmax(190px, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 1120px) {
+  .credits-grid {
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  }
 }
 
 .credit-card {
@@ -201,7 +207,7 @@
 
 @media (min-width: 1180px) {
   .credits-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
@@ -238,3 +244,5 @@
 @media (min-width: 1920px) {
   .credits-page { max-width: 1560px; }
 }
+.credits-icon-attribution { margin: 32px auto; text-align: center; color: var(--text-dim); font-size: .78rem; }
+.credits-icon-attribution a { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }

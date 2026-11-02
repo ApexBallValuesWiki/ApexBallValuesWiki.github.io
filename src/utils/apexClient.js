@@ -1,16 +1,26 @@
 // APEX KV API CLIENT (Cloudflare Workers KV — Supabase-free)
 // The single-file Cloudflare Worker (scripts/cloudflare-proxy-worker.js,
-// deployed as `apex-db`) is the ONLY backend. It serves the live database
-// bundle, announcements, bug reports and fanart straight from KV.
+// deployed as `apex-db`) is the ONLY backend. Both the Test Realm and the
+// production site point at this ONE shared database: an editor publishing a
+// value on staging is immediately visible to production visitors.
 
 export const APEX_KV_URL =
   import.meta.env.VITE_APEX_KV_URL ||
   'https://apex-db.apexballtd-admin.workers.dev';
 
-/** Admin credentials saved by the /admin login screen. */
+import {
+  getAdminCredentials,
+  getAdminSessionToken,
+  saveAdminSessionToken,
+  clearAdminCredentials,
+} from './adminSession';
+
+/** Admin auth headers. A short-lived session token is preferred; a scoped,
+ *  expiring passcode is only used when the worker has no session support. */
 export function getAdminHeaders() {
-  const email = typeof localStorage !== 'undefined' ? localStorage.getItem('apex-admin-email-v1') || '' : '';
-  const passcode = typeof localStorage !== 'undefined' ? localStorage.getItem('apex-admin-passcode-v1') || '' : '';
+  const token = getAdminSessionToken();
+  if (token) return { 'Content-Type': 'application/json', 'X-Admin-Session': token };
+  const { email, passcode } = getAdminCredentials();
   return {
     'Content-Type': 'application/json',
     'X-Admin-Email': email,
@@ -18,15 +28,51 @@ export function getAdminHeaders() {
   };
 }
 
-/**
- * Fetch the ENTIRE live database bundle (values + WIKI + maps + crates
- * overrides) from the KV worker. Falls back to null when unreachable —
- * callers layer the baked static snapshot underneath.
- */
-export async function fetchKvBundle({ cacheBust = true } = {}) {
-  const url = cacheBust ? `${APEX_KV_URL}/overrides?_=${Date.now()}` : `${APEX_KV_URL}/overrides`;
-  const response = await fetch(url, { headers: { Accept: 'application/json' } }).catch(() => null);
+/** Exchange credentials for a signed session. Returns false on legacy workers. */
+export async function requestAdminSession(email, passcode) {
+  const response = await fetch(`${APEX_KV_URL}/session`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Admin-Email': String(email || '').trim().toLowerCase(),
+      'X-Admin-Passcode': String(passcode || ''),
+    },
+  }).catch(() => null);
+  if (!response || !response.ok) return false;
+  try {
+    const data = await response.json();
+    if (!data?.token) return false;
+    saveAdminSessionToken(data.token, data.expiresAt, data.email || email);
+    return true;
+  } catch { return false; }
+}
+
+export function clearAdminAuth() { clearAdminCredentials(); }
+
+/** Tiny (~80 byte) version probe. Lets the app skip a 7.5 MB download on
+ *  every sync tick while still landing editor changes within ~60 seconds. */
+export async function fetchBundleMeta() {
+  const response = await fetch(`${APEX_KV_URL}/overrides/version`, { cache: 'no-store' }).catch(() => null);
   if (!response || !response.ok) return null;
+  try {
+    const data = await response.json();
+    return typeof data?.version === 'number' ? { version: data.version, updatedAt: data.updatedAt || null } : null;
+  } catch { return null; }
+}
+
+/**
+ * Fetch the live database bundle (values + WIKI + maps + crates overrides).
+ * No cache-busting query: the worker now sends ETag + Cache-Control so the
+ * shared edge cache can actually serve it. Returns `{__unchanged:true}` on a
+ * 304 so callers keep their current data instead of falling back to a stale
+ * baked snapshot.
+ */
+export async function fetchKvBundle({ cacheBust = false } = {}) {
+  const url = cacheBust ? `${APEX_KV_URL}/overrides?_=${Date.now()}` : `${APEX_KV_URL}/overrides`;
+  const response = await fetch(url).catch(() => null);
+  if (!response) return null;
+  if (response.status === 304) return { __unchanged: true };
+  if (!response.ok) return null;
   try {
     return await response.json();
   } catch {
@@ -36,10 +82,10 @@ export async function fetchKvBundle({ cacheBust = true } = {}) {
 
 /** Fetch the ACTIVE global announcements (a list; may be empty). */
 export async function fetchActiveAnnouncements() {
-  // no-store + cache-buster: a replaced announcement must show up on the
-  // NEXT poll, never a stale cached response. Handles both the new list
-  // format ({announcements: [...]}) and the legacy single-object format.
-  const response = await fetch(`${APEX_KV_URL}/announcements?_=${Date.now()}`, { cache: 'no-store' }).catch(() => null);
+  // no-store: a replaced announcement must show up on the next poll.
+  // Handles both the new list format ({announcements: [...]}) and the
+  // legacy single-object format.
+  const response = await fetch(`${APEX_KV_URL}/announcements`, { cache: 'no-store' }).catch(() => null);
   if (!response || !response.ok) return [];
   try {
     const data = await response.json();
@@ -70,7 +116,7 @@ export async function deleteAnnouncement(id) {
 
 /** Live worker version (for the dashboard's deploy-status chip). */
 export async function fetchWorkerVersion() {
-  const response = await fetch(`${APEX_KV_URL}/version?_=${Date.now()}`, { cache: 'no-store' }).catch(() => null);
+  const response = await fetch(`${APEX_KV_URL}/version`, { cache: 'no-store' }).catch(() => null);
   if (!response || !response.ok) return null;
   try {
     const data = await response.json();
@@ -82,13 +128,14 @@ export async function fetchWorkerVersion() {
 
 /** Read the maintenance-mode state (public). Never throws. */
 export async function fetchMaintenanceStatus() {
-  const response = await fetch(`${APEX_KV_URL}/maintenance?_=${Date.now()}`, { cache: 'no-store' }).catch(() => null);
-  if (!response || !response.ok) return { on: false, message: '' };
+  const response = await fetch(`${APEX_KV_URL}/maintenance`, { cache: 'no-store' }).catch(() => null);
+  if (!response || !response.ok) return { on: false, message: '', confirmed: false };
   try {
     const data = await response.json();
-    return { on: !!data?.on, message: data?.message || '', at: data?.at || null, by: data?.by || null };
+    if (typeof data?.on !== 'boolean') return { on: false, message: '', confirmed: false };
+    return { on: data.on, message: data?.message || '', at: data?.at || null, confirmed: true };
   } catch {
-    return { on: false, message: '' };
+    return { on: false, message: '', confirmed: false };
   }
 }
 
@@ -114,7 +161,7 @@ export async function pushKvEntry(section, slug, entry) {
     body: JSON.stringify(entry),
   }).catch(() => null);
   const data = response ? await response.json().catch(() => ({})) : {};
-  return { ok: !!(response && response.ok), status: response ? response.status : 0, version: data.version, error: data.error };
+  return { ok: !!(response && response.ok), status: response ? response.status : 0, version: data.version, error: data.error, audit: data.audit };
 }
 
 /** Remove ONE entry from the KV database (records history server-side). */
@@ -124,17 +171,31 @@ export async function deleteKvEntry(section, slug) {
     headers: getAdminHeaders(),
   }).catch(() => null);
   const data = response ? await response.json().catch(() => ({})) : {};
-  return { ok: !!(response && response.ok), status: response ? response.status : 0, version: data.version, error: data.error };
+  return { ok: !!(response && response.ok), status: response ? response.status : 0, version: data.version, error: data.error, audit: data.audit };
 }
 
-/** Shared recent-changes feed (admin-only). Returns [] on failure. */
-export async function fetchChangeLog() {
-  const response = await fetch(`${APEX_KV_URL}/changes`, { headers: getAdminHeaders() }).catch(() => null);
-  if (!response || !response.ok) return [];
+/** Shared recent-changes feed. Strict callers distinguish an error from an empty feed. */
+export async function fetchChangeLog({ strict = false } = {}) {
   try {
+    const response = await fetch(`${APEX_KV_URL}/changes`, { headers: getAdminHeaders(), cache: 'no-store' });
+    if (!response.ok) throw new Error(`Change feed unavailable (HTTP ${response.status}).`);
     const arr = await response.json();
-    return Array.isArray(arr) ? arr : [];
-  } catch { return []; }
+    if (!Array.isArray(arr)) throw new Error('Change feed returned an invalid response.');
+    return arr;
+  } catch (error) {
+    if (strict) throw error;
+    return [];
+  }
+}
+
+/** Older server audit entries, available to an authenticated admin only. */
+export async function fetchArchivedChanges(cursor = null) {
+  const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
+  const response = await fetch(`${APEX_KV_URL}/changes/archive${query}`, { headers: getAdminHeaders(), cache: 'no-store' });
+  if (!response.ok) throw new Error(`Archive unavailable (HTTP ${response.status}).`);
+  const page = await response.json();
+  if (!Array.isArray(page?.entries) || typeof page.complete !== 'boolean') throw new Error('Archive returned an invalid response.');
+  return page;
 }
 
 /** Public per-unit edit history (powers the shared value trend graph). */

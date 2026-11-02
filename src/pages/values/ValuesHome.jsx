@@ -1,26 +1,61 @@
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import PageShell from '../../components/PageShell';
 import PageIntro from '../../components/PageIntro';
 import UnitExplorer from '../../components/UnitExplorer';
+import UnitIcon from '../../components/UnitIcon';
 import ThemeCutout, { getCutoutForRarity } from '../../components/ThemeCutout';
-import { getRarityGlow } from '../../data/taxonomy';
+import { getRarityGlow, isShinyRarity } from '../../data/taxonomy';
 import { UNITS_BY_RARITY } from '../../data/units';
 import { VALUES_NAV } from '../../config/navigation';
+import { useData } from '../../context/DataContext';
+import { formatCompactNumber } from '../../utils/formatNumber';
+import marketDecoration from '../../assets/units/provided/dictatorball.png';
 import '../wiki/WikiHome.css';
 
 const TIER_CARDS = [
-  { rarity: 'Omegas', label: 'Omegas', desc: 'Top-tier endgame units & highest market valuations' },
-  { rarity: 'Transcendents', label: 'Transcendents', desc: 'Ascended units with high trade demand' },
-  { rarity: 'Mythics', label: 'Mythics', desc: 'Core meta DPS & support powerhouses' },
-  { rarity: 'Legendaries', label: 'Legendaries', desc: 'Popular mid-to-late game staples' },
-  { rarity: 'Awesome', label: 'Awesome', desc: 'Versatile tactical towers & event units' },
-  { rarity: 'Rares', label: 'Rares', desc: 'Accessible early-to-mid game defenders' },
-  { rarity: 'Odds', label: 'Odds', desc: 'Uncommon utility & starter progression units' },
-  { rarity: 'Normie', label: 'Normie', desc: 'Foundational base towers & collector staples' },
-  { rarity: '???', label: '???', desc: 'Secret, exclusive & unobtainable anomalies' },
+  'Omegas',
+  'Transcendents',
+  'Mythics',
+  'Legendaries',
+  'Awesome',
+  'Rares',
+  'Odds',
+  'Normie',
+  '???',
 ];
 
 export default function ValuesHome() {
+  const { unitValues, wikiRows } = useData();
+
+  const wikiImageMap = useMemo(() => {
+    const map = {};
+    (wikiRows || []).forEach((r) => {
+      if (r?.slug && r.image_url) map[r.slug] = r.image_url;
+    });
+    return map;
+  }, [wikiRows]);
+
+  // Top 6 highest-valued base units for the Live Market Strip on ValuesHome
+  const topMarketUnits = useMemo(() => {
+    return (unitValues || [])
+      .filter((u) => u.hasValue && !isShinyRarity(u.rarity) && u.rarity !== '???' && u.tradeValue > 0)
+      .sort((a, b) => (b.tradeValue || 0) - (a.tradeValue || 0))
+      .slice(0, 6);
+  }, [unitValues]);
+
+  // Top valued unit per rarity tier for the tier cards
+  const topByRarity = useMemo(() => {
+    const map = {};
+    (unitValues || []).forEach((u) => {
+      if (!u.hasValue || !u.tradeValue) return;
+      if (!map[u.rarity] || u.tradeValue > map[u.rarity].tradeValue) {
+        map[u.rarity] = u;
+      }
+    });
+    return map;
+  }, [unitValues]);
+
   return (
     <PageShell sidebarTitle="VALUES" navTree={VALUES_NAV}>
       <PageIntro
@@ -34,56 +69,92 @@ export default function ValuesHome() {
             <Link to="/values/units/search" className="hero-btn secondary">
               Search Unit Values
             </Link>
+            <Link to="/values/afford" className="hero-btn secondary">
+              What can I afford?
+            </Link>
           </div>
         }
       >
         <p>
-          Base values, demand, and scarcity ratings sourced from real trades &amp; market data.
-          Every value shown is derived from the live formula:{' '}
-          <code>TradeValue = BaseValue × DemandMultiplier × ScarcityMultiplier</code>
+          Explore community-maintained trade estimates, demand, and scarcity. The team’s entered base value is the trade value; demand and scarcity are informational and do not multiply it.
         </p>
       </PageIntro>
 
+      {/* Distinct Values-Only Live Market Spotlight Strip */}
+      {topMarketUnits.length > 0 && (
+        <section className="values-market-strip" aria-label="Highest Valued Units">
+          <div className="values-market-strip-head">
+            <span>Highest Valued Base Units</span>
+          </div>
+          <ThemeCutout src={marketDecoration} className="values-market-title-art" />
+          <div className="values-market-strip-grid">
+            {topMarketUnits.map((u, idx) => {
+              const glow = getRarityGlow(u.rarity);
+              return (
+                <Link
+                  key={u.slug}
+                  to={`/values/units/${encodeURIComponent(u.rarity)}/${u.slug}`}
+                  className="values-market-chip"
+                >
+                  <span className="values-market-rank">#{idx + 1}</span>
+                  <UnitIcon
+                    slug={u.slug}
+                    name={u.name}
+                    glowColor={glow}
+                    size={36}
+                    imageUrl={wikiImageMap[u.slug] || u.imageUrl}
+                  />
+                  <div className="values-market-chip-meta">
+                    <strong>{u.name}</strong>
+                    <span>{formatCompactNumber(u.tradeValue)} value</span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       <UnitExplorer mode="values" />
 
-      {/* Expanded Rarity Tier Value Directories */}
       <section className="hub-tier-section" aria-label="Unit Value Tiers">
         <div className="hub-tier-head">
           <h2>Browse Values by Rarity</h2>
-          <div className="hub-tier-actions">
-            <Link to="/values/crates" className="hub-quick-link">📦 Crates &amp; Gamepasses</Link>
-            <Link to="/values/calculator" className="hub-quick-link">🧮 W/F/L Calculator</Link>
-          </div>
         </div>
 
         <div className="hub-tier-grid">
-          {TIER_CARDS.map((t) => {
-            const glow = getRarityGlow(t.rarity);
-            const count = (UNITS_BY_RARITY[t.rarity] || []).length;
-            const shinyRarity = `Shiny ${t.rarity}`;
+          {TIER_CARDS.map((rarity) => {
+            const glow = getRarityGlow(rarity);
+            const count = (UNITS_BY_RARITY[rarity] || []).length;
+            const shinyRarity = `Shiny ${rarity}`;
             const shinyCount = (UNITS_BY_RARITY[shinyRarity] || []).length;
+            const topUnit = topByRarity[rarity];
             return (
               <div
-                key={t.rarity}
+                key={rarity}
                 className="hub-tier-card"
                 style={{ '--tier-glow': glow }}
               >
                 <ThemeCutout
-                  variant={getCutoutForRarity(t.rarity)}
-                  tintColor={glow}
+                  variant={getCutoutForRarity(rarity)}
                   className="hub-tier-cutout"
+                  tintColor={glow}
                 />
                 <div className="hub-tier-body">
                   <div className="hub-tier-title-row">
                     <span className="hub-tier-dot" style={{ background: glow }} />
-                    <h3>{t.label}</h3>
+                    <h3>{rarity}</h3>
                     <span className="hub-tier-count">{count}</span>
                   </div>
-                  <p>{t.desc}</p>
+                  {topUnit && (
+                    <p className="hub-tier-top-unit">
+                      Top: <strong>{topUnit.name}</strong> · 💎 {formatCompactNumber(topUnit.tradeValue)}
+                    </p>
+                  )}
                 </div>
                 <div className="hub-tier-links">
                   <Link
-                    to={`/values/units/${encodeURIComponent(t.rarity)}`}
+                    to={`/values/units/${encodeURIComponent(rarity)}`}
                     className="hub-tier-btn primary"
                   >
                     Base ({count}) →

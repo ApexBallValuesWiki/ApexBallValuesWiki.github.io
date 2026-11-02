@@ -56,11 +56,27 @@
 }
 
 @media (max-width: 760px) {
+  /* Keep the report link beside search instead of over page content. */
   .global-bug-report {
-    right: 12px;
-    bottom: calc(env(safe-area-inset-bottom) + 84px);
-    min-height: 36px;
-    padding: 7px 12px;
-    font-size: 0.62rem;
+    top: calc(var(--announcement-height, 0px) + 6px);
+    right: 82px;
+    bottom: auto;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .global-bug-report span:not(.global-bug-report-icon) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 }

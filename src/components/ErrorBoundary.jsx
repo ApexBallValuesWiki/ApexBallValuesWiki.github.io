@@ -30,7 +30,7 @@ export default class ErrorBoundary extends Component {
           <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', margin: '0 0 6px' }}>
             A part of the page crashed — the rest of the site is fine. Try reloading.
           </p>
-          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '12px', margin: '0 0 18px', fontFamily: 'monospace', wordBreak: 'break-word' }}>{message}</p>
+          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '12px', margin: '0 0 18px', fontFamily: 'var(--font)', wordBreak: 'break-word' }}>{message}</p>
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
             <button type="button" onClick={() => window.location.reload()} style={{ padding: '10px 18px', borderRadius: '10px', border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, #5a78ff, #7a5aff)', color: '#fff', fontWeight: 600 }}>
               Reload

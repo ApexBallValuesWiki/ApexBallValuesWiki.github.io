@@ -192,3 +192,9 @@
   .sms-input { font-size: 1rem; padding: 9px 11px; }
   .sms-chip { font-size: 0.84rem; max-width: 200px; }
 }
+
+.sms-error { color: var(--danger); font-size: .84rem; margin: 0; }
+.sms-chip-dropdown { min-width: 110px; }
+.sms-chip-dropdown .dd-button { text-transform: capitalize; }
+.sms-card-chip-slot { flex: 1 1 140px; }
+.sms-card-chip-slot .dd-root { flex: 1; }

@@ -11,18 +11,24 @@ import { mkdirSync, readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { ALL_UNITS, UNITS_BY_RARITY } from '../../src/data/units.js';
+import { ALL_UNITS } from '../../src/data/units.js';
 import { UNIT_RARITIES } from '../../src/data/taxonomy.js';
 import { ITEM_GROUPS } from '../../src/data/items.js';
-import { ALL_MAPS } from '../../src/data/maps.js';
-import { ALL_TRAITS } from '../../src/data/traits.js';
-import { SKINS_BY_CATEGORY, SHINY_SKINS_BY_CATEGORY } from '../../src/data/skins.js';
 
 const ROOT = process.env.APEX_PROJECT_ROOT || dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const DIST = join(ROOT, 'dist');
 const SITE_NAME = 'Apex WIKI & Values';
 const BASE_PATH = (process.env.VITE_BASE_PATH || '/').replace(/\/+$/, '');
-const SITE_URL = (process.env.VITE_SITE_URL || 'https://zenithvalues.github.io').replace(/\/+$/, '');
+const SITE_URL_RAW = (process.env.VITE_SITE_URL || 'https://apexballvalueswiki.github.io').replace(/\/+$/, '');
+// SITE_URL must be the ORIGIN only. If a deploy script passes the full
+// project-site URL, strip the base path so canonical/OG/sitemap URLs are not
+// doubled (/Apex-Ball-TD-WIKI/Apex-Ball-TD-WIKI/...).
+const SITE_URL = BASE_PATH && SITE_URL_RAW.endsWith(BASE_PATH)
+  ? SITE_URL_RAW.slice(0, -BASE_PATH.length)
+  : SITE_URL_RAW;
+// User/org pages sites have BASE_PATH="" (public production); project sites
+// have a non-empty subfolder (the restricted Test Realm).
+const IS_TEST_REALM = Boolean(BASE_PATH);
 const DEFAULT_DESCRIPTION =
   'Apex WIKI & Values — the complete companion for Ball Tower Defense by Cash Grab Studios $$$$. Unit database, live trade values, and trade calculator.';
 
@@ -72,23 +78,22 @@ addRoute('/minigames/ball-knowledge', { title: 'Ball Knowledge — daily reset t
 addRoute('/minigames/ballonomics', { title: 'Ballonomics — higher or lower values game', priority: '0.5' });
 addRoute('/minigames/balling', { title: 'Balling — pixel reveal guessing game', priority: '0.5' });
 addRoute('/credits', { title: 'Credits', priority: '0.3' });
-addRoute('/privacy', { title: 'Privacy Policy', priority: '0.3' });
+addRoute('/privacy', { title: 'Privacy & Storage', priority: '0.3' });
+addRoute('/terms', { title: 'Terms of Use', priority: '0.3' });
+addRoute('/cookies', { title: 'Cookie & Storage Notice', priority: '0.3' });
+addRoute('/disclaimer', { title: 'Fan-Content & IP Disclaimer', priority: '0.3' });
 addRoute('/changelog', { title: "What's new — Changelog", priority: '0.4' });
+addRoute('/invite', { title: 'Team invite — APEX WIKI & Values', priority: '0.1' });
+addRoute('/values/afford', { title: 'What can I afford? — APEX Values', priority: '0.6' });
 addRoute('/wiki', { title: 'WIKI — Ball Tower Defense database', priority: '0.9' });
 addRoute('/wiki/compare', { title: 'Compare Units', priority: '0.5' });
-addRoute('/wiki/leaderboards', { title: 'Unit Leaderboards', priority: '0.5' });
 addRoute('/wiki/units', { title: 'Units', priority: '0.7' });
 addRoute('/wiki/units/search', { title: 'Search Units', priority: '0.4' });
 addRoute('/wiki/items', { title: 'Items', priority: '0.6' });
-addRoute('/wiki/maps', { title: 'Maps', priority: '0.6' });
-addRoute('/wiki/traits', { title: 'Traits', priority: '0.6' });
-addRoute('/wiki/skins', { title: 'Skins', priority: '0.6' });
-addRoute('/wiki/shiny-skins', { title: 'Shiny Skins', priority: '0.6' });
 addRoute('/bug-report', { title: 'Report a Bug', priority: '0.3' });
 addRoute('/values', { title: 'Trade Values — live Ball TD values', priority: '0.9' });
 addRoute('/values/units', { title: 'Unit Values', priority: '0.7' });
 addRoute('/values/units/search', { title: 'Search Values', priority: '0.4' });
-addRoute('/values/crates', { title: 'Crate Values', priority: '0.6' });
 addRoute('/values/calculator', { title: 'Trade Calculator', priority: '0.7' });
 
 // Unit rarity + detail pages (both WIKI and Values sides)
@@ -137,48 +142,6 @@ for (const [group, items] of Object.entries(ITEM_GROUPS)) {
   }
 }
 
-// Maps / Traits
-for (const map of ALL_MAPS) {
-  addRoute(`/wiki/maps/${enc(map.slug)}`, {
-    title: `${map.name} — Map`,
-    description: `${map.name} map guide for Ball Tower Defense on ${SITE_NAME}.`,
-    type: 'article',
-    priority: '0.7',
-  });
-}
-for (const trait of ALL_TRAITS) {
-  addRoute(`/wiki/traits/${enc(trait.slug)}`, {
-    title: `${trait.name} — Trait`,
-    description: `${trait.name} trait guide for Ball Tower Defense on ${SITE_NAME}.`,
-    type: 'article',
-    priority: '0.7',
-  });
-}
-
-// Skins + shiny skins
-for (const [category, skins] of Object.entries(SKINS_BY_CATEGORY)) {
-  addRoute(`/wiki/skins/${enc(category)}`, { title: `${category} Skins`, priority: '0.6' });
-  for (const skin of skins) {
-    addRoute(`/wiki/skins/${enc(category)}/${enc(skin.slug)}`, {
-      title: `${skin.name} — Skin`,
-      description: `${skin.name} skin for Ball Tower Defense on ${SITE_NAME}.`,
-      type: 'article',
-      priority: '0.7',
-    });
-  }
-}
-for (const [category, skins] of Object.entries(SHINY_SKINS_BY_CATEGORY)) {
-  addRoute(`/wiki/shiny-skins/${enc(category)}`, { title: `${category} Shiny Skins`, priority: '0.6' });
-  for (const skin of skins) {
-    addRoute(`/wiki/shiny-skins/${enc(category)}/${enc(skin.slug)}`, {
-      title: `Shiny ${skin.name} — Skin`,
-      description: `Shiny ${skin.name} skin for Ball Tower Defense on ${SITE_NAME}.`,
-      type: 'article',
-      priority: '0.7',
-    });
-  }
-}
-
 // HTML template rewriting
 
 const template = readFileSync(join(DIST, 'index.html'), 'utf8');
@@ -200,6 +163,9 @@ function buildHeadBlock(route) {
     `    <meta name="twitter:title" content="${esc(route.title)}" />`,
     `    <meta name="twitter:description" content="${esc(route.description)}" />`,
     `    <meta name="twitter:image" content="${esc(image)}" />`,
+    // The Test Realm is a private staging area, not a public mirror. Without
+    // this, Google indexes duplicate content from the staging project site.
+    ...(IS_TEST_REALM ? ['    <meta name="robots" content="noindex,nofollow" />'] : []),
   ].join('\n');
 }
 
@@ -242,17 +208,19 @@ for (const route of routes) {
 }
 
 // SPA fallback + SEO housekeeping
-const homeHtml = renderRoute(routes[0]);
 // 404.html = the SPA shell (not a copy of Home): GitHub Pages serves it at
 // the unknown URL, the router boots there, and the wildcard route renders
 // the real NotFound page with the visitor's original path shown.
 const shellHtml = template
-  .replace(/<title>[^<]*<\/title>/, '<title>Page not found | ' + SITE_NAME + '</title>');
+  .replace(/<title>[^<]*<\/title>/, '<title>Page not found | ' + SITE_NAME + '</title>')
+  .replace('</head>', IS_TEST_REALM ? '  <meta name="robots" content="noindex,nofollow" />\n  </head>' : '</head>');
 writeFileSync(join(DIST, '404.html'), shellHtml);
 writeFileSync(join(DIST, '.nojekyll'), '');
 writeFileSync(
   join(DIST, 'robots.txt'),
-  `User-agent: *\nAllow: /\nDisallow: /admin\n\nSitemap: ${absoluteUrl('/sitemap.xml')}\n`
+  IS_TEST_REALM
+    ? 'User-agent: *\nDisallow: /\n'
+    : `User-agent: *\nAllow: /\nDisallow: /admin\n\nSitemap: ${absoluteUrl('/sitemap.xml')}\n`
 );
 writeFileSync(
   join(DIST, 'sitemap.xml'),

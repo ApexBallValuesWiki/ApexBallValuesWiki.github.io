@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { APEX_KV_URL } from '../utils/apexClient';
+import { requestAdminSession } from '../utils/apexClient';
+import { probeAdminLogin } from '../utils/adminAccounts';
+import { saveAdminCredentials } from '../utils/adminSession';
 import { notifyAdminAuthChange } from '../hooks/useAdminStatus';
 
 const PAGE_STYLE = {
@@ -54,19 +56,25 @@ export function TeamSignInForm({ buttonLabel = 'Sign in', autoNavigateToAdmin = 
     setBusy(true);
     setError('');
     try {
-      const res = await fetch(`${APEX_KV_URL}/changes`, {
-        headers: { 'x-admin-email': cleanEmail, 'x-admin-passcode': passcode.trim() },
-      }).catch(() => null);
-      if (res && res.ok) {
-        localStorage.setItem('apex-admin-email-v1', cleanEmail);
-        localStorage.setItem('apex-admin-passcode-v1', passcode.trim());
+      // Prefer the short-lived signed session: on success the browser keeps
+      // only an 8-hour HMAC token in sessionStorage and immediately discards
+      // the plaintext passcode. No GET carries the secret.
+      const signedIn = await requestAdminSession(cleanEmail, passcode.trim());
+      if (signedIn) {
         notifyAdminAuthChange();
         if (autoNavigateToAdmin) navigate('/admin');
         return;
       }
-      if (res && res.status === 401) setError('Wrong email or passcode. Check your login and try again.');
-      else if (res && res.status === 403) setError('This account is not on the APEX team roster.');
-      else setError('Could not reach the login server. Check your connection and try again.');
+      // Legacy worker (no /session endpoint yet): verify through /login,
+      // which now returns an actionable error code instead of a generic 401.
+      const result = await probeAdminLogin(cleanEmail, passcode.trim());
+      if (result.ok) {
+        saveAdminCredentials(cleanEmail, passcode.trim());
+        notifyAdminAuthChange();
+        if (autoNavigateToAdmin) navigate('/admin');
+        return;
+      }
+      setError(result.error || 'Wrong email or passcode. Check your login and try again.');
     } finally {
       setBusy(false);
     }
@@ -110,6 +118,9 @@ export function TeamSignInForm({ buttonLabel = 'Sign in', autoNavigateToAdmin = 
       >
         {busy ? 'Checking…' : buttonLabel}
       </button>
+      <p style={{ margin: '14px 0 0', color: '#72727e', fontSize: '11.5px', lineHeight: 1.5 }}>
+        First time here? An owner or admin can send you a one-time invite link that creates your passcode. You don&apos;t need to set anything up yourself.
+      </p>
     </form>
   );
 }
@@ -141,7 +152,7 @@ export function AccessGate() {
         </p>
         <TeamSignInForm buttonLabel="Enter Test Realm" />
         <p style={{ margin: '20px 0 0', color: '#72727e', fontSize: '12px', lineHeight: 1.5 }}>
-          No account? The Test Realm is limited to the APEX team.<br />
+          No account? Ask an owner for an invite link — it creates your passcode automatically.<br />
           Looking for the live site? <a href="https://apexballvalueswiki.github.io/" style={{ color: '#ffffff', textDecoration: 'underline', textUnderlineOffset: '3px' }}>apexballvalueswiki.github.io</a>
         </p>
       </div>
@@ -150,50 +161,40 @@ export function AccessGate() {
 }
 
 export function MaintenancePage({ message }) {
-  const [showSignIn, setShowSignIn] = useState(false);
   return (
     <div style={PAGE_STYLE}>
-      <div style={CARD_STYLE}>
+      {/* A static, theme-aware field avoids the old full-screen silk shader
+          and stays quiet even when motion is disabled or the device is busy. */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
+          background: 'radial-gradient(ellipse at 50% 20%, color-mix(in srgb, var(--accent, #ffffff) 8%, transparent), transparent 60%)',
+        }}
+      />
+      <div style={{ ...CARD_STYLE, position: 'relative', zIndex: 2 }}>
         <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '6px',
+          display: 'inline-block',
           padding: '4px 12px',
           borderRadius: '999px',
-          border: '1px solid rgba(255,255,255,0.14)',
-          background: 'rgba(255,255,255,0.04)',
+          background: 'rgba(255,255,255,0.06)',
+          border: '1px solid rgba(255,255,255,0.16)',
+          color: '#ffffff',
           fontSize: '11px',
           fontWeight: 800,
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
-          color: '#b8b8c2',
           marginBottom: '14px',
         }}>
           Scheduled Maintenance
         </div>
-        <h1 style={{ margin: '0 0 8px', fontSize: '24px', fontWeight: 900, letterSpacing: '-0.03em' }}>We&apos;re under maintenance</h1>
-        <p style={{ margin: '0 0 8px', color: '#b8b8c2', fontSize: '14px', lineHeight: 1.55 }}>
-          APEX Values &amp; WIKI is being updated right now. Please check back shortly — everything will be right where you left it.
+        <h1 style={{ margin: '0 0 8px', fontSize: '24px', fontWeight: 900, letterSpacing: '-0.03em' }}>
+          APEX WIKI &amp; Values
+        </h1>
+        <p style={{ margin: '0 0 22px', color: '#b8b8c2', fontSize: '14px', lineHeight: 1.55 }}>
+          {message || 'We are rolling out a live update to the database and values index. Check back shortly.'}
         </p>
-        {message ? <p style={{ margin: '12px 0 0', color: '#ffffff', fontSize: '13px', padding: '10px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>“{message}”</p> : null}
-        {showSignIn ? (
-          <div style={{ marginTop: '20px', textAlign: 'left' }}>
-            <p style={{ margin: '0 0 10px', color: '#b8b8c2', fontSize: '13px' }}>Team sign-in — logging in takes you straight to the admin panel, where you can turn maintenance off.</p>
-            <TeamSignInForm buttonLabel="Sign in & open Admin" autoNavigateToAdmin />
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShowSignIn(true)}
-            style={{
-              marginTop: '18px', background: 'none', border: 'none', cursor: 'pointer',
-              color: '#72727e', fontSize: '12px', textDecoration: 'underline', boxShadow: 'none',
-            }}
-          >
-            Team member? Sign in
-          </button>
-        )}
-        <p style={{ margin: showSignIn ? '14px 0 0' : '6px 0 0', color: '#72727e', fontSize: '12px' }}>— the APEX team</p>
+        <TeamSignInForm buttonLabel="Sign in & open Admin" autoNavigateToAdmin />
       </div>
     </div>
   );

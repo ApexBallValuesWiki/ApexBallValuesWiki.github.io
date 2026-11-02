@@ -2,36 +2,29 @@ import { motion } from 'framer-motion';
 import './Credits.css';
 
 const fadeUp = {
-  initial: { opacity: 0, y: 22 },
+  initial: { opacity: 0, y: 26 },
   animate: (delay = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1], delay },
+    transition: { duration: 0.78, ease: [0.16, 1, 0.3, 1], delay },
   }),
 };
 
 const gridVariants = {
-  animate: { transition: { staggerChildren: 0.07, delayChildren: 0.16 } },
+  animate: { transition: { staggerChildren: 0.14, delayChildren: 0.22 } },
 };
 
 const cardVariants = {
-  initial: { opacity: 0, y: 20, scale: 0.94 },
-  animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.42, ease: [0.22, 1, 0.36, 1] } },
+  initial: { opacity: 0, y: 28, scale: 0.94 },
+  animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.72, ease: [0.16, 1, 0.3, 1] } },
 };
 
 const credits = [
   { name: 'Gustavo', role: 'Owner', emoji: '👑', icon: 'crown', tier: 'owner' },
-  { name: 'Nemuiito', role: 'Admin+', emoji: '🎩', icon: 'hammer', tier: 'lead' },
-  { name: 'DancyBalls', role: 'Value Editor', emoji: '💵', icon: 'hammer', tier: 'lead' },
-  { name: 'Gloomy', role: 'Admin', emoji: '🔨', icon: 'hammer', tier: 'lead' },
-  { name: 'Kron3d', role: 'Lead WIKI Editor', emoji: '👑', icon: 'crown', tier: 'lead' },
-  { name: 'Nose', role: 'Value Editor', emoji: '💵', icon: 'tube', tier: 'tester' },
-  { name: 'Amethyst', role: 'WIKI Editor', emoji: '📃', icon: 'tube', tier: 'tester' },
-  { name: 'Nub', role: 'WIKI Editor', emoji: '📃', icon: 'tube', tier: 'tester' },
-  { name: 'Silly Goober', role: 'WIKI Editor', emoji: '📃', icon: 'tube', tier: 'tester' },
-  { name: 'Hungry', role: 'Value Editor', emoji: '💵', icon: 'tube', tier: 'tester' },
-  { name: 'Nooberto', role: 'WIKI Editor', emoji: '📃', icon: 'tube', tier: 'tester' },
-  { name: 'Hellfire', role: 'Value Editor', emoji: '💵', icon: 'tube', tier: 'tester' },
+  { name: 'Nemuiito', role: 'Co-Owner', emoji: '👑', icon: 'crown', tier: 'owner' },
+  { name: 'Silly Goober', role: 'Admin', emoji: '🎩', icon: 'hammer', tier: 'lead' },
+  { name: 'Horren Balls', role: 'Editor', emoji: '📃', icon: 'tube', tier: 'tester' },
+  { name: 'Izak', role: 'Editor', emoji: '📃', icon: 'tube', tier: 'tester' },
 ];
 
 export default function Credits() {
@@ -63,6 +56,7 @@ export default function Credits() {
           </motion.article>
         ))}
       </motion.section>
+      <p className="credits-icon-attribution">Icons adapted from <a href="https://github.com/krystonschwarze/coolicons" target="_blank" rel="noreferrer">Coolicons</a> by Kryston Schwarze · MIT License.</p>
     </main>
   );
 }

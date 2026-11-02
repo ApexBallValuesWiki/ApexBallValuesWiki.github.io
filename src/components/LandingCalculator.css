@@ -1,0 +1,102 @@
+/* Landing quick calculator — mirrors the real /values/calculator silhouette
+   (two sides, live totals, outcome badge) without duplicating its feature set. */
+.landing-calc {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  overflow: hidden;
+  background:
+    radial-gradient(70% 90% at 92% 8%, color-mix(in srgb, var(--accent, #ffffff) 9%, transparent), transparent 72%),
+    linear-gradient(160deg, #0d0d13 0%, #07070b 62%, #030305 100%);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.66);
+  font-family: var(--font, 'Montserrat', system-ui, sans-serif);
+  color: var(--text, #fff);
+}
+
+.landing-calc-topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.025);
+}
+.landing-calc-label { font-size: .62rem; font-weight: 800; letter-spacing: .16em; }
+.landing-calc-live { display: inline-flex; align-items: center; gap: 6px; font-size: .6rem; font-weight: 700; color: #8de8a4; letter-spacing: .1em; }
+.landing-calc-live i { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+
+.landing-calc-grid {
+  display: grid; grid-template-columns: 1fr 34px 1fr; align-items: start; gap: 10px;
+  padding: 18px;
+}
+.landing-calc-side {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+  padding: 12px;
+}
+.landing-calc-side-you { border-top: 2px solid color-mix(in srgb, var(--accent, #ffffff) 72%, #fff); }
+.landing-calc-side-them { border-top: 2px solid rgba(160, 140, 255, 0.85); }
+.landing-calc-side-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,.09); }
+.landing-calc-side-head span { font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; color: var(--text-dim, #a0a0ac); }
+.landing-calc-side-head strong { font-size: .95rem; font-weight: 900; letter-spacing: -.02em; }
+
+.landing-calc-rows { display: grid; gap: 6px; padding: 10px 0; min-height: 62px; }
+.landing-calc-row {
+  display: grid; grid-template-columns: 34px minmax(0, 1fr) auto 18px; align-items: center; gap: 8px;
+  padding: 5px 6px; border-radius: 8px; background: rgba(255,255,255,.035);
+}
+.landing-calc-row .unit-icon { width: 34px !important; height: 34px !important; }
+.landing-calc-row .unit-icon-glow { display: none; }
+.landing-calc-row .unit-icon-squircle { border: 0; border-radius: 7px; background: rgba(255,255,255,.06); }
+.landing-calc-row-name { font-size: .68rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.landing-calc-row-value { font-size: .65rem; font-weight: 800; color: var(--text-dim, #a0a0ac); white-space: nowrap; }
+.landing-calc-row button { border: 0; background: none; color: #8b8b98; cursor: pointer; font-size: .65rem; padding: 3px; line-height: 1; }
+.landing-calc-row button:hover { color: #ff8080; }
+.landing-calc-empty { margin: 0; padding: 12px 2px; font-size: .68rem; color: var(--text-dim, #a0a0ac); }
+
+.landing-calc-add, .landing-calc-picker {
+  width: 100%; min-height: 32px; border-radius: 8px;
+  border: 1px dashed rgba(255,255,255,.2); background: transparent;
+  color: var(--text-dim, #a0a0ac); font-size: .66rem; font-weight: 700; cursor: pointer;
+  font-family: inherit;
+}
+.landing-calc-add:hover { border-color: var(--accent, #fff); color: var(--text, #fff); }
+.landing-calc-picker { border-style: solid; background: #12121a; color: #fff; padding: 0 8px; }
+
+.landing-calc-swap {
+  align-self: center; width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06);
+  color: #fff; cursor: pointer; font-size: .85rem; line-height: 1;
+  transition: transform 260ms var(--ease-out), background-color 260ms var(--ease-out);
+}
+.landing-calc-swap:hover { transform: rotate(180deg); background: rgba(255,255,255,.14); }
+
+.landing-calc-verdict { padding: 0 18px 16px; }
+.landing-calc-verdict-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 10px; }
+.landing-calc-badge { padding: 5px 11px; border-radius: 999px; font-size: .68rem; font-weight: 900; letter-spacing: .02em; }
+.landing-calc-badge.fair { background: rgba(255,255,255,.12); color: #fff; }
+.landing-calc-badge.win { background: rgba(74, 222, 128, .16); color: #86efac; border: 1px solid rgba(74,222,128,.35); }
+.landing-calc-badge.loss { background: rgba(248, 113, 113, .14); color: #fca5a5; border: 1px solid rgba(248,113,113,.32); }
+.landing-calc-diff { font-size: .68rem; font-weight: 700; color: var(--text-dim, #a0a0ac); }
+.landing-calc-bars { display: grid; gap: 6px; }
+.landing-calc-bar-track { height: 5px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
+.landing-calc-bar { height: 100%; border-radius: 999px; transition: width 520ms cubic-bezier(.2,.7,.2,1); }
+.landing-calc-bar.you { background: linear-gradient(90deg, color-mix(in srgb, var(--accent, #fff) 60%, #fff), var(--accent, #fff)); }
+.landing-calc-bar.them { background: linear-gradient(90deg, #7c6cf0, #b39dff); }
+
+.landing-calc-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  padding: 12px 18px; border-top: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.02);
+}
+.landing-calc-foot > span { font-size: .62rem; color: #7f7f8c; }
+.landing-calc-open { display: inline-flex; align-items: center; gap: 8px; font-size: .7rem; font-weight: 800; color: var(--text, #fff); text-decoration: none; }
+.landing-calc-open:hover { color: var(--accent, #fff); }
+.landing-calc-open .cool-icon { transition: transform 220ms var(--ease-out); }
+.landing-calc-open:hover .cool-icon { transform: translate(3px,-3px); }
+
+@media (max-width: 700px) {
+  .landing-calc-grid { grid-template-columns: 1fr; padding: 14px; }
+  .landing-calc-swap { justify-self: center; transform: rotate(90deg); }
+  .landing-calc-swap:hover { transform: rotate(270deg); }
+}
+html[data-motion="off"] .landing-calc-bar,
+html[data-motion="off"] .landing-calc-swap { transition: none; }

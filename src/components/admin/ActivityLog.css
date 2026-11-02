@@ -1,0 +1,47 @@
+.activity, .activity-local { padding: clamp(20px, 3vw, 34px); }
+.activity-head { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.activity-kicker { color: var(--accent); font-size: .62rem; font-weight: 800; letter-spacing: .16em; }
+.activity h2, .activity-local h2 { margin: 7px 0 0; font-size: clamp(1.35rem, 2vw, 1.9rem); letter-spacing: -.04em; }
+.activity-intro, .activity-local > p { max-width: 75ch; margin: 10px 0 20px; color: var(--text-dim); line-height: 1.7; font-size: .82rem; }
+.activity-refresh, .activity-details-button { border: 1px solid var(--border); border-radius: 9px; background: var(--bg-elevated); color: var(--text); font: inherit; font-size: .74rem; font-weight: 800; padding: 10px 14px; cursor: pointer; }
+.activity-refresh:hover, .activity-details-button:hover { border-color: var(--accent); }
+.activity-toolbar { display: grid; grid-template-columns: minmax(180px, 1fr) repeat(2, minmax(130px, 185px)); gap: 8px; }
+.activity-search { width: 100%; min-width: 0; }
+.activity-summary { display: flex; justify-content: space-between; gap: 12px; padding: 19px 0 9px; color: var(--text-dim); font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
+.activity-list, .activity-local-list { border-top: 1px solid var(--border); max-height: 680px; overflow-y: auto; overscroll-behavior: contain; }
+.activity-row { border-bottom: 1px solid var(--border); }
+.activity-row-main { display: grid; grid-template-columns: 8px minmax(0, 1fr) minmax(120px, auto) auto; align-items: center; gap: 14px; padding: 15px 0; }
+.activity-marker { width: 7px; height: 7px; background: var(--accent); border-radius: 50%; }
+.activity-row-copy, .activity-row-meta, .activity-local-row > div { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.activity-row-copy strong, .activity-local-row strong { font-size: .8rem; overflow-wrap: anywhere; }
+.activity-row-copy span, .activity-row-meta time, .activity-local-row span, .activity-local-row time { color: var(--text-dim); font-size: .7rem; overflow-wrap: anywhere; }
+.activity-row-meta { text-align: right; }
+.activity-row-meta strong { font-size: .73rem; }
+.activity-detail-note, .activity-empty, .activity-alert { padding: 14px; color: var(--text-dim); font-size: .8rem; line-height: 1.6; }
+.activity-alert { color: var(--danger); border: 1px solid var(--danger); border-radius: 10px; }
+.activity-diff { margin: 0 0 16px 22px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.activity-diff-head, .activity-diff-row { display: grid; grid-template-columns: minmax(110px, .8fr) minmax(0, 1fr) minmax(0, 1fr); gap: 12px; padding: 10px 12px; }
+.activity-diff-head { color: var(--text-dim); background: var(--bg-elevated); font-size: .63rem; text-transform: uppercase; letter-spacing: .08em; }
+.activity-diff-row { border-top: 1px solid var(--border); font-size: .72rem; align-items: start; }
+.activity-diff-row strong, .activity-diff-row span { overflow-wrap: anywhere; white-space: pre-wrap; }
+.activity-diff-row span { color: var(--text-dim); }
+.activity-diff-row span:last-child { color: var(--text); }
+.activity-diff-row small { display: none; }
+.activity-local-row { display: flex; justify-content: space-between; gap: 20px; padding: 13px 0; border-bottom: 1px solid var(--border); }
+.activity-local-row time { text-align: right; white-space: nowrap; }
+@media (max-width: 700px) {
+  .activity-toolbar { grid-template-columns: 1fr 1fr; }
+  .activity-search { grid-column: 1 / -1; }
+  .activity-row-main { grid-template-columns: 8px 1fr auto; gap: 10px; }
+  .activity-row-meta { grid-column: 2; text-align: left; }
+  .activity-details-button { grid-column: 3; grid-row: 1 / span 2; }
+  .activity-diff { margin-left: 0; }
+  .activity-diff-head { display: none; }
+  .activity-diff-row { display: flex; flex-direction: column; gap: 5px; }
+  .activity-diff-row small { display: inline-block; min-width: 55px; color: var(--text-dim); font-size: .62rem; text-transform: uppercase; }
+  .activity-local-row { flex-direction: column; gap: 5px; }
+  .activity-local-row time { text-align: left; }
+}
+EOF.activity-archive { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding-top: 16px; color: var(--text-dim); font-size: .72rem; }
+.activity-archive [role="alert"] { color: var(--danger); }
+.activity-restore { margin-top: 14px; }

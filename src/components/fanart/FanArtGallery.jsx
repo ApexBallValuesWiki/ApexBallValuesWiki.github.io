@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { resolveImageUrl } from '../../utils/localAssets';
 
 const cardVariants = {
   initial: { opacity: 0, y: 18 },
@@ -52,12 +53,11 @@ export default function FanArtGallery({ entries, loading }) {
             padding: 0,
           }}
           variants={cardVariants}
-          whileHover={{ y: -4, transition: { duration: 0.2 } }}
         >
           {entry.image_url && (
             <div style={{ position: 'relative', paddingTop: '66%', background: 'var(--bg-elevated)' }}>
               <img
-                src={entry.image_url}
+                src={resolveImageUrl(entry.image_url)}
                 alt={entry.title}
                 style={{
                   position: 'absolute',

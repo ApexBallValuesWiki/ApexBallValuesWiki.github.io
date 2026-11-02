@@ -1,0 +1,53 @@
+/* Quiet, self-hosted character cutouts used as section atmosphere.
+   Two per view maximum — no parallax, no scroll listener, no layout cost. */
+.apex-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  contain: layout paint style;
+}
+
+.apex-ambient-cutout {
+  position: absolute;
+  width: clamp(150px, 17vw, 290px);
+  height: auto;
+  opacity: 0.085;
+  user-select: none;
+  filter: grayscale(0.35) drop-shadow(0 18px 30px rgba(0, 0, 0, 0.35));
+  animation:
+    apex-ambient-in 1100ms cubic-bezier(.2, .7, .2, 1) both,
+    apex-ambient-drift 24s ease-in-out infinite alternate;
+  animation-delay: 0s, 0s;
+}
+
+.apex-ambient-left { left: -3vw; top: 26vh; }
+.apex-ambient-right {
+  right: -3vw;
+  bottom: 8vh;
+  animation-delay: 0s, -11s;
+  animation-duration: 1100ms, 29s;
+}
+
+@keyframes apex-ambient-in {
+  from { opacity: 0; }
+  to { opacity: 0.085; }
+}
+@keyframes apex-ambient-drift {
+  from { transform: translate3d(0, 0, 0) rotate(-1.2deg); }
+  to { transform: translate3d(0, -16px, 0) rotate(1.2deg); }
+}
+
+/* The global motion gates win: no drift, just a static, very faint cutout. */
+html[data-anim-speed="none"] .apex-ambient-cutout,
+html[data-reduced-motion="true"] .apex-ambient-cutout {
+  animation: none !important;
+  opacity: 0.06;
+}
+@media (prefers-reduced-motion: reduce) {html:not([data-motion="on"]) .apex-ambient-cutout { animation: none !important; opacity: 0.06; }
+}
+
+@media (max-width: 899px), (pointer: coarse) {
+  .apex-ambient { display: none; }
+}

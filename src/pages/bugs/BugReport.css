@@ -64,3 +64,6 @@
     padding: 20px;
   }
 }
+
+.bug-select-label { display: block; margin-bottom: 8px; color: var(--text); font-size: 0.9rem; font-weight: 700; }
+.bug-report-error { margin: 0; color: #ff9b9b; line-height: 1.5; }

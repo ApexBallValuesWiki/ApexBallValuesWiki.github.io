@@ -8,6 +8,7 @@ import { useData } from '../../context/DataContext';
 import { ALL_UNITS } from '../../data/units';
 import { useWikiImageOverrides } from '../../hooks/useWikiImageOverrides';
 import { slugify } from '../../utils/slug';
+import { resolveImageUrl } from '../../utils/localAssets';
 
 export default function ItemDetail() {
   const params = useParams();
@@ -39,7 +40,7 @@ export default function ItemDetail() {
         <div className="unit-body">
           {(item.imageUrl || item.image_url || item.image) && (
             <div className="item-detail-image" style={{ width: '120px', height: '120px', borderRadius: '14px', overflow: 'hidden', marginBottom: '20px', border: '1px solid var(--border, rgba(255,255,255,0.12))', background: '#0c0c12', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <img src={item.imageUrl || item.image_url || item.image} alt={item.name} style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
+              <img src={resolveImageUrl(item.imageUrl || item.image_url || item.image)} alt={item.name} style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
             </div>
           )}
           {item.description && (
@@ -154,7 +155,7 @@ export default function ItemDetail() {
                     <>
                       <div className="crate-drop-image">
                         {imgUrl ? (
-                          <img src={imgUrl} alt={name} />
+                          <img src={resolveImageUrl(imgUrl)} alt={name} />
                         ) : (
                           <span className="crate-drop-fallback" aria-hidden="true">⚔️</span>
                         )}

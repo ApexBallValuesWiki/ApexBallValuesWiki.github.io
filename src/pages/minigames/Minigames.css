@@ -88,9 +88,9 @@
   position: absolute;
   right: -10px;
   bottom: -10px;
-  width: 165px;
-  height: 165px;
-  opacity: 0.22;
+  width: 205px;
+  height: 205px;
+  opacity: 0.3;
   pointer-events: none;
   z-index: 0;
   transition: opacity 240ms var(--ease-out), transform 280ms var(--ease-out);
@@ -119,14 +119,16 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 76px;
+  height: 76px;
+  border-radius: 18px;
   background: #08080c;
   border: 1px solid rgba(255, 255, 255, 0.12);
   font-size: 1.45rem;
   line-height: 1;
 }
+
+.mg-card-icon-art { width: 68px; height: 68px; }
 
 .mg-card h2 {
   margin: 0;
@@ -721,3 +723,4 @@
   background: radial-gradient(circle at 35% 30%, #fff 0%, #9a9a9a 60%, #222 100%);
   border: none;
 }
+.ball-guess-row .ball-combobox { flex: 1 1 0; min-width: 0; }

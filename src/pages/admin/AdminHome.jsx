@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useRef, useCallback} from 'react';
+import { formatSiteNumber } from '../../utils/formatNumber';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ALL_UNITS } from '../../data/units';
@@ -13,7 +14,8 @@ import { useWikiImageOverrides } from '../../hooks/useWikiImageOverrides';
 import { UNIT_RARITIES, isShinyRarity } from '../../data/taxonomy';
 import { computeTradeValue } from '../../utils/calculator';
 import { slugify } from '../../utils/slug';
-import { APEX_KV_URL, getAdminHeaders, pushKvEntry, deleteKvEntry, fetchChangeLog, logoutEverywhere, addDeletedUnit, restoreDeletedUnit, fetchUnitHistory, fetchMaintenanceStatus, setMaintenance } from '../../utils/apexClient';
+import { APEX_KV_URL, requestAdminSession, getAdminHeaders, pushKvEntry, deleteKvEntry, fetchChangeLog, logoutEverywhere, addDeletedUnit, restoreDeletedUnit, fetchUnitHistory, fetchMaintenanceStatus, setMaintenance } from '../../utils/apexClient';
+import { saveAdminCredentials, getAdminCredentials, getAdminEmail, clearAdminCredentials } from '../../utils/adminSession';
 import AnnouncementStudio from '../../components/admin/AnnouncementStudio';
 import AdminDashboard from '../../components/admin/AdminDashboard';
 import AdminCommandHeader from '../../components/admin/AdminCommandHeader';
@@ -21,6 +23,9 @@ import AdminMaterialsSection from '../../components/admin/AdminMaterialsSection'
 import AdminLogsSection from '../../components/admin/AdminLogsSection';
 import BlameLog from '../../components/admin/BlameLog';
 import SpreadsheetMode from '../../components/admin/SpreadsheetMode';
+import { makeSpreadsheetPatch, makeSpreadsheetInitialRow } from '../../utils/spreadsheetValues';
+import { EXPECTED_WORKER_VERSION } from '../../config/workerVersion';
+import { isWorkerAtLeast } from '../../utils/workerCompatibility';
 import SoftLockBanner from '../../components/admin/SoftLockBanner';
 import ShinySyncPanel from '../../components/admin/ShinySyncPanel';
 import { buildFullPublishBundle, pushBundleToCloudflareKV } from '../../components/admin/adminKV';
@@ -145,13 +150,15 @@ export default function AdminHome() {
   // password-change screen until they set their own — no editing before.
   const [mustChangePassword, setMustChangePassword] = useState(() => {
     try {
-      return localStorage.getItem('apex-admin-passcode-v1') === 'apex2026';
+      return getAdminCredentials().passcode === 'apex2026';
     } catch { return false; }
   });
 
   const [query, setQuery] = useState('');
   const [unitFilter, setUnitFilter] = useState('all');
   const [spreadsheetMode, setSpreadsheetMode] = useState(false);
+  // Keep in-progress spreadsheet edits alive when changing admin views.
+  const [spreadsheetEdits, setSpreadsheetEdits] = useState({});
   const [previewMode, setPreviewMode] = useState(true);
   const [valueRows, setValueRows] = useState([]);
   const [valueLog] = useState([]);
@@ -301,7 +308,7 @@ export default function AdminHome() {
   const [saving, setSaving] = useState(false);
   const [localChangeLog, setLocalChangeLog] = useState(() => loadPersistedLogs());
   const [liveDbTime, setLiveDbTime] = useState(null);
-  const [serverEdits, setServerEdits] = useState([]);
+  const [serverEdits, setServerEdits] = useState(null);
   const [messageAction, setMessageAction] = useState(null);
   const [recentEdits, setRecentEdits] = useState(() => loadRecentEdits());
   const [draftsOpen, setDraftsOpen] = useState(false);
@@ -324,7 +331,7 @@ export default function AdminHome() {
   const valueDirty = isDirty('value', valueForm);
   const wikiDirty = isDirty('wiki', wikiForm) || !!wikiImageFile;
   const contentDirty = !!contentImageFile || isDirty('content', contentForm);
-  const anyDirty = valueDirty || wikiDirty || contentDirty;
+  const anyDirty = valueDirty || wikiDirty || contentDirty || Object.keys(spreadsheetEdits).length > 0;
 
   // Dirty-state shield: warn on tab close / reload…
   useEffect(() => {
@@ -363,8 +370,8 @@ export default function AdminHome() {
   }, [activeTool, activeView]);
 
   useEffect(() => {
-    const savedEmail = localStorage.getItem('apex-admin-email-v1');
-    const savedPasscode = localStorage.getItem('apex-admin-passcode-v1');
+    const savedEmail = getAdminEmail();
+    const savedPasscode = getAdminCredentials().passcode;
     if (savedEmail && savedPasscode) {
       const cleanEmail = savedEmail.trim().toLowerCase();
       const member = TEAM_MEMBERS[cleanEmail];
@@ -413,8 +420,8 @@ export default function AdminHome() {
     crates: crateRows.length,
   };
   const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
-  const edits24h = serverEdits.filter((e) => new Date(e?.at || 0).getTime() >= dayAgo).length
-    + localChangeLog.filter((e) => new Date(e?.changed_at || 0).getTime() >= dayAgo).length;
+  // Shared publishes only; browser-local drafts are a separate record.
+  const edits24h = serverEdits ? serverEdits.filter((e) => new Date(e?.at || 0).getTime() >= dayAgo).length : null;
   const anyAllowed = valueAllowed || wikiAllowed;
 
   // Track changes locally for the Admin Log display (persisted to localStorage)
@@ -449,7 +456,7 @@ export default function AdminHome() {
     // sandbox drafts are layered LAST, so a local PRVW draft always wins.
     let kvData = null;
     try {
-      const res = await fetch(`${APEX_KV_URL}/overrides`).catch(() => null);
+      const res = await fetch(`${APEX_KV_URL}/overrides`, { headers: getAdminHeaders(), cache: 'no-store' }).catch(() => null);
       if (res && res.ok) kvData = await res.json();
       if (typeof kvData?.__v === 'number') bundleVersionRef.current = kvData.__v;
       if (kvData?.timestamp) setLiveDbTime(new Date(kvData.timestamp));
@@ -457,30 +464,24 @@ export default function AdminHome() {
       kvData = null; // Worker offline → fall back to static + local layers only
     }
     // Shared change feed (for the "Edits (24h)" stat card + server log tab)
-    fetchChangeLog()
-      .then((changes) => setServerEdits(Array.isArray(changes) ? changes : []))
-      .catch(() => {});
+    fetchChangeLog({ strict: true })
+      .then((changes) => setServerEdits(changes))
+      .catch(() => setServerEdits(null));
 
     // Tolerant row builders: accept both camelCase bundle entries
     // (`baseValue`, `unlockRequirement`, `imageUrl`) and snake_case DB row
     // entries (`base_value`, `unlock_requirement`, `image_url`), and NEVER
     // drop fields like trend/notes/updated_at (dropping them made forms
     // revert to fallback data after a refresh).
-    const buildValueRow = (slug, val = {}) => ({
-      slug,
-      base_value: val.baseValue ?? val.base_value,
-      base_value_max: val.baseValueMax ?? val.base_value_max ?? null,
-      gems_max: val.gemsMax ?? val.gems_max ?? null,
-      coins_max: val.coinsMax ?? val.coins_max ?? null,
-      demand: val.demand,
-      scarcity: val.scarcity,
-      trend: val.trend,
-      notes: val.notes,
-      gems: val.gems,
-      coins: val.coins,
-      updated_at: val.updated_at,
-      updated_by: val.updated_by,
-    });
+    const buildValueRow = (slug, val = {}) => {
+      const row = { ...val, slug };
+      // Keep snake/camel aliases synchronized while retaining unknown fields.
+      for (const [snake, camel] of [['base_value', 'baseValue'], ['base_value_max', 'baseValueMax'], ['gems_max', 'gemsMax'], ['coins_max', 'coinsMax']]) {
+        const chosen = val[camel] !== undefined ? val[camel] : val[snake];
+        if (chosen !== undefined) { row[snake] = chosen; row[camel] = chosen; }
+      }
+      return row;
+    };
 
     const buildWikiRow = (slug, wiki = {}) => ({
       slug,
@@ -534,7 +535,7 @@ export default function AdminHome() {
     const valueMap = {};
     [staticOverridesJson?.valueOverrides, kvData?.valueOverrides, localValues].forEach((src) => {
       Object.entries(src || {}).forEach(([slug, val]) => {
-        valueMap[slug] = buildValueRow(slug, val);
+        if (val && typeof val === 'object' && !Array.isArray(val)) valueMap[slug] = { ...(valueMap[slug] || {}), ...buildValueRow(slug, val) };
       });
     });
 
@@ -579,7 +580,7 @@ export default function AdminHome() {
         // re-merge our drafts on top, and try exactly once more.
         setMessage('🔄 Database changed while saving — re-merging your edits…');
         await refreshAdminData();
-        bundle = await buildFullPublishBundle();
+        bundle = await buildFullPublishBundle({ freshKV: true });
         result = await pushBundleToCloudflareKV(bundle, { isRestore, onStatus: setMessage });
         if (result.conflict) {
           setMessage('⚠️ Still out of date after retry — your edits are saved locally. Try saving again in a moment.');
@@ -611,8 +612,8 @@ export default function AdminHome() {
     return null;
   }
 
-  async function pushEntryToKV(section, slug, { silent = true } = {}) {
-    const draft = localDraftFor(section, slug);
+  async function pushEntryToKV(section, slug, { silent = true, patch = null } = {}) {
+    const draft = patch || localDraftFor(section, slug);
     if (!draft) {
       // No local draft — fall back to a full publish.
       return pushToCloudflareKV();
@@ -640,9 +641,13 @@ export default function AdminHome() {
   const publishQueueRef = useRef(Promise.resolve());
   const pendingPublishRef = useRef(new Map());
 
-  function queueCloudPublish(section, slug) {
+  function queueCloudPublish(section, slug, patch = null) {
     const key = `${section}:${slug}`;
-    pendingPublishRef.current.set(key, { section, slug });
+    const prior = pendingPublishRef.current.get(key);
+    // A full pending save must stay full; otherwise combine adjacent partial
+    // spreadsheet patches without dropping a column.
+    const combined = prior ? (prior.patch && patch ? { ...prior.patch, ...patch } : null) : patch;
+    pendingPublishRef.current.set(key, { section, slug, patch: combined });
     publishQueueRef.current = publishQueueRef.current
       .then(async () => {
         await new Promise((r) => setTimeout(r, 250)); // collapse rapid re-saves of the same unit
@@ -652,18 +657,22 @@ export default function AdminHome() {
         let result = null;
         for (let attempt = 1; attempt <= 3; attempt += 1) {
           try {
-            result = await pushEntryToKV(pending.section, pending.slug, { silent: true });
+            result = await pushEntryToKV(pending.section, pending.slug, { silent: true, patch: pending.patch });
           } catch { result = null; }
           if (result && result.ok) break;
           if (result && result.status === 401) break; // no point retrying a bad login
           await new Promise((r) => setTimeout(r, 500 * attempt));
         }
         if (result && result.ok) {
-          setMessage(`☁️ Live: ${pending.slug} published${typeof result.version === 'number' ? ` (v${result.version})` : ''}.`);
+          const auditFailed = result.audit && (result.audit.changeLog === false || result.audit.unitHistory === false);
+          setMessage(!result.audit
+            ? `⚠️ ${pending.slug} was published, but this worker did not report audit status.`
+            : auditFailed ? `⚠️ ${pending.slug} was published, but the server could not save its complete audit history. Contact the owner.`
+            : `☁️ Live: ${pending.slug} published${typeof result.version === 'number' ? ` (v${result.version})` : ''}.`);
         } else {
           const why = (result && result.error) ? result.error : `HTTP ${result && result.status ? result.status : 'network error'}`;
           setMessage(`⚠️ Cloud publish failed for ${pending.slug}: ${why} — your edits are safe locally and will publish with the next save.`);
-          setMessageAction({ label: '🔄 Publish now', run: () => { queueCloudPublish(pending.section, pending.slug); } });
+          setMessageAction({ label: '🔄 Publish now', run: () => { queueCloudPublish(pending.section, pending.slug, pending.patch); } });
         }
       })
       .catch(() => { /* the queue must never die */ });
@@ -672,9 +681,15 @@ export default function AdminHome() {
 
   async function deleteEntryFromKV(section, slug) {
     const result = await deleteKvEntry(section, slug);
-    if (result.ok && typeof result.version === 'number') bundleVersionRef.current = result.version;
-    else if (result.status === 401) setMessage('⚠️ Cloud delete failed: invalid saved login/passcode.');
-    else if (!result.ok) {
+    if (result.ok) {
+      if (typeof result.version === 'number') bundleVersionRef.current = result.version;
+      const auditFailed = result.audit && (result.audit.changeLog === false || result.audit.unitHistory === false);
+      setMessage(!result.audit
+        ? `⚠️ ${slug} was deleted, but this worker did not report audit status.`
+        : auditFailed ? `⚠️ ${slug} was deleted, but the server could not save its complete audit history. Contact the owner.`
+        : `☁️ ${slug} was deleted from the shared database.`);
+    } else if (result.status === 401) setMessage('⚠️ Cloud delete failed: invalid saved login/passcode.');
+    else {
       setMessage(`⚠️ Cloud delete failed: ${result.error || 'Server error'}`);
       setMessageAction({ label: '🔄 Try again', run: () => { deleteEntryFromKV(section, slug); } });
     }
@@ -686,15 +701,22 @@ export default function AdminHome() {
   async function revertChange(entry) {
     if (!entry?.section || !entry?.slug) return;
     try {
-      if (entry.before) {
-        const result = await pushKvEntry(entry.section, entry.slug, entry.before);
-        if (!result.ok) { setMessage(`⚠️ Revert failed: ${result.error || 'Server error'}`); return; }
-        if (typeof result.version === 'number') bundleVersionRef.current = result.version;
-      } else {
-        const result = await deleteKvEntry(entry.section, entry.slug);
-        if (!result.ok) { setMessage(`⚠️ Revert failed: ${result.error || 'Server error'}`); return; }
+      const versionResponse = await fetch(`${APEX_KV_URL}/version`, { cache: 'no-store' });
+      const version = versionResponse.ok ? (await versionResponse.json()).version : null;
+      if (!isWorkerAtLeast(version, EXPECTED_WORKER_VERSION)) {
+        setMessage(`⚠️ Applying prior fields requires the coordinated worker update (${EXPECTED_WORKER_VERSION}).`);
+        return;
       }
-      setMessage(`↩️ Reverted ${entry.section} change for ${entry.slug}.`);
+      const result = entry.before
+        ? await pushKvEntry(entry.section, entry.slug, entry.before)
+        : await deleteKvEntry(entry.section, entry.slug);
+      if (!result.ok) { setMessage(`⚠️ Revert failed: ${result.error || 'Server error'}`); return; }
+      if (typeof result.version === 'number') bundleVersionRef.current = result.version;
+      const auditFailed = result.audit && (result.audit.changeLog === false || result.audit.unitHistory === false);
+      setMessage(!result.audit
+        ? `⚠️ Previous fields were applied, but this worker did not report audit status.`
+        : auditFailed ? `⚠️ Previous fields were applied, but the server could not save the complete audit history. Contact the owner.`
+        : `↩️ Previous fields applied to ${entry.section} / ${entry.slug}.`);
       logChange(entry.slug, entry.section, `Reverted to previous ${entry.section} value`);
       await Promise.all([refreshAdminData(), refresh(), refreshWiki()]);
     } catch (e) {
@@ -882,8 +904,8 @@ export default function AdminHome() {
       
       if (response.ok) {
         const loginData = await response.json().catch(() => ({}));
-        localStorage.setItem('apex-admin-email-v1', cleanEmail);
-        localStorage.setItem('apex-admin-passcode-v1', password.trim());
+        saveAdminCredentials(cleanEmail, password.trim());
+        await requestAdminSession(cleanEmail, password.trim());
         setMustChangePassword(loginData.mustChangePassword === true || password.trim() === 'apex2026');
         
         const mockSession = {
@@ -911,8 +933,7 @@ export default function AdminHome() {
   }
 
   async function signOut() {
-    localStorage.removeItem('apex-admin-email-v1');
-    localStorage.removeItem('apex-admin-passcode-v1');
+    clearAdminCredentials();
     setSession(null);
     setAdminUser(null);
     setAuthMessage('');
@@ -932,11 +953,11 @@ export default function AdminHome() {
     const confirm = confirmPassword.trim();
 
     if (scorePasscode(nextPasscode).score < 3) {
-      setAuthMessage('⚠️ Passcode too weak — use at least 8 characters with a capital letter and a number (symbols help).');
+      setAuthMessage('⚠️ Passcode too weak — use at least 12 characters with a capital letter and a number (symbols help).');
       return;
     }
-    if (nextPasscode.length < 6) {
-      setAuthMessage('⚠️ New password must be at least 6 characters.');
+    if (nextPasscode.length < 12) {
+      setAuthMessage('⚠️ New password must be at least 12 characters.');
       return;
     }
     if (nextPasscode !== confirm) {
@@ -958,8 +979,7 @@ export default function AdminHome() {
         // Success: wipe every stored credential + session so the editor is
         // fully logged out, then route back to the LOGIN screen so they must
         // verify their NEW password immediately.
-        localStorage.removeItem('apex-admin-email-v1');
-        localStorage.removeItem('apex-admin-passcode-v1');
+        clearAdminCredentials();
         setSession(null);
         setAdminUser(null);
         setValueRows([]);
@@ -1259,7 +1279,7 @@ export default function AdminHome() {
     try {
       const result = await logoutEverywhere();
       if (result.ok && result.passcode) {
-        localStorage.setItem('apex-admin-passcode-v1', result.passcode);
+        saveAdminCredentials(getAdminEmail(), result.passcode);
         sessionCheckRef.current = { at: 0, ok: true };
         setAuthMessage('✓ All other devices were logged out. Your new passcode was saved in this browser automatically.');
       } else {
@@ -1341,29 +1361,51 @@ export default function AdminHome() {
   async function saveSpreadsheetRows(rows) {
     if (!valueAllowed || !rows?.length) return false;
     if (!(await verifySession())) return false;
-    let saved = 0;
-    for (const row of rows) {
-      const num = (v) => { const n = Number(String(v ?? '').replace(/[^0-9.]/g, '')); return Number.isFinite(n) && String(v ?? '').trim() !== '' ? n : null; };
-      const payload = {
-        slug: row.slug,
-        base_value: num(row.form.base_value), baseValue: num(row.form.base_value),
-        base_value_max: num(row.form.base_value_max), baseValueMax: num(row.form.base_value_max),
-        gems: num(row.form.gems), coins: num(row.form.coins),
-        gems_max: num(row.form.gems_max), gemsMax: num(row.form.gems_max),
-        coins_max: num(row.form.coins_max), coinsMax: num(row.form.coins_max),
-        demand: row.form.demand || null, scarcity: row.form.scarcity || null, trend: row.form.trend || 'stable', notes: row.form.notes || null,
-        updated_at: new Date().toISOString(), updated_by: session.user.email,
-      };
-      setLocalValueOverride(row.slug, payload);
-      setValueRows((prev) => [payload, ...prev.filter((r) => r.slug !== row.slug)]);
-      logChange(row.slug, 'value', `Spreadsheet: ${row.name}`);
-      queueCloudPublish('value', row.slug);
-      saved += 1;
+    setSaving(true);
+    try {
+      // Never infer an absent remote row from a failed/offline request. The
+      // server snapshot determines whether a patch or a full seed is safe.
+      const versionResponse = await fetch(`${APEX_KV_URL}/version`, { cache: 'no-store' });
+      const version = versionResponse.ok ? (await versionResponse.json()).version : null;
+      if (!isWorkerAtLeast(version, EXPECTED_WORKER_VERSION)) {
+        throw new Error(`Spreadsheet publishing requires the coordinated worker update (${EXPECTED_WORKER_VERSION}).`);
+      }
+      const response = await fetch(`${APEX_KV_URL}/overrides`, { headers: getAdminHeaders(), cache: 'no-store' });
+      if (!response.ok) throw new Error(`Database refresh failed (HTTP ${response.status}). Edits were not queued.`);
+      const bundle = await response.json();
+      if (!bundle || typeof bundle.valueOverrides !== 'object' || Array.isArray(bundle.valueOverrides)) {
+        throw new Error('The database returned an invalid values section. Edits were not queued.');
+      }
+      // Validate the entire batch before changing any local or remote rows.
+      const validated = rows.map((row) => {
+        const changes = makeSpreadsheetPatch(row.changes);
+        const exists = Object.prototype.hasOwnProperty.call(bundle.valueOverrides, row.slug);
+        const outbound = exists ? changes : { ...makeSpreadsheetInitialRow(row.form), ...changes };
+        return { ...row, changes, outbound };
+      });
+      const local = loadLocalValueOverrides() || {};
+      for (const row of validated) {
+        const stamp = { updated_at: new Date().toISOString(), updated_by: session.user.email };
+        // Keep current visible values and other draft data locally. Publish
+        // only changed columns for existing records, avoiding stale overwrites.
+        const previous = valueRows.find((item) => item.slug === row.slug) || {};
+        const payload = { ...previous, ...(local[row.slug] || {}), ...row.outbound, ...row.changes, slug: row.slug, ...stamp };
+        setLocalValueOverride(row.slug, payload);
+        setValueRows((prev) => [payload, ...prev.filter((item) => item.slug !== row.slug)]);
+        logChange(row.slug, 'value', `Spreadsheet draft saved: ${row.name}`);
+        queueCloudPublish('value', row.slug, { ...row.outbound, ...stamp });
+      }
+      setDraftsVersion((v) => v + 1);
+      setMessage(`Saved ${validated.length} local draft${validated.length === 1 ? '' : 's'}; cloud publishing is queued.`);
+      setMessageAction(null);
+      return true;
+    } catch (error) {
+      const message = errorMessage(error, 'Could not save spreadsheet edits.');
+      setMessage(`⚠️ ${message} Your spreadsheet edits remain unsaved.`);
+      throw new Error(message);
+    } finally {
+      setSaving(false);
     }
-    setDraftsVersion((v) => v + 1);
-    setMessage(`✓ Saved ${saved} unit${saved > 1 ? 's' : ''}! — ☁️ publishing live in the background…`);
-    setMessageAction(null);
-    return true;
   }
 
   // BULK SHINY SYNC: recompute + publish the selected shiny variants.
@@ -1438,8 +1480,8 @@ export default function AdminHome() {
         return [payload, ...filtered];
       });
       justSavedRef.current = true;
-      logChange(selectedUnit.slug, 'value', `Value: ${next.baseValue}${next.baseValueMax ? '-' + next.baseValueMax : ''} | Gems: ${next.gems} | Coins: ${next.coins} | ${next.demand} / ${next.scarcity}`);
-      setMessage(`✓ Saved! Value: ${next.baseValue}${next.baseValueMax ? '-' + next.baseValueMax : ''} | Gems: ${next.gems} | Coins: ${next.coins} — ☁️ publishing live…`);
+      logChange(selectedUnit.slug, 'value', `Value: ${formatSiteNumber(next.baseValue)}${next.baseValueMax ? '-' + formatSiteNumber(next.baseValueMax) : ''} | Gems: ${formatSiteNumber(next.gems)} | Coins: ${formatSiteNumber(next.coins)} | ${next.demand} / ${next.scarcity}`);
+      setMessage(`✓ Saved! Value: ${formatSiteNumber(next.baseValue)}${next.baseValueMax ? '-' + formatSiteNumber(next.baseValueMax) : ''} | Gems: ${formatSiteNumber(next.gems)} | Coins: ${formatSiteNumber(next.coins)} — ☁️ publishing live…`);
       setMessageAction(null);
       baseline('value', valueForm); // the on-screen form IS what was saved
       clearFormDraft('value');
@@ -1458,7 +1500,7 @@ export default function AdminHome() {
     clearFormDraft('value');
     setLocalValueOverride(selectedUnit.slug, null);
     markLocalOverrideDeleted('value', selectedUnit.slug);
-    setMessage(`✓ Removed live value override for ${selectedUnit.name}! Fallback value restored.`);
+    setMessage(`Marked ${selectedUnit.name} for deletion locally; publishing…`);
     setValueRows((prev) => [...prev]);
     try {
       await refresh();
@@ -1615,7 +1657,7 @@ export default function AdminHome() {
       markLocalOverrideDeleted('crate', selectedContentItem.slug);
       setCrateRows((prev) => prev.filter((r) => r.slug !== selectedContentItem.slug));
     }
-    setMessage('Content override removed; default data restored.');
+    setMessage('Content override marked for deletion locally; publishing…');
     const resetContentForm = mapsMode
       ? { name: selectedContentItem.name, description: '', difficulty: '', unlockRequirement: selectedContentItem.unlockRequirement || '', imageUrl: selectedContentItem.image || '' }
       : { name: selectedContentItem.name, description: '', chances: {}, obtain: '', effect: '', imageUrl: selectedContentItem.imageUrl || '' };
@@ -1629,7 +1671,7 @@ export default function AdminHome() {
     setLocalWikiOverride(selectedUnit.slug, null);
     markLocalOverrideDeleted('wiki', selectedUnit.slug);
     removeCachedWikiImage(selectedUnit.slug);
-    setMessage(`✓ Removed live WIKI override for ${selectedUnit.name}!`);
+    setMessage(`Marked the WIKI override for ${selectedUnit.name} for deletion locally; publishing…`);
     setWikiRows((prev) => [...prev]);
     try {
       await refreshAdminData({ logsOnly: true });
@@ -1726,7 +1768,7 @@ export default function AdminHome() {
             <label>Current Password (the default one)</label>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Current Password…" required />
             <label>New Password</label>
-            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New Password…" minLength={6} required aria-describedby="pass-strength-meter" />
+            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New Password…" minLength={12} required aria-describedby="pass-strength-meter" />
             {newPassword && (
               <div id="pass-strength-meter" className={`pass-strength s-${scorePasscode(newPassword).score}`} aria-live="polite">
                 <div className="pass-bars" aria-hidden="true">
@@ -1736,7 +1778,7 @@ export default function AdminHome() {
               </div>
             )}
             <label>Confirm New Password</label>
-            <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm New Password…" minLength={6} required />
+            <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm New Password…" minLength={12} required />
             <button type="submit" className="filled" disabled={resetSaving}>{resetSaving ? 'Saving…' : '🔐 Change Password & Continue'}</button>
           </form>
           <button type="button" className="ghost admin-logout-all" onClick={signOut} style={{ marginTop: 12 }}>Cancel & log out</button>
@@ -1756,7 +1798,7 @@ export default function AdminHome() {
             <label>Current Password</label>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Current Password…" required />
             <label>New Password</label>
-            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New Password…" minLength={6} required aria-describedby="pass-strength-meter" />
+            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="New Password…" minLength={12} required aria-describedby="pass-strength-meter" />
             {newPassword && (
               <div id="pass-strength-meter" className={`pass-strength s-${scorePasscode(newPassword).score}`} aria-live="polite">
                 <div className="pass-bars" aria-hidden="true">
@@ -1766,7 +1808,7 @@ export default function AdminHome() {
               </div>
             )}
             <label>Confirm New Password</label>
-            <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm New Password…" minLength={6} required />
+            <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm New Password…" minLength={12} required />
             <button type="button" className="ghost admin-logout-all" onClick={handleLogoutEverywhere} title="Rotate your passcode so every other device gets logged out">
               🚪 Log out everywhere
             </button>
@@ -1993,6 +2035,8 @@ export default function AdminHome() {
                     valueRows={valueRows}
                     saving={saving}
                     canEdit={valueAllowed}
+                    edits={spreadsheetEdits}
+                    setEdits={setSpreadsheetEdits}
                     onSaveRows={saveSpreadsheetRows}
                   />
                 </>
@@ -2091,6 +2135,8 @@ export default function AdminHome() {
           {activeView === 'logs' && (
             <AdminLogsSection
               role={role}
+              message={message}
+              messageAction={messageAction}
               valueLog={valueLog}
               wikiLog={wikiLog}
               localChangeLog={localChangeLog}

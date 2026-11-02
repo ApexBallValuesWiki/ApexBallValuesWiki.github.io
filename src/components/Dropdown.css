@@ -223,3 +223,18 @@
   font-size: 0.8rem;
   border-radius: 10px;
 }
+
+/* Shared select / editable-combobox surfaces, derived from the active theme. */
+.dd-menu { border-color: var(--border-strong, var(--border)); background: var(--bg-elevated); box-shadow: 0 24px 60px rgba(0,0,0,.35), var(--surface-refraction-strong); }
+.dd-option:hover, .dd-option.highlight { background: color-mix(in srgb, var(--accent) 12%, var(--bg-elevated)); }
+.dd-option.selected { background: color-mix(in srgb, var(--accent) 15%, var(--bg-elevated)); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+.dd-search { background: var(--bg); border-color: var(--border); font-size: max(16px, .85rem); }
+.dd-input-wrap { position: relative; width: 100%; }
+.dd-root .dd-input { width: 100%; min-height: 44px; box-sizing: border-box; padding: 10px 14px 10px 43px; border: 1px solid var(--border); border-radius: var(--radius-sm); outline: none; background: var(--bg-elevated); color: var(--text); font: 600 max(16px, .85rem) var(--font); box-shadow: var(--surface-refraction); }
+.dd-input-icon { position: absolute; z-index: 1; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-dim); pointer-events: none; }
+.dd-root .dd-input:focus-visible, .dd-autocomplete.open .dd-input { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+.dd-option-meta { color: var(--text-dim); font-size: .68rem; font-weight: 600; white-space: nowrap; }
+.dd-caret { display: block; }
+.dd-option .unit-icon { margin-right: 0; }
+@media (prefers-reduced-motion: reduce) {html:not([data-motion="on"]) .dd-menu { animation: none; } }
+

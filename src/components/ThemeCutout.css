@@ -1,3 +1,8 @@
+/* Strong theme tint — restored to the pre-Push-#300 look (two masked passes
+   plus a tinted glow). A later performance pass had flattened this to a single
+   0.42-opacity normal-blend layer, which made colored themes feel washed out.
+   These blends are isolated to one small ornament; the FPS problem on mobile
+   Firefox came from a FULL-SCREEN blend, not from these local masks. */
 .theme-cutout {
   --cutout-tint: var(--accent, #ffffff);
   position: relative;
@@ -18,12 +23,8 @@
 }
 
 @keyframes apex-cutout-float {
-  0% {
-    transform: translate3d(0, 0, 0) rotate(-0.8deg);
-  }
-  100% {
-    transform: translate3d(0, -10px, 0) rotate(1.2deg);
-  }
+  0% { transform: translate3d(0, 0, 0) rotate(-0.8deg); }
+  100% { transform: translate3d(0, -10px, 0) rotate(1.2deg); }
 }
 
 .theme-cutout-img {
@@ -31,15 +32,17 @@
   height: 100%;
   object-fit: contain;
   display: block;
-  /* Pure metallic monochrome base matching the APEX logo */
   filter: grayscale(1) contrast(1.22) brightness(1.16);
 }
 
-/* Alpha-masked theme color adaptation — tints only opaque pixels of the cutout */
+/* Alpha-masked colour pass: tints only the opaque pixels and keeps luminance
+   detail, so a coloured theme reads as richly colored metal rather than a flat
+   silhouette. */
 .theme-cutout-tint,
 .theme-cutout-color {
   position: absolute;
   inset: 0;
+  z-index: 2;
   pointer-events: none;
   background: var(--cutout-tint);
   mix-blend-mode: color;
@@ -54,10 +57,11 @@
   mask-position: center;
 }
 
-/* Secondary soft-light pass so deep shadows also pick up rich theme color when a colored theme (e.g. Red) is active */
+/* Second soft-light pass so deep shadows also pick up the hue. */
 .theme-cutout-sheen {
   position: absolute;
   inset: 0;
+  z-index: 3;
   pointer-events: none;
   background: radial-gradient(
     circle at 50% 30%,
@@ -75,3 +79,11 @@
   -webkit-mask-position: center;
   mask-position: center;
 }
+
+/* On small screens keep just the main colour pass: still strongly tinted, but
+   one compositing layer instead of two. */
+@media (max-width: 900px) {
+  .theme-cutout-sheen { display: none; }
+}
+
+html[data-motion="off"] .theme-cutout.is-floating { animation: none; }

@@ -1,167 +1,175 @@
 import { useEffect, useMemo, useState } from 'react';
-import { APEX_KV_URL, fetchChangeLog } from '../../utils/apexClient';
-import { getTeamMember } from '../../utils/teamMembers';
+import { APEX_KV_URL, fetchChangeLog, fetchArchivedChanges, getAdminHeaders } from '../../utils/apexClient';
+import { EXPECTED_WORKER_VERSION } from '../../config/workerVersion';
+import { isWorkerAtLeast } from '../../utils/workerCompatibility';
+import { TEAM_MEMBERS } from '../../utils/teamMembers';
+import { displayAuditValue, historyChanges, matchHistoryRecord } from '../../utils/auditLog';
 import Dropdown from '../Dropdown';
+import './ActivityLog.css';
 
-// BLAME VIEW — the reimagined Logs: every publish with who/when, and for any
-// unit edit a field-level DIFF (before → after) pulled from the per-unit
-// history the worker already records. Filters by editor, section and kind.
+const SECTION_LABELS = { value: 'Values', wiki: 'Wiki', map: 'Maps', crate: 'Crates', materials: 'Materials', announcement: 'Announcements', announcements: 'Announcements', maintenance: 'Maintenance', bundle: 'Database' };
+const HISTORY_SECTIONS = new Set(['value', 'wiki', 'map', 'crate', 'materials']);
 
-const SECTION_LABELS = {
-  value: 'Values', wiki: 'WIKI', map: 'Maps', crate: 'Crates',
-  materials: 'Materials', announcement: 'Announcements', maintenance: 'Maintenance', bundle: 'Database',
-};
-const KIND_ICONS = { edit: '✏️', delete: '🗑️', create: '✨', restore: '↩️', bundle: '🗄️' };
-
-function timeAgo(iso) {
-  try {
-    const ms = Date.now() - new Date(iso).getTime();
-    if (!Number.isFinite(ms)) return '';
-    const mins = Math.floor(ms / 60000);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins} min ago`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    if (days < 7) return `${days}d ago`;
-    return new Date(iso).toLocaleDateString();
-  } catch { return ''; }
+function editorName(by) {
+  if (!by) return 'Editor not recorded';
+  return TEAM_MEMBERS[String(by).trim().toLowerCase()]?.name || String(by);
 }
 
-const who = (email) => getTeamMember(email);
+function formatTime(value) {
+  const date = new Date(value || '');
+  if (!Number.isFinite(date.getTime())) return 'Time not recorded';
+  return date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+}
 
-function DiffRow({ section, slug }) {
-  const [state, setState] = useState('loading'); // loading | ready | error
-  const [records, setRecords] = useState([]);
-
+function EventDetail({ entry, onRevert }) {
+  const [state, setState] = useState({ status: 'loading', record: null });
   useEffect(() => {
-    let alive = true;
+    const controller = new AbortController();
     (async () => {
       try {
-        const r = await fetch(`${APEX_KV_URL}/history/${section}/${encodeURIComponent(slug)}`);
-        if (!r.ok) throw new Error(String(r.status));
-        const data = await r.json();
-        const rows = Array.isArray(data) ? data : data.history || [];
-        if (alive) { setRecords(rows.slice(-6).reverse()); setState('ready'); }
-      } catch {
-        if (alive) setState('error');
+        const idQuery = entry.id == null ? '?private=1' : `?private=1&id=${encodeURIComponent(String(entry.id))}`;
+        const [response, version] = await Promise.all([
+          fetch(`${APEX_KV_URL}/history/${entry.section}/${encodeURIComponent(entry.slug)}${idQuery}`, { signal: controller.signal, cache: 'no-store', headers: getAdminHeaders() }),
+          fetch(`${APEX_KV_URL}/version`, { signal: controller.signal, cache: 'no-store' }).then((r) => r.ok ? r.json() : null).catch(() => null),
+        ]);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        if (!Array.isArray(data)) throw new Error('Invalid history');
+        setState({ status: 'ready', record: matchHistoryRecord(entry, data), canRestore: isWorkerAtLeast(version?.version, EXPECTED_WORKER_VERSION) });
+      } catch (error) {
+        if (error.name !== 'AbortError') setState({ status: 'error', record: null });
       }
     })();
-    return () => { alive = false; };
-  }, [section, slug]);
+    return () => controller.abort();
+  }, [entry]);
 
-  if (state === 'loading') return <div className="blame-diff-note">Loading history…</div>;
-  if (state === 'error') return <div className="blame-diff-note">No history available for this unit.</div>;
-  if (!records.length) return <div className="blame-diff-note">No recorded edits.</div>;
-
+  if (state.status === 'loading') return <p className="activity-detail-note">Loading this entry’s recorded history…</p>;
+  if (state.status === 'error') return <p className="activity-detail-note">Could not load the unit history. Please try again.</p>;
+  if (!state.record) return <p className="activity-detail-note">A matching field-level record is not available for this entry. The history may be older than the retained records or was not captured.</p>;
+  const fields = historyChanges(state.record);
+  if (!fields) return <p className="activity-detail-note">This record does not contain both field snapshots.</p>;
+  if (!fields.length) return <p className="activity-detail-note">No field differences were recorded in this snapshot.</p>;
   return (
-    <div className="blame-diff-list">
-      {records.map((rec, i) => {
-        const before = rec.before || {};
-        const after = rec.after || {};
-        const changed = [...new Set([...Object.keys(before), ...Object.keys(after)])]
-          .filter((k) => k !== 'updated_at' && k !== 'updated_by' && JSON.stringify(before[k] ?? null) !== JSON.stringify(after[k] ?? null));
-        return (
-          <div key={rec.id || i} className="blame-diff-record">
-            <div className="blame-diff-meta">
-              {who(rec.by).icon} <strong>{who(rec.by).name}</strong>
-              <span className="blame-diff-time">{timeAgo(rec.at)} · {rec.kind || 'edit'}</span>
-            </div>
-            {changed.length === 0 ? (
-              <div className="blame-diff-note">No field changes recorded (publish only).</div>
-            ) : changed.map((field) => (
-              <div key={field} className="blame-diff-field">
-                <span className="blame-diff-key">{field}</span>
-                <span className="blame-diff-val old">{String(before[field] ?? '—').slice(0, 60)}</span>
-                <span className="blame-diff-arrow">→</span>
-                <span className="blame-diff-val new">{String(after[field] ?? '—').slice(0, 60)}</span>
-              </div>
-            ))}
-          </div>
-        );
-      })}
+    <div className="activity-diff" aria-label="Recorded field changes">
+      <div className="activity-diff-head"><span>Field</span><span>Before</span><span>After</span></div>
+      {fields.map(({ key, before, after }) => (
+        <div className="activity-diff-row" key={key}>
+          <strong>{key.replaceAll('_', ' ')}</strong>
+          <span><small>Before</small>{displayAuditValue(before)}</span>
+          <span><small>After</small>{displayAuditValue(after)}</span>
+        </div>
+      ))}
+      {state.canRestore && state.record.before && typeof state.record.before === 'object' && typeof onRevert === 'function' && <button type="button" className="activity-refresh activity-restore" onClick={() => {
+        if (window.confirm('Apply the previous field values for this record? Fields added later will not be removed. This publishes a new change.')) onRevert({ ...entry, before: state.record.before });
+      }}>Apply previous field values</button>}
     </div>
   );
 }
 
-export default function BlameLog() {
+export default function BlameLog({ onRevert }) {
   const [entries, setEntries] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
+  const [archive, setArchive] = useState([]);
+  const [archiveCursor, setArchiveCursor] = useState(null);
+  const [archiveDone, setArchiveDone] = useState(false);
+  const [archiveLoading, setArchiveLoading] = useState(false);
+  const [archiveError, setArchiveError] = useState('');
   const [editor, setEditor] = useState('all');
   const [section, setSection] = useState('all');
-  const [q, setQ] = useState('');
-  const [openDiff, setOpenDiff] = useState(null); // `${section}/${slug}`
+  const [query, setQuery] = useState('');
+  const [openKey, setOpenKey] = useState(null);
 
   async function load() {
-    setLoading(true);
+    setStatus('loading');
     setError('');
     try {
-      const rows = await fetchChangeLog();
-      setEntries(rows);
-      if (!rows.length) setError('No changes recorded yet.');
+      const rows = await fetchChangeLog({ strict: true });
+      setEntries([...rows].sort((a, b) => {
+        const x = Date.parse(a.at || '') || 0;
+        const y = Date.parse(b.at || '') || 0;
+        return y - x;
+      }));
+      setArchive([]); setArchiveCursor(null); setArchiveDone(false); setArchiveError('');
+      setStatus('ready');
     } catch (e) {
-      setError(`Failed to load: ${e.message}`);
+      setError(e?.message || 'Could not load the shared change feed.');
+      setStatus('error');
     }
-    setLoading(false);
   }
-
   useEffect(() => { load(); }, []);
 
-  const editors = useMemo(() => [...new Set(entries.map((e) => e.by).filter(Boolean))], [entries]);
-  const sections = useMemo(() => [...new Set(entries.map((e) => e.section).filter(Boolean))], [entries]);
-
-  const filtered = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    return entries.filter((e) => {
-      if (editor !== 'all' && e.by !== editor) return false;
-      if (section !== 'all' && e.section !== section) return false;
-      if (needle && !(`${e.slug || ''} ${e.detail || ''}`.toLowerCase().includes(needle))) return false;
+  async function loadArchive() {
+    setArchiveLoading(true); setArchiveError('');
+    try {
+      const page = await fetchArchivedChanges(archiveCursor);
+      setArchive((prev) => [...prev, ...page.entries]);
+      setArchiveCursor(page.cursor || null);
+      setArchiveDone(page.complete);
+    } catch (e) { setArchiveError(e?.message || 'Could not load the archive.'); }
+    finally { setArchiveLoading(false); }
+  }
+  const allEntries = useMemo(() => {
+    const seen = new Set();
+    return [...entries, ...archive].filter((entry) => {
+      // A failed final write can leave an archived copy in the recent feed.
+      // Only deduplicate stable IDs; never merge unrelated legacy entries.
+      if (entry.id == null) return true;
+      const id = String(entry.id);
+      if (seen.has(id)) return false;
+      seen.add(id);
       return true;
     });
-  }, [entries, editor, section, q]);
+  }, [entries, archive]);
+  const editors = useMemo(() => [...new Set(allEntries.map((e) => e.by).filter(Boolean))], [allEntries]);
+  const sections = useMemo(() => [...new Set(allEntries.map((e) => e.section).filter(Boolean))], [allEntries]);
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return allEntries.filter((e) => (editor === 'all' || e.by === editor) && (section === 'all' || e.section === section) &&
+      (!q || `${e.slug || ''} ${e.detail || ''} ${e.kind || ''} ${editorName(e.by)}`.toLowerCase().includes(q)));
+  }, [allEntries, editor, section, query]);
 
   return (
-    <section className="blame-wrap card">
-      <div className="blame-head">
-        <h2>🕵️ Activity &amp; Blame</h2>
-        <button type="button" onClick={load} disabled={loading}>{loading ? 'Refreshing…' : '↻ Refresh'}</button>
+    <section className="activity card" aria-labelledby="activity-title">
+      <div className="activity-head">
+        <div><span className="activity-kicker">SERVER RECORDS</span><h2 id="activity-title">Shared activity</h2></div>
+        <button type="button" className="activity-refresh" onClick={load} disabled={status === 'loading'}>{status === 'loading' ? 'Refreshing…' : 'Refresh'}</button>
       </div>
-      <p className="blame-sub">Every publish, who made it, and exactly which fields changed. Expand a row to see the diff.</p>
-
-      <div className="blame-filters">
-        <Dropdown compact className="blame-select" value={editor} onChange={setEditor}
-          options={[{ value: 'all', label: 'All editors' }, ...editors.map((em) => ({ value: em, label: who(em).name }))]}
-          ariaLabel="Filter by editor" />
-        <Dropdown compact className="blame-select" value={section} onChange={setSection}
-          options={[{ value: 'all', label: 'All sections' }, ...sections.map((sec) => ({ value: sec, label: SECTION_LABELS[sec] || sec }))]}
-          ariaLabel="Filter by section" />
-        <input className="admin-search blame-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search slug or detail…" aria-label="Search changes" />
+      <p className="activity-intro">Server-recorded changes only. The recent feed shows up to 200 entries; older entries saved by the updated worker can be loaded from the archive. History from before archiving, or a failed audit write, may be unavailable.</p>
+      <div className="activity-toolbar">
+        <input className="admin-search activity-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search changes…" aria-label="Search shared activity" />
+        <Dropdown compact value={section} onChange={setSection} ariaLabel="Filter activity by section" options={[{ value: 'all', label: 'All sections' }, ...sections.map((sec) => ({ value: sec, label: SECTION_LABELS[sec] || sec }))]} />
+        <Dropdown compact value={editor} onChange={setEditor} ariaLabel="Filter activity by editor" options={[{ value: 'all', label: 'All editors' }, ...editors.map((by) => ({ value: by, label: editorName(by) }))]} />
       </div>
-
-      {error && <div className="blame-note">{error}</div>}
-
-      <div className="blame-list" data-lenis-prevent>
-        {filtered.slice(0, 150).map((e, i) => {
-          const key = `${e.section}/${e.slug}`;
-          const canDiff = e.slug && ['value', 'wiki', 'map', 'crate', 'materials'].includes(e.section);
-          const open = openDiff === key;
-          return (
-            <div key={e.id || i} className={`blame-row${open ? ' open' : ''}`}>
-              <button type="button" className="blame-row-head" onClick={() => setOpenDiff(open ? null : key)} disabled={!canDiff}>
-                <span className="blame-icon">{KIND_ICONS[e.kind] || '•'}</span>
-                <span className="blame-detail">{e.detail || `${e.kind} ${e.section}`}</span>
-                <span className="blame-section-tag">{SECTION_LABELS[e.section] || e.section}</span>
-                <span className="blame-who">{who(e.by).icon} {who(e.by).name}</span>
-                <span className="blame-time">{timeAgo(e.at)}</span>
-                {canDiff && <span className="blame-chev">{open ? '▾' : '▸'}</span>}
-              </button>
-              {open && <DiffRow section={e.section} slug={e.slug} />}
-            </div>
-          );
-        })}
-        {!loading && filtered.length === 0 && !error && <div className="blame-note">Nothing matches those filters.</div>}
-      </div>
+      <div className="activity-summary"><span>{status === 'ready' ? `${filtered.length} shown · ${allEntries.length} loaded` : status === 'loading' ? 'Loading records…' : 'Records unavailable'}</span><span>Newest recorded first</span></div>
+      {error && <p className="activity-alert" role="alert">{error} Check the admin login and worker connection, then refresh.</p>}
+      {status === 'ready' && !filtered.length && <p className="activity-empty">{allEntries.length ? 'No records match these filters.' : 'The server returned no recent recorded changes.'}</p>}
+      {status === 'ready' && filtered.length > 0 && (
+        <div className="activity-list" data-lenis-prevent>
+          {filtered.map((entry, index) => {
+            const key = `${entry.id ?? 'legacy'}-${entry.section ?? ''}-${entry.slug ?? ''}-${entry.at ?? index}`;
+            const expandable = Boolean(entry.slug && HISTORY_SECTIONS.has(entry.section));
+            const open = openKey === key;
+            const title = entry.detail || [entry.kind, entry.section, entry.slug].filter(Boolean).join(' · ') || 'Change (details not recorded)';
+            return (
+              <article className={`activity-row${open ? ' is-open' : ''}`} key={key}>
+                <div className="activity-row-main">
+                  <span className="activity-marker" aria-hidden="true" />
+                  <div className="activity-row-copy"><strong>{title}</strong><span>{entry.slug || 'No unit recorded'} · {SECTION_LABELS[entry.section] || entry.section || 'Section not recorded'}</span></div>
+                  <div className="activity-row-meta"><strong>{editorName(entry.by)}</strong><time dateTime={entry.at || undefined}>{formatTime(entry.at)}</time></div>
+                  {expandable && <button type="button" className="activity-details-button" aria-expanded={open} onClick={() => setOpenKey(open ? null : key)}>{open ? 'Close' : 'Details'}</button>}
+                </div>
+                {open && <EventDetail entry={entry} onRevert={onRevert} />}
+              </article>
+            );
+          })}
+        </div>
+      )}
+      {status === 'ready' && <div className="activity-archive">
+        {!archiveDone && <button type="button" className="activity-refresh" onClick={loadArchive} disabled={archiveLoading}>{archiveLoading ? 'Loading archive…' : 'Load older archived changes'}</button>}
+        {archiveDone && <span>All available archived entries loaded.</span>}
+        {archiveError && <span role="alert">{archiveError} Check that the updated shared worker is deployed.</span>}
+      </div>}
     </section>
   );
 }

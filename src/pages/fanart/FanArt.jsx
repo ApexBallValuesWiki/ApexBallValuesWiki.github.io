@@ -64,7 +64,7 @@ export default function FanArt() {
 
   return (
     <PageShell sidebarTitle="WIKI" navTree={WIKI_NAV}>
-      <PageIntro eyebrow="Community Creations" title="FanArt">
+      <PageIntro title="FanArt" cutoutVariant="partyman">
         <p>
           Explore amazing fan-created artwork featuring units from Ball Tower Defense!
           All submitted art is community-vetted and approved for display here.

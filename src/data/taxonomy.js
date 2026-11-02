@@ -251,8 +251,9 @@ export const SKINS = {
   '???': ['Chud Worm', 'Mr. Clark', 'Present Of Doom', 'The Spoon Man', 'True Ooze Master'],
 };
 
-// TRADE CALCULATOR — FORMULA CONSTANTS
-// TradeValue = BaseValue × DemandMultiplier × ScarcityMultiplier
+// Legacy tier weights are retained for compatibility and label ordering only.
+// The current calculator uses the entered base value directly; these weights
+// do not multiply trade values.
 export const DEMAND = {
   Abysmal: 0.94,
   'Extremely Low': 0.95,

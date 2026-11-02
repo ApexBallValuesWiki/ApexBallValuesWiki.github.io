@@ -1,6 +1,5 @@
-/**
- * Analytics — page views, feature usage, search tracking (owner only)
- */
+/** Local-only usage statistics, disabled until the visitor opts in. */
+import { localStatsAllowed } from './privacyChoices';
 
 const ANALYTICS_KEY = 'apex-analytics-v1';
 const MAX_ENTRIES = 5000;
@@ -18,17 +17,20 @@ function saveAnalytics(data) {
     if (data.pageViews.length > MAX_ENTRIES) data.pageViews = data.pageViews.slice(-MAX_ENTRIES);
     if (data.searches.length > MAX_ENTRIES) data.searches = data.searches.slice(-MAX_ENTRIES);
     if (data.features.length > MAX_ENTRIES) data.features = data.features.slice(-MAX_ENTRIES);
+    if (data.editors.length > MAX_ENTRIES) data.editors = data.editors.slice(-MAX_ENTRIES);
     localStorage.setItem(ANALYTICS_KEY, JSON.stringify(data));
   } catch { /* ignore */ }
 }
 
 export function trackPageView(path) {
+  if (!localStatsAllowed()) return;
   const data = loadAnalytics();
   data.pageViews.push({ path, at: Date.now() });
   saveAnalytics(data);
 }
 
 export function trackSearch(query) {
+  if (!localStatsAllowed()) return;
   if (!query || !query.trim()) return;
   const data = loadAnalytics();
   data.searches.push({ query: query.trim(), at: Date.now() });
@@ -36,12 +38,14 @@ export function trackSearch(query) {
 }
 
 export function trackFeature(feature) {
+  if (!localStatsAllowed()) return;
   const data = loadAnalytics();
   data.features.push({ feature, at: Date.now() });
   saveAnalytics(data);
 }
 
 export function trackEditorAction(editor, action) {
+  if (!localStatsAllowed()) return;
   const data = loadAnalytics();
   data.editors.push({ editor, action, at: Date.now() });
   saveAnalytics(data);
@@ -49,7 +53,7 @@ export function trackEditorAction(editor, action) {
 
 // Aggregate stats for the analytics dashboard
 export function getAnalyticsStats() {
-  const data = loadAnalytics();
+  const data = localStatsAllowed() ? loadAnalytics() : { pageViews: [], searches: [], features: [], editors: [] };
   const now = Date.now();
   const day = 86400000;
   const week = day * 7;

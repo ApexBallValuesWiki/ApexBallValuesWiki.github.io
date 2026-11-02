@@ -37,7 +37,7 @@ export async function buildFullPublishBundle({ freshKV = false } = {}) {
     kvData = kvCache;
   } else {
     try {
-      const res = await fetch(`${APEX_KV_URL}/overrides?_=${Date.now()}`).catch(() => null);
+      const res = await fetch(`${APEX_KV_URL}/overrides?_=${Date.now()}`, { headers: getAdminHeaders(), cache: 'no-store' }).catch(() => null);
       if (res && res.ok) {
         kvData = await res.json();
         kvCache = kvData;
@@ -47,6 +47,9 @@ export async function buildFullPublishBundle({ freshKV = false } = {}) {
       console.warn('[APEX] Failed to fetch current KV bundle:', e);
     }
   }
+
+  // Never publish a partial fallback over the live shared database.
+  if (!kvData || typeof kvData.__v !== 'number') throw new Error('A verified, current database snapshot is required to publish. Please reconnect and retry.');
 
   const bakedData = await fetchBakedBackupBundle() || {};
   const localValues = loadLocalValueOverrides() || {};
@@ -64,6 +67,7 @@ export async function buildFullPublishBundle({ freshKV = false } = {}) {
   ];
 
   const result = {
+    ...kvData, // Preserve sections such as materials and the deletion registry.
     timestamp: new Date().toISOString(),
     __baseVersion: typeof kvData?.__v === 'number' ? kvData.__v : undefined,
   };
@@ -114,10 +118,11 @@ export async function pushBundleToCloudflareKV(bundle, { isRestore = false, onSt
 
     if (response.ok) {
       const data = await response.json().catch(() => ({}));
-      onStatus?.(isRestore
-        ? '✅ FULL DATABASE RESTORED!'
-        : '✓ Saved & Published live to Cloudflare KV database! Updates are active for all players instantly.');
-      return { ok: true, version: data.version, conflict: false };
+      onStatus?.(!data.audit
+        ? '⚠️ Database published, but this worker did not report audit status.'
+        : data.audit.changeLog === false ? '⚠️ Database published, but the shared audit entry could not be saved. Contact the owner.'
+        : isRestore ? '✅ Full database restored.' : '✓ Published to the shared database.');
+      return { ok: true, version: data.version, conflict: false, audit: data.audit };
     }
 
     const errData = await response.json().catch(() => ({}));

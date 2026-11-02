@@ -3,6 +3,7 @@ import PageShell from '../../components/PageShell';
 import { WIKI_NAV } from '../../config/navigation';
 import { getMapBySlug } from '../../data/maps';
 import { useData } from '../../context/DataContext';
+import { resolveImageUrl } from '../../utils/localAssets';
 
 export default function MapDetail() {
   const { slug } = useParams();
@@ -22,7 +23,7 @@ export default function MapDetail() {
         <div className="unit-body">
           {(map.image || map.image_url || map.imageUrl) && (
             <div className="map-detail-image" style={{ width: '100%', height: '240px', borderRadius: '14px', overflow: 'hidden', marginBottom: '20px', border: '1px solid var(--border, rgba(255,255,255,0.12))', background: '#0c0c12' }}>
-              <img src={map.image || map.image_url || map.imageUrl} alt={map.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={resolveImageUrl(map.image || map.image_url || map.imageUrl)} alt={map.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
           )}
           {map.description && <p className="unit-desc">{map.description}</p>}

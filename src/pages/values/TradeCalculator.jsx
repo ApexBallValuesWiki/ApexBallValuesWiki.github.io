@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageShell from '../../components/PageShell';
 import { VALUES_NAV } from '../../config/navigation';
-import { DEMAND, SCARCITY, getRarityGlow, isShinyRarity } from '../../data/taxonomy';
+import { getRarityGlow, isShinyRarity } from '../../data/taxonomy';
 import { useLiveValues } from '../../hooks/useLiveValues';
 import { evaluateTrade, valueFromGems, valueFromCoins, gemsFromValue, coinsFromValue } from '../../utils/calculator';
 import { encodeState, decodeState, loadFromLocalStorage, saveToLocalStorage } from '../../utils/tradePersistence';
@@ -12,9 +12,10 @@ import ThemeCutout from '../../components/ThemeCutout';
 import { getUnitIcon } from '../../data/unitIcons';
 import ValueEntryPicker from '../../components/ValueEntryPicker';
 import { CURRENCIES, CURRENCY_BY_SLUG, clampQuantity, isCurrencySlug } from '../../data/currency';
-import { formatCompactNumber, formatFullNumber } from '../../utils/formatNumber';
+import { formatCompactNumber, formatFullNumber, parseCompactValue } from '../../utils/formatNumber';
 import AdSlot from '../../components/AdSlot';
 import { incrementStat } from '../../utils/achievements';
+import calculatorDecoration from '../../assets/units/provided/hephaestusball.png';
 import './TradeCalculator.css';
 
 let idCounter = 0;
@@ -374,7 +375,7 @@ export default function TradeCalculator() {
           className="calc-head-cutout"
         />
         <div>
-          <h1>Trade Calculator</h1>
+          <h1><ThemeCutout as="span" className="calc-heading-art" src={calculatorDecoration} /><span>Trade Calculator</span></h1>
           <p className="crumb">Values / Trade Calculator</p>
           {liveValuesError && <p className="pending-flag">Live values could not load; using bundled fallback values.</p>}
         </div>
@@ -423,7 +424,7 @@ export default function TradeCalculator() {
       </div>
 
       <TradeHistory history={history} onLoad={loadHistoryTrade} onDelete={deleteHistoryTrade} />
-      <AdSlot slotId="2911497117" />
+      <AdSlot placement="calculator" />
 
       {currencyModal && (
         <CurrencyAmountModal
@@ -798,12 +799,6 @@ function verdictClass(result) {
   return 'fair';
 }
 
-function multiplierLabel(table, label) {
-  const mult = table[label];
-  if (mult == null) return label;
-  return `${label} (${mult}×)`;
-}
-
 function TradeHistory({ history, onLoad, onDelete }) {
   if (!history?.length) return null;
 
@@ -947,7 +942,7 @@ function TradeSide({ side, label, entries, setEntries, computed, valueEntries, r
                     {resolved.specialValue || resolved.rarity}
                   </span>
                   <span className="calc-entry-tiers">
-                    {multiplierLabel(DEMAND, resolved.demand)} · {multiplierLabel(SCARCITY, resolved.scarcity)}
+                    Demand: {resolved.demand || '—'} · Scarcity: {resolved.scarcity || '—'}
                   </span>
                     </>
                   )}
@@ -964,10 +959,11 @@ function TradeSide({ side, label, entries, setEntries, computed, valueEntries, r
                   </button>
                   <input
                     className={isCurrency ? 'calc-qty-input calc-qty-input-wide' : 'calc-qty-input'}
-                    type="number"
-                    min={isCurrency ? 0 : 1}
+                    type={isCurrency ? 'text' : 'number'}
+                    inputMode={isCurrency ? 'text' : undefined}
+                    min={isCurrency ? undefined : 1}
                     max={isCurrency ? undefined : 9999}
-                    step={isCurrency ? 1000 : 1}
+                    step={isCurrency ? undefined : 1}
                     value={entry.quantity}
                     onChange={(e) => updateQuantity(entry.id, e.target.value)}
                     aria-label={isCurrency ? `Amount for ${resolved.name}` : `Quantity for ${resolved.name}`}
@@ -1012,7 +1008,8 @@ function TradeSide({ side, label, entries, setEntries, computed, valueEntries, r
 // market-ratio preview; Enter adds, Escape closes.
 function CurrencyAmountModal({ sideLabel, currency, existingAmount = 0, onClose, onConfirm }) {
   const [raw, setRaw] = useState('');
-  const amount = Math.floor(Number(String(raw).replace(/[\s,_]/g, '')) || 0);
+  const parsed = parseCompactValue(raw);
+  const amount = Math.floor(parsed ?? 0);
   const preview = amount > 0
     ? (currency.kind === 'gems' ? valueFromGems(amount) : valueFromCoins(amount))
     : 0;
@@ -1049,8 +1046,8 @@ function CurrencyAmountModal({ sideLabel, currency, existingAmount = 0, onClose,
           ref={inputRef}
           className="cam-input"
           type="text"
-          inputMode="numeric"
-          placeholder={`Amount of ${currency.name}`}
+          inputMode="text"
+          placeholder={`Amount of ${currency.name} — e.g. 20M`}
           value={raw}
           onChange={(e) => setRaw(e.target.value)}
           onKeyDown={(e) => {
@@ -1059,6 +1056,7 @@ function CurrencyAmountModal({ sideLabel, currency, existingAmount = 0, onClose,
           }}
           aria-label={`${currency.name} amount`}
         />
+        <small className="cam-suffix-hint">K / M / B / T accepted · 20M = {formatFullNumber(20_000_000)}</small>
 
         <div className="cam-quick">
           {currency.quickAmounts.map((value) => (
@@ -1066,7 +1064,7 @@ function CurrencyAmountModal({ sideLabel, currency, existingAmount = 0, onClose,
               type="button"
               key={value}
               className={amount === value && raw ? 'cam-chip on' : 'cam-chip'}
-              onClick={() => setRaw(String(value))}
+              onClick={() => setRaw(formatCompactNumber(value))}
             >
               {formatCompactNumber(value)}
             </button>

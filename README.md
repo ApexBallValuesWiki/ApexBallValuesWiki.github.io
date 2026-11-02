@@ -5,6 +5,27 @@ React 19 + Vite, deployed to GitHub Pages with **clean URLs, pre-rendered
 pages, social cards, and live updates** — powered end-to-end by a free
 Cloudflare Workers KV database (no Supabase).
 
+## New in `2026-11-02.5`
+
+- **Command palette** — `⌘K` / `Ctrl+K` (or the header search button) searches
+  pages and units, with arrow keys, Enter and Escape.
+- **OFFLINE Values mode** — the LIVE/OFFLINE chip in the header switches to the
+  baked snapshot + cache, with a visible badge; the choice is remembered.
+- **Stat tooltips** — short, redesigned accent-tinted hover/focus popovers. The
+  standalone stat glossary page and click-to-pin popovers were removed.
+- **Uniform WIKI cards** — DPS and $/DPS use the same bordered stat boxes as
+  Damage / Cooldown / Range / Placement; bottom tag chips are gone.
+- **K / M / B / T everywhere** — type `20M` into admin value fields, spreadsheet
+  cells, the budget box or the calculator's Gems / Coins fields; large numbers
+  display compact across the site while exact values stay in tooltips.
+- **“What can I afford?”** — standalone reverse research page at
+  `/values/afford` with custom dropdown filters. Shiny Omega and O/C units
+  become affordable from a `300M` budget (`???` units stay excluded).
+- **Display names** — `ShadowPrince (SP)`, `NightmareBall (NM)`, and shiny
+  variants `NightmareBall` / `CorruptMalware` (the rarity badge says Shiny).
+- **Stronger hero tint** — colour-blended accent plus an overlay gradient and
+  higher-contrast portrait treatment.
+
 ## Run locally
 ```bash
 npm install

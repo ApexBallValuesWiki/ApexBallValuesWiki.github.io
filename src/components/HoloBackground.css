@@ -4,29 +4,28 @@
   z-index: -1;
   overflow: hidden;
   background: var(--bg);
+  pointer-events: none;
 }
 
 .holo-grid {
   position: absolute;
-  inset: -200px;
+  inset: 0;
   background-image:
-    linear-gradient(to right, color-mix(in srgb, #ffffff calc(var(--theme-grid-opacity, 0.07) * 100%), transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in srgb, #ffffff calc(var(--theme-grid-opacity, 0.07) * 100%), transparent) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
   background-size: 96px 96px;
-  mask-image: radial-gradient(ellipse 90% 75% at 50% 15%, #000 20%, transparent 100%);
-  -webkit-mask-image: radial-gradient(ellipse 90% 75% at 50% 15%, #000 20%, transparent 100%);
+  opacity: calc(var(--theme-grid-opacity, 0.07) * 10);
 }
 
 .holo-particles {
   position: absolute;
-  inset: -100px;
+  inset: 0;
   background-image:
-    radial-gradient(1.2px 1.2px at 15% 25%, rgba(255, 255, 255, 0.18), transparent),
+    radial-gradient(1.2px 1.2px at 15% 25%, rgba(255, 255, 255, 0.16), transparent),
     radial-gradient(1px 1px at 45% 65%, rgba(255, 255, 255, 0.12), transparent),
-    radial-gradient(1.5px 1.5px at 75% 35%, rgba(255, 255, 255, 0.15), transparent),
-    radial-gradient(1px 1px at 85% 85%, rgba(255, 255, 255, 0.1), transparent);
+    radial-gradient(1.5px 1.5px at 75% 35%, rgba(255, 255, 255, 0.14), transparent);
   background-size: 360px 360px;
-  opacity: calc(var(--theme-vfx, 0.9) * 0.65);
+  opacity: calc(var(--theme-vfx, 0.9) * 0.55);
 }
 
 .holo-vignette {
@@ -34,16 +33,16 @@
   inset: 0;
   background:
     radial-gradient(900px 420px at 50% -8%, color-mix(in srgb, var(--accent) 5%, transparent), transparent 70%),
-    radial-gradient(140% 100% at 50% 0%, transparent 0%, transparent 60%, var(--bg) 100%);
+    radial-gradient(140% 100% at 50% 0%, transparent 0%, transparent 58%, var(--bg) 100%);
 }
 
 .holo-scanline {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.02) 50%, transparent 100%);
+  background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.018) 50%, transparent 100%);
   height: 240px;
   opacity: calc(var(--theme-scanline-opacity, 0.06) * var(--theme-vfx, 0.9));
-  animation: holo-scan calc(14s / var(--theme-speed, 1)) linear infinite;
+  animation: holo-scan calc(22s / var(--theme-speed, 1)) linear infinite;
 }
 
 @keyframes holo-scan {
@@ -51,33 +50,50 @@
   100% { transform: translateY(100vh); }
 }
 
-.holo-crt-scanlines {
-  position: fixed;
-  inset: 0;
-  z-index: 45;
-  pointer-events: none;
-  background:
-    repeating-linear-gradient(
-      0deg,
-      rgba(255, 255, 255, 0.022) 0px,
-      rgba(255, 255, 255, 0.022) 1px,
-      transparent 1px,
-      transparent 4px
-    );
-  opacity: calc(var(--theme-scanline-opacity, 0.06) * 0.55);
-  mix-blend-mode: screen;
-}
+/* The opaque landing hero hides this layer. Remove it entirely instead of
+   leaving a paused (but still allocated) animation running behind the hero. */
+html[data-apex-hero-visible="true"] .holo-scanline { visibility: hidden; animation: none; }
 
-@media (prefers-reduced-motion: reduce) {
-  .holo-grid,
-  .holo-scanline,
-  .holo-crt-scanlines {
-    animation: none;
-  }
+/* Lightweight CRT texture. No mix-blend-mode (the old full-screen screen
+   blend caused a ~90% FPS drop on Firefox Mobile). Desktop only, GPU-cheap
+   transform, and fully suppressed when motion is disabled.
+   It MUST stay inside `.holo-bg` (pointer-events:none, z-index:-1): as a bare
+   root sibling this absolutely-positioned sheet covered the whole document
+   and silently swallowed every click on links and buttons. */
+.holo-bg .holo-crt-scanlines {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: calc(var(--theme-scanline-opacity, 0.06) * 0.5);
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.035) 0px,
+    rgba(255, 255, 255, 0.035) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  animation: holo-crt-drift calc(8s / var(--theme-speed, 1)) linear infinite;
+}
+@keyframes holo-crt-drift {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(0, 4px, 0); }
 }
 
 @media (max-width: 900px) {
-  .holo-crt-scanlines {
+  /* Only the heavy particle/scanline layers are disabled on small screens.
+     The CRT texture has no mix-blend-mode and is a single compositor-friendly
+     transform, so it stays active — mobile and tablet otherwise had ZERO
+     running animations after their intro effects finished ("animations only
+     work on desktop"). */
+  .holo-scanline,
+  .holo-particles {
     display: none;
+    animation: none;
   }
+  .holo-crt-scanlines { opacity: calc(var(--theme-scanline-opacity, 0.06) * 0.3); }
 }
+html[data-reduced-motion="true"] .holo-crt-scanlines,
+html[data-anim-speed="none"] .holo-crt-scanlines { animation: none; }
+@media (prefers-reduced-motion: reduce) {html:not([data-motion="on"]) .holo-crt-scanlines { animation: none; } }
+

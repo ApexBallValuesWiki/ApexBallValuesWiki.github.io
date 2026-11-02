@@ -133,13 +133,13 @@
 /* ============================================================
    REDUCED MOTION
    ============================================================ */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+@media (prefers-reduced-motion: reduce) {html:not([data-motion="on"]) *, html:not([data-motion="on"]) *::before, html:not([data-motion="on"]) *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
+
 
 /* ============================================================
    FOCUS INDICATORS (Accessibility)
@@ -164,6 +164,13 @@ textarea:focus-visible {
    ============================================================ */
 html {
   scroll-behavior: smooth;
+}
+/* Avoid native smooth-scrolling fighting Lenis on each animation frame. */
+html.lenis,
+html[data-smooth-scroll="false"],
+html[data-reduced-motion="true"],
+html[data-anim-speed="none"] {
+  scroll-behavior: auto !important;
 }
 
 .admin-unit-list,

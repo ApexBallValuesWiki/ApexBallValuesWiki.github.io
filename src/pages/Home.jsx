@@ -1,428 +1,127 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { ALL_UNITS } from '../data/units';
+import { useData } from '../context/DataContext';
 import { isShinyRarity } from '../data/taxonomy';
-import logoImg from '../assets/apex-values-wiki-logo.png';
+import { formatCompactNumber } from '../utils/formatNumber';
+import { useWikiImageOverrides } from '../hooks/useWikiImageOverrides';
+import UnitIcon from '../components/UnitIcon';
+import wikiFeatureDecoration from '../assets/units/provided/laserminigunner.png';
+import HeroShowcase from '../components/HeroShowcase';
 import ThemeCutout from '../components/ThemeCutout';
+import CoolIcon from '../components/CoolIcon';
+import LandingCalculator from '../components/LandingCalculator';
+import AdSlot from '../components/AdSlot';
+// Optional website illustration icons; never used as unit image overrides.
+import wikiDecoration from '../assets/units/provided/baller.png';
+import valuesDecoration from '../assets/units/provided/brainball.png';
+import gamesDecoration from '../assets/units/provided/showmanball.png';
 import './Home.css';
 
-const BASE_UNIT_COUNT = ALL_UNITS.filter((u) => !isShinyRarity(u.rarity)).length;
-
-const EASE_OUT = [0.23, 1, 0.32, 1];
-
-const SHOWCASE_SLIDES = [
-  { id: 'overlord', cutout: 'overlord', ctaLabel: 'Explore Values', ctaTo: '/values' },
-  { id: 'poseidon', cutout: 'poseidon', ctaLabel: 'Browse WIKI', ctaTo: '/wiki' },
-  { id: 'king', cutout: 'king', ctaLabel: 'Trade Calculator', ctaTo: '/values/calculator' },
-  { id: 'laserminigunner', cutout: 'laserminigunner', ctaLabel: 'Leaderboards', ctaTo: '/wiki/leaderboards' },
-  { id: 'hacker', cutout: 'hacker', ctaLabel: 'Compare Units', ctaTo: '/wiki/compare' },
-  { id: 'drone', cutout: 'drone', ctaLabel: 'Play Arcade', ctaTo: '/minigames' },
-  { id: 'forest', cutout: 'forest', ctaLabel: 'Theme Studio', ctaTo: '/themes' },
-  { id: 'elfcommander', cutout: 'elfcommander', ctaLabel: 'Unit Search', ctaTo: '/values/units/search' },
-  { id: 'partyman', cutout: 'partyman', ctaLabel: 'Achievements', ctaTo: '/achievements' },
+const BASE_UNIT_COUNT = ALL_UNITS.filter((unit) => !isShinyRarity(unit.rarity)).length;
+const DESTINATIONS = [
+  { to: '/wiki', label: 'Wiki', text: 'Stats, upgrades and how to obtain each unit.', icon: wikiDecoration },
+  { to: '/values', label: 'Values', text: 'Browse estimates, demand and scarcity.', icon: valuesDecoration },
+  { to: '/minigames', label: 'Minigames', text: 'Put your Ball TD knowledge to the test.', icon: gamesDecoration },
+];
+const COMMUNITY = [
+  { label: 'Credits', description: 'The people behind the wiki', to: '/credits' },
+  { label: 'Play Ball TD', description: 'Official Roblox experience', href: 'https://www.roblox.com/games/18343561950/Ball-Tower-Defense' },
+  { label: 'Official Discord', description: 'Ball Tower Defense community', href: 'https://discord.gg/kWhpVncQwr' },
+  { label: 'Cash Grab Studios', description: 'Official Roblox community', href: 'https://www.roblox.com/communities/32380537/Cash-Grab-Studios#!/about' },
+  { label: 'YouTube', description: 'Cash Grab Studios channel', href: 'https://www.youtube.com/@CashGrabStudios' },
 ];
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.06, delayChildren: 0.04 },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 18, scale: 0.985 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.42, ease: EASE_OUT },
-  },
-};
-
 export default function Home() {
-  const [slideIndex, setSlideIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
+  const { unitValues } = useData();
+  const unitCount = unitValues?.filter((u) => u.kind !== 'item' && !u.shiny && !isShinyRarity(u.rarity)).length || BASE_UNIT_COUNT;
 
-  useEffect(() => {
-    if (paused) return undefined;
-    const timer = setInterval(() => {
-      setSlideIndex((prev) => (prev + 1) % SHOWCASE_SLIDES.length);
-    }, 5200);
-    return () => clearInterval(timer);
-  }, [paused]);
-
-  const activeSlide = SHOWCASE_SLIDES[slideIndex];
-  const prevSlide = SHOWCASE_SLIDES[(slideIndex - 1 + SHOWCASE_SLIDES.length) % SHOWCASE_SLIDES.length];
-  const nextSlide = SHOWCASE_SLIDES[(slideIndex + 1) % SHOWCASE_SLIDES.length];
+  const featuredValueUnits = useMemo(() => (unitValues || [])
+    .filter((u) => u.kind !== 'item' && u.hasValue && !u.shiny && !isShinyRarity(u.rarity) && Number.isFinite(u.tradeValue) && u.tradeValue > 0)
+    .sort((a, b) => b.tradeValue - a.tradeValue).slice(0, 4), [unitValues]);
+  const calculatorUnits = useMemo(() => (unitValues || [])
+    .filter((u) => u.kind !== 'item' && u.hasValue && !u.shiny && !isShinyRarity(u.rarity) && Number.isFinite(u.tradeValue) && u.tradeValue > 0)
+    .sort((a, b) => b.tradeValue - a.tradeValue).slice(0, 40), [unitValues]);
+  const { imageMap } = useWikiImageOverrides(
+    [...new Set([...featuredValueUnits.map((unit) => unit.slug), ...calculatorUnits.map((unit) => unit.slug)])],
+  );
 
   return (
-    <motion.main
-      className="home"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      {/* Clean Editorial Showcase Stage */}
-      <motion.section
-        className="home-hero-stage"
-        variants={itemVariants}
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        aria-label="Featured Apex Showcase"
-      >
-        <div className="hero-ribbon-bg" aria-hidden="true">
-          <div className="hero-ribbon-wave wave-1" />
-          <div className="hero-ribbon-wave wave-2" />
-          <svg className="hero-trajectory-svg" viewBox="0 0 1200 600" preserveAspectRatio="none">
-            <line
-              x1="140"
-              y1="580"
-              x2="1080"
-              y2="30"
-              stroke="rgba(255,255,255,0.12)"
-              strokeWidth="1.5"
-              strokeDasharray="6 8"
-            />
-          </svg>
-        </div>
+    <div className="home-layout-wrapper">
+      <div className="home-side-ad left"><AdSlot placement="home" /></div>
+      <main className="home">
+        <HeroShowcase />
 
-        {/* Center Main Stage Grid */}
-        <div className="hero-stage-grid">
-          {/* Left Editorial Copy */}
-          <div className="hero-editorial-left">
-            <h1 className="hero-title">
-              THE <span className="hero-highlight">DEFINITIVE</span> WIKI &amp; VALUES WEBSITE FOR BALL TOWER DEFENSE
-            </h1>
-            <p className="hero-subtitle">
-              {BASE_UNIT_COUNT} Units, All Values &amp; Trade Calculator, Ball Knowledge, Stat sheets, Rankings and MUCH more!
-            </p>
-            <div className="hero-actions">
-              <Link to="/values" className="hero-btn primary">
-                Explore Values <span aria-hidden="true">→</span>
+        <section id="inside-apex" className="landing-intro landing-container" aria-labelledby="landing-intro-title">
+          <div className="landing-intro-main" data-scroll-reveal>
+            <h2 id="landing-intro-title">Wiki, values<br />and games.</h2>
+            <p>Browse unit stats, check trading values, and play three Ball Tower Defense minigames.</p>
+          </div>
+          <div className="landing-destinations">
+            {DESTINATIONS.map((item) => <Link key={item.to} to={item.to} className="landing-destination">
+              <ThemeCutout as="span" src={item.icon} className="landing-destination-art" />
+              <div><strong>{item.label}</strong><span>{item.text}</span></div>
+              <CoolIcon name="arrow-up-right" size={20} />
+            </Link>)}
+          </div>
+        </section>
+
+        <section className="landing-market landing-container" aria-labelledby="landing-market-title">
+          <div className="landing-market-copy" data-scroll-reveal>
+            <h2 id="landing-market-title">Unit<br />values.</h2>
+            <p>Compare current estimates, demand and scarcity for {unitCount} units.</p>
+            <Link to="/values" className="landing-text-link">Explore values <CoolIcon name="arrow-up-right" size={18} /></Link>
+          </div>
+          <div className="landing-market-list" data-scroll-reveal>
+            <div className="landing-list-head"><strong>Highest-valued units</strong><Link to="/values/units/search">View all <CoolIcon name="arrow-up-right" size={15} /></Link></div>
+            {featuredValueUnits.length ? featuredValueUnits.map((unit, index) => (
+              <Link key={unit.slug} className="landing-market-row" to={`/values/units/${encodeURIComponent(unit.rarity)}/${unit.slug}`}>
+                <span className="landing-row-number">{String(index + 1).padStart(2, '0')}</span>
+                <UnitIcon slug={unit.slug} name={unit.name} shiny={isShinyRarity(unit.rarity)} size={46} imageUrl={imageMap[unit.slug] || unit.imageUrl} />
+                <span className="landing-unit-name"><strong>{unit.name}</strong><small>{unit.rarity} · {unit.demand || 'Normal'} demand</small></span>
+                <span className="showcase-unit-price">{formatCompactNumber(unit.tradeValue)}</span>
+                <CoolIcon name="arrow-up-right" size={16} />
               </Link>
-              <Link to="/wiki" className="hero-btn secondary">
-                Browse WIKI
-              </Link>
-              <Link to="/values/calculator" className="hero-btn secondary">
-                Trade Calculator
-              </Link>
+            )) : <p className="landing-empty">Value estimates are not available right now.</p>}
+          </div>
+        </section>
+
+        <section className="landing-wiki" aria-labelledby="landing-wiki-title">
+          <div className="landing-wiki-art" aria-hidden="true">
+            <span>WIKI</span>
+            <ThemeCutout src={wikiFeatureDecoration} className="landing-wiki-cutout" />
+          </div>
+          <div className="landing-wiki-copy" data-scroll-reveal>
+            <h2 id="landing-wiki-title">Unit<br />stats.</h2>
+            <p>See stats, upgrades and how to obtain each unit.</p>
+            <div className="landing-link-stack">
+              <Link to="/wiki/units/search" className="landing-text-link">Browse units <CoolIcon name="arrow-up-right" size={18} /></Link>
+              <Link to="/wiki/compare" className="landing-text-link">Compare units <CoolIcon name="arrow-up-right" size={18} /></Link>
             </div>
           </div>
+        </section>
 
-          {/* Right Floating Cutout Stage (Clean — no watermark text behind) */}
-          <div className="hero-editorial-right">
-            {/* Previous Cutout Preview */}
-            <button
-              type="button"
-              className="hero-side-preview prev"
-              onClick={() => setSlideIndex((slideIndex - 1 + SHOWCASE_SLIDES.length) % SHOWCASE_SLIDES.length)}
-              aria-label="Previous showcase unit"
-            >
-              <ThemeCutout variant={prevSlide.cutout} className="hero-side-cutout" />
-              <span className="hero-side-dot" />
-              <span className="hero-side-stem" />
-            </button>
-
-            {/* Active Cutout Sculpture */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeSlide.id}
-                className="hero-centerpiece"
-                initial={{ opacity: 0, scale: 0.9, y: 16 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.92, y: -16 }}
-                transition={{ duration: 0.38, ease: EASE_OUT }}
-              >
-                <div className="hero-sculpture-wrap">
-                  <ThemeCutout
-                    variant={activeSlide.cutout}
-                    floating
-                    className="hero-main-cutout"
-                  />
-                </div>
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Next Cutout Preview */}
-            <button
-              type="button"
-              className="hero-side-preview next"
-              onClick={() => setSlideIndex((slideIndex + 1) % SHOWCASE_SLIDES.length)}
-              aria-label="Next showcase unit"
-            >
-              <ThemeCutout variant={nextSlide.cutout} className="hero-side-cutout" />
-              <span className="hero-side-dot" />
-              <span className="hero-side-stem" />
-            </button>
+        <section className="landing-trade landing-container" aria-labelledby="landing-trade-title">
+          <div className="landing-trade-copy" data-scroll-reveal>
+            <h2 id="landing-trade-title">Trade<br />calculator.</h2>
+            <p>Compare the values on both sides of a trade.</p>
+            <Link to="/values/calculator" className="landing-text-link">Open calculator <CoolIcon name="arrow-up-right" size={18} /></Link>
           </div>
-        </div>
-
-        {/* Bottom Stage Bar */}
-        <div className="hero-stage-footer">
-          <div className="hero-slide-counter">
-            <span className="hero-counter-dash">—</span>
-            <span className="hero-counter-active">{String(slideIndex + 1).padStart(2, '0')}</span>
-            <span className="hero-counter-sep">/</span>
-            <span className="hero-counter-total">{String(SHOWCASE_SLIDES.length).padStart(2, '0')}</span>
+          <div className="landing-trade-demo" data-scroll-reveal>
+            <LandingCalculator unitValues={calculatorUnits} imageMap={imageMap} />
           </div>
+        </section>
 
-          <div className="hero-slide-dots" role="tablist" aria-label="Showcase slides">
-            {SHOWCASE_SLIDES.map((s, idx) => (
-              <button
-                key={s.id}
-                type="button"
-                role="tab"
-                aria-selected={idx === slideIndex}
-                aria-label={`Slide ${idx + 1}`}
-                className={`hero-dot ${idx === slideIndex ? 'active' : ''}`}
-                onClick={() => setSlideIndex(idx)}
-              />
-            ))}
+        <section className="landing-community landing-container" aria-labelledby="landing-community-title">
+          <div><h2 id="landing-community-title">Community.</h2></div>
+          <div className="landing-community-links">
+            {COMMUNITY.map((item) => {
+              const body = <><span><strong>{item.label}</strong><small>{item.description}</small></span><CoolIcon name="arrow-up-right" size={18} /></>;
+              return item.to ? <Link key={item.label} to={item.to}>{body}</Link> : <a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer">{body}</a>;
+            })}
           </div>
-
-          <div className="hero-stage-controls">
-            <button
-              type="button"
-              className="hero-nav-link"
-              onClick={() => setSlideIndex((slideIndex - 1 + SHOWCASE_SLIDES.length) % SHOWCASE_SLIDES.length)}
-            >
-              Prev
-            </button>
-            <button
-              type="button"
-              className="hero-nav-link"
-              onClick={() => setSlideIndex((slideIndex + 1) % SHOWCASE_SLIDES.length)}
-            >
-              Next
-            </button>
-            <Link to={activeSlide.ctaTo} className="hero-corner-cta">
-              <span>{activeSlide.ctaLabel}</span>
-              <span className="hero-corner-arrow" aria-hidden="true">›</span>
-            </Link>
-          </div>
-        </div>
-      </motion.section>
-
-      {/* Expanded Primary Hubs: Values, WIKI, Trade Calculator */}
-      <div className="bento-grid">
-        <motion.div className="bento-card bento-large bento-values" variants={itemVariants}>
-          <ThemeCutout variant="poseidon" className="bento-cutout-bg" />
-          <div className="bento-top">
-            <div className="bento-icon-wrap">
-              <span className="logo-tint-wrap bento-logo-wrap">
-                <img src={logoImg} alt="" className="bento-logo" />
-              </span>
-            </div>
-            <Link to="/values" className="bento-open-btn">
-              Open Values <span aria-hidden="true">→</span>
-            </Link>
-          </div>
-          <div className="bento-body">
-            <h2>Values</h2>
-            <p className="bento-desc">
-              {BASE_UNIT_COUNT} Units, Consumables, Currencies, and Gamepasses with live demand &amp; scarcity ratings.
-            </p>
-            <div className="bento-sublinks">
-              <Link to="/values/units/Omegas" className="bento-sublink">Omegas</Link>
-              <Link to="/values/units/Transcendents" className="bento-sublink">Transcendents</Link>
-              <Link to="/values/units/Mythics" className="bento-sublink">Mythics</Link>
-              <Link to="/values/units/Legendaries" className="bento-sublink">Legendaries</Link>
-              <Link to="/values/crates" className="bento-sublink">Crates &amp; Passes</Link>
-              <Link to="/values/units/search" className="bento-sublink">Search All</Link>
-            </div>
-          </div>
-          <div className="bento-footer">
-            <span className="bento-meta">Values sourced from real trades &amp; market data</span>
-            <Link to="/values" className="bento-arrow" aria-label="Go to Values">→</Link>
-          </div>
-        </motion.div>
-
-        <motion.div className="bento-card bento-large bento-wiki" variants={itemVariants}>
-          <ThemeCutout variant="overlord" className="bento-cutout-bg" />
-          <div className="bento-top">
-            <div className="bento-icon-wrap">
-              <span className="logo-tint-wrap bento-logo-wrap">
-                <img src={logoImg} alt="" className="bento-logo" />
-              </span>
-            </div>
-            <Link to="/wiki" className="bento-open-btn">
-              Open WIKI <span aria-hidden="true">→</span>
-            </Link>
-          </div>
-          <div className="bento-body">
-            <h2>WIKI</h2>
-            <p className="bento-desc">
-              {BASE_UNIT_COUNT} Units, full level-by-level stat sheets, DPS breakdowns, obtain methods, Maps, Crates, and Skins.
-            </p>
-            <div className="bento-sublinks">
-              <Link to="/wiki/units/Omegas" className="bento-sublink">All Units ({BASE_UNIT_COUNT})</Link>
-              <Link to="/wiki/compare" className="bento-sublink">Compare Units</Link>
-              <Link to="/wiki/leaderboards" className="bento-sublink">Leaderboards</Link>
-              <Link to="/wiki/maps" className="bento-sublink">Maps</Link>
-              <Link to="/wiki/traits" className="bento-sublink">Traits</Link>
-              <Link to="/wiki/skins" className="bento-sublink">Skins</Link>
-            </div>
-          </div>
-          <div className="bento-footer">
-            <span className="bento-meta">Complete unit stat sheets, obtain methods, and upgrades</span>
-            <Link to="/wiki" className="bento-arrow" aria-label="Go to WIKI">→</Link>
-          </div>
-        </motion.div>
-
-        <motion.div className="bento-card bento-large bento-calc" variants={itemVariants}>
-          <ThemeCutout variant="king" className="bento-cutout-bg" />
-          <div className="bento-top">
-            <div className="bento-icon-wrap">
-              <span className="logo-tint-wrap bento-logo-wrap">
-                <img src={logoImg} alt="" className="bento-logo" />
-              </span>
-            </div>
-            <Link to="/values/calculator" className="bento-open-btn">
-              Calculator <span aria-hidden="true">→</span>
-            </Link>
-          </div>
-          <div className="bento-body">
-            <h2>Trade Calculator</h2>
-            <p className="bento-desc">
-              Compare multi-unit offers side-by-side with instant Win / Fair / Loss verdicts and Shiny 1.5× support.
-            </p>
-            <div className="bento-sublinks">
-              <Link to="/values/calculator" className="bento-sublink">W / F / L Evaluator</Link>
-              <Link to="/values/units/Shiny%20Omegas" className="bento-sublink">Shiny Values</Link>
-              <Link to="/values/units/search" className="bento-sublink">Quick Value Lookup</Link>
-            </div>
-          </div>
-          <div className="bento-footer">
-            <span className="bento-meta">Live trade formula powered by real market data</span>
-            <Link to="/values/calculator" className="bento-arrow" aria-label="Go to Trade Calculator">→</Link>
-          </div>
-        </motion.div>
-
-        {/* Secondary Cards — each with a monochrome cutout sculpture */}
-        <motion.div variants={itemVariants}>
-          <Link to="/minigames" className="bento-card bento-small">
-            <ThemeCutout variant="laserminigunner" className="bento-cutout-mini" />
-            <div className="bento-small-icon">
-              <span className="logo-tint-wrap bento-logo-wrap">
-                <img src={logoImg} alt="" className="bento-logo" />
-              </span>
-            </div>
-            <div className="bento-small-text">
-              <h3>Minigames</h3>
-              <p>Play games, earn achievements</p>
-              <span className="bento-small-meta">Daily challenges &amp; endless modes</span>
-            </div>
-            <span className="bento-arrow">→</span>
-          </Link>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <Link to="/credits" className="bento-card bento-small">
-            <ThemeCutout variant="elfcommander" className="bento-cutout-mini" />
-            <div className="bento-small-icon">
-              <span className="logo-tint-wrap bento-logo-wrap">
-                <img src={logoImg} alt="" className="bento-logo" />
-              </span>
-            </div>
-            <div className="bento-small-text">
-              <h3>Credits</h3>
-              <p>Owner, tester lead, and testers</p>
-              <span className="bento-small-meta">The people behind Apex WIKI &amp; Values</span>
-            </div>
-            <span className="bento-arrow">→</span>
-          </Link>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <a
-            href="https://www.roblox.com/games/94547891458554/Ball-Tower-Defense"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bento-card bento-small"
-          >
-            <ThemeCutout variant="partyman" className="bento-cutout-mini" />
-            <div className="bento-small-icon">
-              <span className="logo-tint-wrap bento-logo-wrap">
-                <img src={logoImg} alt="" className="bento-logo" />
-              </span>
-            </div>
-            <div className="bento-small-text">
-              <h3>Play Ball TD</h3>
-              <p>Official Roblox experience</p>
-              <span className="bento-small-meta">Open Ball Tower Defense on Roblox</span>
-            </div>
-            <span className="bento-arrow">↗</span>
-          </a>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <a
-            href="https://discord.gg/cZ997779g2"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bento-card bento-small"
-          >
-            <ThemeCutout variant="hacker" className="bento-cutout-mini" />
-            <div className="bento-small-icon">
-              <span className="logo-tint-wrap bento-logo-wrap">
-                <img src={logoImg} alt="" className="bento-logo" />
-              </span>
-            </div>
-            <div className="bento-small-text">
-              <h3>Community Discord</h3>
-              <p>Apex WIKI &amp; Values Server</p>
-              <span className="bento-small-meta">Discuss values, trades, and updates</span>
-            </div>
-            <span className="bento-arrow">↗</span>
-          </a>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <a
-            href="https://discord.gg/cashgrabstudios"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bento-card bento-small"
-          >
-            <ThemeCutout variant="drone" className="bento-cutout-mini" />
-            <div className="bento-small-icon">
-              <span className="logo-tint-wrap bento-logo-wrap">
-                <img src={logoImg} alt="" className="bento-logo" />
-              </span>
-            </div>
-            <div className="bento-small-text">
-              <h3>CGS Discord</h3>
-              <p>Cash Grab Studios</p>
-              <span className="bento-small-meta">Official game developers server</span>
-            </div>
-            <span className="bento-arrow">↗</span>
-          </a>
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <a
-            href="https://www.youtube.com/@ApexValuesBTD"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bento-card bento-small"
-          >
-            <ThemeCutout variant="forest" className="bento-cutout-mini" />
-            <div className="bento-small-icon">
-              <span className="logo-tint-wrap bento-logo-wrap">
-                <img src={logoImg} alt="" className="bento-logo" />
-              </span>
-            </div>
-            <div className="bento-small-text">
-              <h3>YouTube</h3>
-              <p>@ApexValuesBTD</p>
-              <span className="bento-small-meta">Guides, showcases, and tier lists</span>
-            </div>
-            <span className="bento-arrow">↗</span>
-          </a>
-        </motion.div>
-      </div>
-    </motion.main>
+        </section>
+      </main>
+    </div>
   );
 }

@@ -385,7 +385,7 @@
   font-size: 0.82rem;
   font-weight: 800;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: transform 0.15s, opacity 0.15s, background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, filter 0.15s;
 }
 
 .admin-quick-btn:hover {
@@ -593,7 +593,7 @@
   border: 1px solid var(--border);
   border-radius: 16px;
   text-align: center;
-  transition: all 0.2s;
+  transition: transform 0.2s, opacity 0.2s, background-color 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s, filter 0.2s;
 }
 
 .admin-stat-card:hover {
@@ -611,7 +611,7 @@
   font-size: 1.8rem;
   font-weight: 900;
   color: var(--text);
-  font-family: ui-monospace, monospace;
+  font-family: var(--font);
 }
 
 .admin-stat-label {
@@ -643,7 +643,7 @@
   font-size: 0.82rem;
   font-weight: 800;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: transform 0.15s, opacity 0.15s, background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, filter 0.15s;
 }
 
 .admin-quick-btn:hover {
@@ -775,7 +775,7 @@
   border-radius: 12px;
   background: var(--bg-card);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: transform 0.15s, opacity 0.15s, background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, filter 0.15s;
 }
 
 .admin-unit:hover {
@@ -1162,7 +1162,7 @@
 }
 
 .admin-code-box {
-  font-family: ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+  font-family: var(--font);
   font-size: 0.78rem;
   font-weight: 600;
   white-space: pre;
@@ -1417,7 +1417,7 @@
   font-size: 0.75rem;
   font-weight: 900;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: transform 0.15s, opacity 0.15s, background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, filter 0.15s;
 }
 
 .admin-bug-reports .filter:hover {
@@ -1495,7 +1495,7 @@
   font-size: 0.78rem;
   font-weight: 900;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: transform 0.15s, opacity 0.15s, background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, filter 0.15s;
 }
 
 .ann-chip:hover {
@@ -1648,7 +1648,7 @@
   font-size: 0.74rem;
   font-weight: 900;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: transform 0.15s, opacity 0.15s, background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, filter 0.15s;
 }
 
 .log-tab:hover {
@@ -1737,7 +1737,7 @@
   font-size: 0.68rem;
   font-weight: 900;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: transform 0.15s, opacity 0.15s, background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, filter 0.15s;
 }
 
 .vtg-metric:hover {
@@ -1797,7 +1797,7 @@
   font-size: 0.76rem;
   font-weight: 900;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: transform 0.15s, opacity 0.15s, background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, filter 0.15s;
 }
 
 .log-show-more:hover {
@@ -1816,7 +1816,7 @@
   font-size: 0.66rem;
   font-weight: 900;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: transform 0.15s, opacity 0.15s, background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, filter 0.15s;
 }
 
 .log-revert-btn:hover {
@@ -1862,7 +1862,7 @@
   font-size: 0.68rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: transform 0.15s, opacity 0.15s, background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, filter 0.15s;
   max-width: 130px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2040,7 +2040,7 @@
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
 }
-@keyframes apex-pop {
+@keyframes admin-pop {
   from { opacity: 0; transform: scale(0.95) translateY(-4px); }
   to { opacity: 1; transform: none; }
 }
@@ -2052,11 +2052,11 @@
   flex-wrap: wrap;
   animation: apex-slide-in 0.25s ease;
 }
-.admin-drafts-panel { animation: apex-pop 0.18s ease; }
-.admin-drafts-pill { animation: apex-pop 0.2s ease; }
+.admin-drafts-panel { animation: admin-pop 0.18s ease; }
+.admin-drafts-pill { animation: admin-pop 0.2s ease; }
 .admin-recent-pill { animation: apex-slide-in 0.25s ease backwards; }
 .admin-log-entry { animation: apex-rise 0.3s ease backwards; }
-.log-revert-btn { animation: apex-pop 0.2s ease backwards; }
+.log-revert-btn { animation: admin-pop 0.2s ease backwards; }
 
 /* Dashboard stat cards rise in with a quick stagger. */
 .admin-dashboard .admin-stat-card { animation: apex-rise 0.35s ease backwards; }
@@ -2071,7 +2071,7 @@
 .admin-quick-actions { animation: apex-rise 0.4s ease 0.34s backwards; }
 
 /* Quicker hover response on unit rows + buttons. */
-.admin-unit, .admin-recent-pill, .admin-message-action, .admin-drafts-pill { transition: all 0.14s ease; }
+.admin-unit, .admin-recent-pill, .admin-message-action, .admin-drafts-pill { transition: transform 0.14s ease, opacity 0.14s ease, background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease; }
 .admin-unit:hover { transform: translateX(2px); }
 
 /* Create Unit page: small hints under fields (theme-driven) */
@@ -2102,7 +2102,7 @@
   font-size: 0.76rem;
   font-weight: 800;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: transform 0.15s, opacity 0.15s, background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, filter 0.15s;
 }
 .admin-create-tab:hover { border-color: var(--accent); color: var(--text); }
 .admin-create-tab.active {
@@ -2251,3 +2251,10 @@
 /* Wide monitors — the admin (incl. Spreadsheet Mode) uses the extra width. */
 @media (min-width: 1920px) { .admin-page { max-width: 1900px; } }
 @media (min-width: 2400px) { .admin-page { max-width: 2240px; } }
+
+/* Compact K/M/B/T suffix helper under admin numeric fields. */
+.admin-compact-hint {
+  display: block; margin-top: 4px; font-size: 10.5px; line-height: 1.4;
+  color: var(--text-faint, #7f7f8c); font-weight: 600;
+}
+.admin-text-input[aria-invalid="true"] { border-color: var(--c-danger, #e5484d) !important; }

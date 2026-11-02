@@ -2,13 +2,13 @@ import { useMemo } from 'react';
 import { useParams, Navigate, Link } from 'react-router-dom';
 import PageShell from '../../components/PageShell';
 import EntityGrid from '../../components/EntityGrid';
-import UnitTags from '../../components/UnitTags';
 import ThemeCutout, { getCutoutForRarity } from '../../components/ThemeCutout';
 import { WIKI_NAV } from '../../config/navigation';
 import { ALL_UNITS } from '../../data/units';
 import { UNIT_RARITIES, getRarityGlow, isShinyRarity } from '../../data/taxonomy';
 import { useData } from '../../context/DataContext';
 import { decodeRouteParam, encodeRouteParam } from '../../utils/routeParams';
+import { withUnitDisplayName } from '../../utils/unitNames';
 import '../values/ValueUnitsList.css';
 
 export default function UnitsList() {
@@ -26,7 +26,7 @@ export default function UnitsList() {
       const cleanOverride = Object.fromEntries(
         Object.entries(override).filter(([, value]) => value !== undefined)
       );
-      return { ...unit, ...cleanOverride };
+      return withUnitDisplayName({ ...unit, ...cleanOverride });
     });
 
     const generated = liveUnits.filter((unit) => unit.rarity === rarity);
@@ -47,7 +47,6 @@ export default function UnitsList() {
       <div className="rarity-list-header" style={{ '--rarity-accent': rarityGlow }}>
         <ThemeCutout
           variant={getCutoutForRarity(rarity)}
-          tintColor={rarityGlow}
           floating
           className="rarity-list-cutout"
         />
@@ -57,7 +56,7 @@ export default function UnitsList() {
             <span className="rarity-list-dot" aria-hidden="true" />
             <h1>{rarity}</h1>
           </div>
-          <p className="rarity-list-sub">{units.length} units documented in this tier</p>
+          <p className="rarity-list-sub">{units.length} units</p>
         </div>
         <div className="rarity-list-actions">
           {hasCounterpart && (
@@ -83,13 +82,6 @@ export default function UnitsList() {
         linkBase={`/wiki/units/${encodedRarity}`}
         emptyLabel={`No ${rarity} units added yet.`}
         rarityAccent
-        renderMeta={(u) => (
-          <>
-            {u.type && <span className="badge">{u.type}</span>}
-            {u.category && <span className="badge dim">{u.category}</span>}
-            <UnitTags unit={u} limit={4} />
-          </>
-        )}
       />
     </PageShell>
   );

@@ -1,0 +1,83 @@
+/* A vector composition rather than a raster/video/WebGL effect: crisp at every
+   resolution, with a distinct home-only atmosphere and no continuous repaint. */
+.landing-backdrop {
+  --landing-prism-tint: #c5e8ff;
+  --landing-prism-tint: color-mix(in srgb, var(--accent, #ffffff) 52%, #91cbf6);
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  background: #040a11;
+}
+
+.landing-backdrop__field {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 53% 72% at 70% 44%, rgba(61, 130, 164, 0.28), transparent 75%),
+    linear-gradient(120deg, #04070c 8%, #07111b 42%, #0a1b26 100%);
+  background:
+    radial-gradient(ellipse 53% 72% at 70% 44%, color-mix(in srgb, var(--accent, #ffffff) 15%, #1d6682) 0%, transparent 72%),
+    linear-gradient(120deg, #04070c 8%, #07111b 42%, #0a1b26 100%);
+}
+
+.landing-backdrop__shape-position {
+  position: absolute;
+  top: 50%;
+  right: clamp(110px, 10vw, 200px);
+  width: min(44vw, 650px, 74vh);
+  transform: translateY(-47%);
+}
+
+.landing-backdrop__shape {
+  width: 100%;
+  transform-origin: 50% 50%;
+  transition: transform 650ms cubic-bezier(0.2, 0.75, 0.25, 1);
+  filter: drop-shadow(0 30px 38px rgba(0, 0, 0, 0.33));
+}
+
+.landing-backdrop__shape svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+@media (max-width: 1120px) and (min-width: 721px) {
+  .landing-backdrop__shape-position {
+    right: 1vw;
+    width: min(55vw, 580px, 69vh);
+    opacity: 0.72;
+  }
+}
+
+@media (max-width: 720px) {
+  .landing-backdrop__field {
+    background:
+      radial-gradient(ellipse 85% 48% at 58% 21%, rgba(50, 115, 145, 0.38), transparent 73%),
+      linear-gradient(155deg, #050b13 0%, #0a1b26 45%, #04080e 100%);
+    background:
+      radial-gradient(ellipse 85% 48% at 58% 21%, color-mix(in srgb, var(--accent, #ffffff) 14%, #1d6682) 0%, transparent 73%),
+      linear-gradient(155deg, #050b13 0%, #0a1b26 45%, #04080e 100%);
+  }
+
+  .landing-backdrop__shape-position {
+    top: 55px;
+    right: 50%;
+    width: min(66vw, 310px, 38vh);
+    transform: translateX(50%);
+    opacity: 0.86;
+  }
+
+  .landing-backdrop__shape {
+    filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {html:not([data-motion="on"]) .landing-backdrop__shape {
+    transform: none !important;
+    transition: none;
+  }
+}
+

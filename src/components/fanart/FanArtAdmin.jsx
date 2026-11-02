@@ -17,7 +17,7 @@ export default function FanArtAdmin({ onChange }) {
   async function loadPending() {
     setLoadingPending(true);
     try {
-      const response = await fetch(`${APEX_KV_URL}/fanart`).catch(() => null);
+      const response = await fetch(`${APEX_KV_URL}/fanart`, { headers: getAdminHeaders(), cache: 'no-store' }).catch(() => null);
       if (!response || !response.ok) {
         setMessage('Failed to load entries — the FanArt database is unreachable.');
         setPendingEntries([]);

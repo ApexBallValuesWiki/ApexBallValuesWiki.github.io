@@ -31,7 +31,7 @@
   font-size: 1.4rem;
   font-weight: 900;
   color: var(--text);
-  font-family: ui-monospace, monospace;
+  font-family: var(--font);
 }
 
 .bk-stat-label {

@@ -26,6 +26,9 @@ compatibility_date = "2026-07-19"
 #   npx wrangler kv namespace create APEX_OVERRIDES
 #
 # Then make sure this block is uncommented with the real id:
+# REQUIRED BEFORE DEPLOY: npx wrangler kv namespace create APEX_OVERRIDES
+# then uncomment this block and paste the returned id. Without the binding the
+# worker silently falls back to per-isolate memory and EDITOR CHANGES ARE LOST.
 # [[kv_namespaces]]
 # binding = "APEX_OVERRIDES"
 # id = "<your-kv-namespace-id>"
@@ -34,3 +37,9 @@ compatibility_date = "2026-07-19"
 # method), verify: Workers & Pages -> apex-db -> Settings -> Bindings ->
 # "APEX_OVERRIDES" -> your KV namespace.
 # ============================================================================
+
+# SESSION SECRET (required for short-lived editor sessions).
+# Do NOT put the value in this file or in git. Run:
+#   npx wrangler secret put APEX_SESSION_SECRET
+# The site works without it (legacy passcode fallback), but enabling it means
+# the browser never keeps a plaintext passcode. Check /health after deploying.

@@ -1,8 +1,8 @@
-const CACHE_NAME = 'apex-values-offline-v11-black-screen-hotfix';
+const CACHE_NAME = 'apex-values-offline-v16-compliance-sync';
 const CORE_ASSETS = ['./', './index.html', './manifest.webmanifest', './favicon.svg'];
 
-// NOTE: bumped to v9 for the clean-URL migration — forces every installed
-// client onto the new cache so nobody is stuck on hash-routed assets.
+// Bump the cache with each coordinated frontend release so installed clients
+// can replace stale assets after the new build is deployed.
 
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
@@ -19,7 +19,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+      .then((keys) => Promise.all(keys.filter((key) => key.startsWith('apex-values-offline-') && key !== CACHE_NAME).map((key) => caches.delete(key))))
       .then(() => self.clients.claim())
   );
 });

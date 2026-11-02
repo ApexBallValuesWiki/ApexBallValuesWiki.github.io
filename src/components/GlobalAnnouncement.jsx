@@ -1,16 +1,16 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchActiveAnnouncements, deleteAnnouncement } from '../utils/apexClient';
+import { subscribeLiveStatus, ensureLiveStatus, refreshLiveStatus } from '../utils/liveStatus';
 import { useAdminStatus } from '../hooks/useAdminStatus';
 import './GlobalAnnouncement.css';
 
 // GLOBAL ANNOUNCEMENTS — stacked banners at the top of the site. Multiple can
-// be live at once (each with its own type and expiry). They poll the KV
-// worker (every 30s) so a broadcast from the admin Announcement Studio
-// appears for EVERY visitor, not just the sender's browser.
+// be live at once (each with its own type and expiry). They arrive in the
+// consolidated /status poll, so a broadcast from the admin Announcement
+// Studio appears for EVERY visitor without a dedicated 30s timer.
 
 const DISMISSED_KEY = 'apex-dismissed-announcements';
-const POLL_MS = 30000;
 const MAX_DISMISSED = 20;
 
 export function useGlobalAnnouncements() {
@@ -18,28 +18,28 @@ export function useGlobalAnnouncements() {
 
   useEffect(() => {
     let alive = true;
+    const apply = (status) => {
+      if (alive && status) setAnnouncements(Array.isArray(status.announcements) ? status.announcements : []);
+    };
+    const unsubscribe = subscribeLiveStatus(apply);
 
-    async function refresh() {
-      const list = await fetchActiveAnnouncements();
+    // No dedicated 30s timer: announcements ride the consolidated /status
+    // request. Legacy workers fall back to the original endpoint once.
+    ensureLiveStatus(1500).then(async (status) => {
       if (!alive) return;
-      setAnnouncements(Array.isArray(list) ? list : []);
-    }
+      if (status) { apply(status); return; }
+      const list = await fetchActiveAnnouncements();
+      if (alive) setAnnouncements(Array.isArray(list) ? list : []);
+    });
 
-    refresh();
-    // Lightweight polling: a new broadcast reaches every visitor within
-    // half a minute — no realtime socket needed. The custom event makes it
-    // instant for this browser right after the studio sends or clears.
-    const pollId = window.setInterval(refresh, POLL_MS);
-    const onUpdated = () => refresh();
+    const onUpdated = () => refreshLiveStatus();
     window.addEventListener('apex-announcements-updated', onUpdated);
-    // Coming back to the tab? Check immediately instead of waiting for the
-    // next poll tick, so switching apps never shows a stale announcement.
-    const onVisible = () => { if (document.visibilityState === 'visible') refresh(); };
+    const onVisible = () => { if (document.visibilityState === 'visible') refreshLiveStatus(); };
     document.addEventListener('visibilitychange', onVisible);
 
     return () => {
       alive = false;
-      window.clearInterval(pollId);
+      unsubscribe();
       window.removeEventListener('apex-announcements-updated', onUpdated);
       window.removeEventListener('visibilitychange', onVisible);
     };

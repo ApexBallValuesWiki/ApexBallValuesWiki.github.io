@@ -1,4 +1,5 @@
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
+import OfflineValuesControl from './OfflineValuesControl';
 import { motion } from 'framer-motion';
 import apexLogo from '../assets/apex-values-wiki-logo.png';
 import { TOP_NAV_LINKS } from '../config/navigation';
@@ -9,16 +10,10 @@ import './Header.css';
 export default function Header() {
   const { isAdmin } = useAdminStatus();
   const location = useLocation();
-  const navigate = useNavigate();
   const links = isAdmin ? [...TOP_NAV_LINKS, { to: '/admin', label: 'ADMIN' }] : TOP_NAV_LINKS;
 
-  const handleQuickSearch = () => {
-    const target = location.pathname.startsWith('/values') ? '/values/units/search' : '/wiki/units/search';
-    navigate(target);
-  };
-
   return (
-    <header className="site-header">
+    <header className={`site-header${location.pathname === '/' ? ' site-header-home' : ''}`}>
       <div className="brand">
         <NavLink to="/" className="brand-link">
           <motion.span
@@ -60,17 +55,19 @@ export default function Header() {
         <button
           type="button"
           className="header-search-trigger"
-          onClick={handleQuickSearch}
-          title="Quick unit search (Press /)"
-          aria-label="Search units"
+          onClick={() => window.dispatchEvent(new Event('apex:open-palette'))}
+          title="Command palette (⌘K / Ctrl+K)"
+          aria-label="Open command palette"
+          data-apex-palette-open=""
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.3-4.3" />
           </svg>
-          <span className="header-search-label">Search units…</span>
-          <kbd className="header-kbd">/</kbd>
+          <span className="header-search-label">Search anything…</span>
+          <kbd className="header-kbd">⌘K</kbd>
         </button>
+        <OfflineValuesControl />
       </div>
     </header>
   );

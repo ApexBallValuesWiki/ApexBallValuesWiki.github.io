@@ -7,12 +7,13 @@
 
 import { ACHIEVEMENTS } from './achievements';
 import { TEAM_MEMBERS } from './teamMembers';
+import { getAdminEmail } from './adminSession';
 
 export const REWARD_MODES = [
   { id: 'none', label: 'None', icon: '🚫', desc: 'No reward theme — just your colors and effects.' },
   { id: 'knowledge', label: 'Knowledge Rise', icon: '🧠', category: 'Ball Knowledge', color: '#7cff45', particles: true, desc: 'Glowing question marks rise up the background — pick any glyph.' },
   { id: 'ballonomics', label: 'Money Grid', icon: '📈', category: 'Ballonomics', color: '#ffd94d', desc: 'Coins + gems drawn onto the background grid itself.' },
-  { id: 'retro', label: 'Retro Ball', icon: '🟪', category: 'Balling', color: '#ff7ad9', desc: 'Blocky UI with the Press Start 2P arcade font.' },
+  { id: 'retro', label: 'Retro Ball', icon: '🟪', category: 'Balling', color: '#ff7ad9', desc: 'Blocky arcade styling with Montserrat typography.' },
   { id: 'premium', label: 'Premium Aura', icon: '👑', category: 'General', color: '#ffd76a', desc: 'An aurora backdrop and gilded cards. The absolute beast.' },
   { id: 'admin', label: 'APEX Team', icon: '🎩', adminOnly: true, color: '#ffd76a', particles: true, desc: 'Exclusive for the team running this site — prestige rain and aura.' },
 ];
@@ -79,7 +80,7 @@ export function getUnlockedRewards() {
     if (raw) unlockedIds = (JSON.parse(raw) || []).map((a) => a.id || a);
   } catch { /* storage unavailable */ }
   try {
-    adminEmail = localStorage.getItem(ADMIN_EMAIL_KEY);
+    adminEmail = getAdminEmail();
   } catch { /* storage unavailable */ }
   return computeUnlocks({ unlockedIds, adminEmail });
 }

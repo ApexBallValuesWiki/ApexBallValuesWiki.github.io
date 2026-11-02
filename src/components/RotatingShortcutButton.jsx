@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useData } from '../context/DataContext';
 import { getUnitIcon } from '../data/unitIcons';
-import { UNIT_RARITIES, getRarityGlow, isShinyRarity } from '../data/taxonomy';
-import { formatCompactNumber, formatFullNumber } from '../utils/formatNumber';
+import { getRarityGlow, isShinyRarity } from '../data/taxonomy';
+import { formatCompactNumber } from '../utils/formatNumber';
 import UnitIcon from './UnitIcon';
 import './RotatingShortcutButton.css';
 
@@ -245,8 +245,7 @@ export default function RotatingShortcutButton({ section = 'wiki' }) {
           <>
             <Link to="/wiki/units/search" className="heh-portal-link">🔍 Search All Units</Link>
             <Link to="/wiki/compare" className="heh-portal-link">⚖️ Unit Compare</Link>
-            <Link to="/wiki/leaderboards" className="heh-portal-link">🏆 DPS Leaderboards</Link>
-            <Link to="/wiki/maps" className="heh-portal-link">🗺️ Maps Index</Link>
+            <Link to="/wiki/units/Omegas" className="heh-portal-link">👑 Omega Index</Link>
           </>
         ) : (
           <>

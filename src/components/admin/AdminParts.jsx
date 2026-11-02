@@ -8,6 +8,7 @@ import ValueTrendGraph from '../ValueTrendGraph';
 import { DEMAND_LABELS, SCARCITY_LABELS, getRarityGlow, isShinyRarity, UNIT_RARITIES } from '../../data/taxonomy';
 import { upgradeToForm, ensureArray, linesToObject, objectToLines } from '../../utils/adminForms';
 import { computeTradeValue } from '../../utils/calculator';
+import { parseCompactRange, formatRangeForInput, formatSiteNumber } from '../../utils/formatNumber';
 import { getDisplayName } from '../../utils/teamMembers';
 import EditorLeaderboard from './EditorLeaderboard';
 import { UNIT_TAGS, normalizeUnitTag } from '../../utils/originTag';
@@ -257,8 +258,9 @@ export function UnitPicker({ units = [], total = 0, query = '', setQuery, filter
 // so '-' can be typed freely (the old controlled rebuild ate trailing
 // dashes: '5-' instantly snapped back to '5').
 export function RangeTextInput({ label, min, max, onCommit, placeholder }) {
-  const external = max ? `${min ?? ''}-${max}` : `${min ?? ''}`;
+  const external = formatRangeForInput(min, max);
   const [raw, setRaw] = useState(external);
+  const [invalid, setInvalid] = useState(false);
   const lastExternal = useRef(external);
   if (external !== lastExternal.current) {
     lastExternal.current = external;
@@ -268,13 +270,9 @@ export function RangeTextInput({ label, min, max, onCommit, placeholder }) {
   function handleChange(event) {
     const val = event.target.value;
     setRaw(val);
-    const trimmed = val.trim();
-    if (trimmed.includes('-')) {
-      const parts = trimmed.split('-').map((s) => s.trim());
-      onCommit(parts[0] ?? '', parts[1] ?? '');
-    } else {
-      onCommit(trimmed, '');
-    }
+    const parsed = parseCompactRange(val);
+    setInvalid(!parsed.valid && val.trim() !== '');
+    if (parsed.valid) onCommit(parsed.min, parsed.max);
   }
 
   return (
@@ -285,8 +283,11 @@ export function RangeTextInput({ label, min, max, onCommit, placeholder }) {
         type="text"
         value={raw}
         onChange={handleChange}
-        placeholder={placeholder}
+        onBlur={() => setRaw(formatRangeForInput(min, max))}
+        placeholder={placeholder || 'e.g. 5 or 1M-2M'}
+        aria-invalid={invalid || undefined}
       />
+      <small className="admin-compact-hint">K / M / B / T supported · e.g. 20M = {formatSiteNumber(20_000_000, { full: true })}</small>
     </label>
   );
 }
@@ -303,36 +304,34 @@ export function ValueEditor({ unit, form = {}, tradeValue = 0, selectedRow, upda
   const coinsMax = form.coinsMax ? computeTradeValue(form.coinsMax, form.demand, form.scarcity) : null;
 
   // Local input state so typing feels natural
-  const [rangeInput, setRangeInput] = useState(() => {
-    return form.baseValueMax
-      ? `${form.baseValue || ''}-${form.baseValueMax}`
-      : `${form.baseValue || ''}`;
-  });
+  const [rangeInput, setRangeInput] = useState(() => formatRangeForInput(form.baseValue, form.baseValueMax));
+  const [rangeInvalid, setRangeInvalid] = useState(false);
 
   // Sync local input when form changes externally (unit switch, load, etc.)
   const prevSlug = useMemo(() => String(form.baseValue) + '|' + String(form.baseValueMax), [form.baseValue, form.baseValueMax]);
   const lastSynced = useRef(prevSlug);
   if (prevSlug !== lastSynced.current) {
     lastSynced.current = prevSlug;
-    const next = form.baseValueMax
-      ? `${form.baseValue || ''}-${form.baseValueMax}`
-      : `${form.baseValue || ''}`;
+    const next = formatRangeForInput(form.baseValue, form.baseValueMax);
     if (rangeInput !== next) setRangeInput(next);
   }
 
   function commitRange() {
-    const val = rangeInput.trim();
-    if (val.includes('-')) {
-      const parts = val.split('-').map(s => s.trim());
-      const min = parts[0] || '';
-      const max = parts[1] || '';
-      updateField('baseValue', min);
-      updateField('baseValueMax', max);
-      return { baseValue: min, baseValueMax: max };
-    } else {
-      updateField('baseValue', val);
-      updateField('baseValueMax', '');
-      return { baseValue: val, baseValueMax: '' };
+    const parsed = parseCompactRange(rangeInput);
+    setRangeInvalid(!parsed.valid);
+    updateField('baseValue', parsed.min);
+    updateField('baseValueMax', parsed.max);
+    return { baseValue: parsed.min, baseValueMax: parsed.max };
+  }
+
+  // Live-parse so K/M/B/T works while typing, not only on blur/save.
+  function onRangeInput(value) {
+    setRangeInput(value);
+    const parsed = parseCompactRange(value);
+    setRangeInvalid(!parsed.valid && value.trim() !== '');
+    if (parsed.valid) {
+      updateField('baseValue', parsed.min);
+      updateField('baseValueMax', parsed.max);
     }
   }
 
@@ -364,23 +363,25 @@ export function ValueEditor({ unit, form = {}, tradeValue = 0, selectedRow, upda
 
       <div className="admin-form-grid">
         <label className="admin-field">
-          <span>Value (type 90-100 for range)</span>
+          <span>Value (type 90-100 or 1M-2M for a range)</span>
           <input
             className="admin-text-input"
             type="text"
             value={rangeInput}
-            onChange={(e) => setRangeInput(e.target.value)}
-            onBlur={commitRange}
+            onChange={(e) => onRangeInput(e.target.value)}
+            onBlur={() => setRangeInput(formatRangeForInput(form.baseValue, form.baseValueMax))}
             onKeyDown={(e) => { if (e.key === 'Enter') { commitRange(); e.target.blur(); } }}
-            placeholder="e.g. 90-100 or 500"
+            placeholder="e.g. 20M or 1M-2M"
+            aria-invalid={rangeInvalid || undefined}
           />
+          <small className="admin-compact-hint">K / M / B / T supported · 20M = {formatSiteNumber(20_000_000, { full: true })}</small>
         </label>
         <RangeTextInput
           label="Gems (type 10-20 for range)"
           min={form.gems}
           max={form.gemsMax}
           onCommit={(nextMin, nextMax) => { updateField('gems', nextMin); updateField('gemsMax', nextMax); }}
-          placeholder="e.g. 10-20 or 5"
+          placeholder="e.g. 1K-2K or 5"
         />
         <RangeTextInput
           label="Coins (type 5-10 for range)"

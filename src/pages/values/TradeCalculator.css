@@ -43,23 +43,30 @@
   z-index: 0;
 }
 
-.calc-page-head > div {
+.calc-page-head > div:not(.calc-head-cutout) {
   position: relative;
   z-index: 1;
 }
 
-.calc-page-head > div:first-child {
+.calc-page-head > div:not(.calc-head-cutout):not(.calc-page-actions) {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
 .calc-page-head h1 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
   margin: 0;
   font-size: clamp(1.7rem, 3vw, 2.25rem);
   font-weight: 900;
   letter-spacing: -0.032em;
 }
+
+.calc-heading-art { flex: 0 0 64px; width: 64px; height: 64px; }
+.calc-page-head h1 > span:last-child { min-width: 0; overflow-wrap: anywhere; }
 
 .calc-page-head .crumb {
   margin: 0;
@@ -523,17 +530,25 @@
   }
 }
 
+@media (max-width: 400px) {
+  .calc-page-head { padding: 22px 18px; }
+  .calc-swap, .calc-share { font-size: 0.68rem; }
+}
+
 @media (max-width: 700px) {
   .calc-page-actions {
     width: 100%;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .calc-swap,
   .calc-share {
+    min-width: 0;
     min-height: 46px;
-    padding: 12px 14px;
+    padding: 12px 10px;
+    white-space: normal;
+    text-align: center;
   }
 
   .calc-side {
@@ -1133,3 +1148,6 @@
     transform: none;
   }
 }
+
+/* Compact-suffix helper for the Gems / Coins amount prompt. */
+.cam-suffix-hint { display: block; margin: 7px 0 0; font-size: 10.5px; font-weight: 600; color: var(--text-faint, #7f7f8c); }

@@ -5,6 +5,8 @@
   margin-top: 12px;
 }
 
+.ach-summary-art { width: 64px; height: 64px; margin-right: 6px; flex: 0 0 64px; align-self: center; }
+
 .ach-summary-count {
   font-size: 2rem;
   font-weight: 900;

@@ -1,11 +1,11 @@
 .page-intro {
   position: relative;
   overflow: hidden;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(160px, 16vw, 225px);
+  align-items: center;
+  gap: 14px 28px;
+  min-height: 202px;
   margin-bottom: 28px;
   padding: 24px 28px;
   border-radius: 22px;
@@ -19,14 +19,34 @@
 }
 
 .page-intro-cutout {
-  position: absolute;
-  right: 18px;
-  top: -14px;
-  width: 176px;
-  height: 176px;
-  opacity: 0.24;
+  position: relative;
+  grid-column: 2;
+  grid-row: 1 / 3;
+  width: 100%;
+  height: clamp(160px, 16vw, 225px);
+  opacity: 0.72;
   pointer-events: none;
   z-index: 0;
+}
+
+.page-intro-3d-ring {
+  position: absolute;
+  right: clamp(8px, 2vw, 30px);
+  top: 50%;
+  margin-top: -100px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  border: 1px dashed color-mix(in srgb, var(--accent, #ffffff) 28%, transparent);
+  transform: perspective(600px) rotateX(62deg) rotateZ(0deg);
+  animation: page-intro-ring-spin calc(24s / var(--theme-speed, 1)) linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes page-intro-ring-spin {
+  from { transform: perspective(600px) rotateX(62deg) rotateZ(0deg); }
+  to { transform: perspective(600px) rotateX(62deg) rotateZ(360deg); }
 }
 
 .page-intro h1 {
@@ -40,7 +60,9 @@
 .page-intro-copy {
   position: relative;
   z-index: 1;
-  min-width: min(100%, 420px);
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
   max-width: 68ch;
 }
 
@@ -75,24 +97,40 @@
 
 .page-intro-actions {
   position: relative;
+  grid-column: 1;
+  grid-row: 2;
   z-index: 1;
   display: flex;
+  min-width: 0;
+  max-width: 100%;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
 }
+.page-intro-actions > * { min-width: 0; max-width: 100%; }
 
+@media (max-width: 1150px) {
+  .page-intro { grid-template-columns: minmax(0, 1fr) minmax(150px, 210px); }
+  .page-intro-cutout { grid-column: 2; grid-row: 1 / 3; height: clamp(150px, 20vw, 210px); }
+  .page-intro-actions { grid-column: 1; grid-row: 2; }
+}
 @media (max-width: 760px) {
   .page-intro {
+    display: flex;
     align-items: flex-start;
+    flex-wrap: wrap;
     gap: 14px;
+    min-height: 170px;
     padding: 20px;
     margin-bottom: 22px;
   }
-
   .page-intro-cutout {
-    width: 120px;
-    height: 120px;
-    opacity: 0.16;
+    position: absolute;
+    right: 4px;
+    top: 0;
+    width: 155px;
+    height: 155px;
+    opacity: 0.18;
   }
+  .page-intro-3d-ring { right: -12px; opacity: .55; }
 }

@@ -129,10 +129,22 @@
 }
 
 .uv-bar-fill {
+  width: 100%;
   height: 100%;
   border-radius: var(--radius-pill);
-  transition: width 420ms var(--ease-out);
+  transform-origin: left center;
+  transform: scaleX(var(--uv-fill, 0));
+  transition: transform 420ms var(--ease-out);
 }
+.scroll-revealed .uv-bar-fill { animation: uv-bar-enter 600ms var(--ease-out); }
+@keyframes uv-bar-enter {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(var(--uv-fill, 0)); }
+}
+@media (prefers-reduced-motion: reduce) {html:not([data-motion="on"]) .scroll-revealed .uv-bar-fill { animation: none; } }
+
+html[data-reduced-motion="true"] .scroll-revealed .uv-bar-fill,
+html[data-anim-speed="none"] .scroll-revealed .uv-bar-fill { animation: none; }
 
 .uv-no-data {
   color: var(--text-faint);

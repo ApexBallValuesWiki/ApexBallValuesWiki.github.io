@@ -14,7 +14,9 @@ import { RELEASE_ID } from './utils/release.js'
 // Production noise control: silence debug-level logging in prod builds.
 // Real failures (console.error / console.warn) are kept. To debug a prod
 // build, set localStorage 'apex-debug' = '1' and reload.
-if (import.meta.env.PROD && !localStorage.getItem('apex-debug')) {
+let debugEnabled = false
+try { debugEnabled = Boolean(localStorage.getItem('apex-debug')) } catch { /* storage may be blocked */ }
+if (import.meta.env.PROD && !debugEnabled) {
   const noop = () => {};
   console.log = noop;
   console.debug = noop;

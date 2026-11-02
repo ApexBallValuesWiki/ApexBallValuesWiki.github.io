@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import PageShell from '../../components/PageShell';
-import UnitTags from '../../components/UnitTags';
 import Dropdown from '../../components/Dropdown';
 import { useWikiImageOverrides } from '../../hooks/useWikiImageOverrides';
 import { WIKI_NAV } from '../../config/navigation';
@@ -130,7 +129,6 @@ function CompareCard({ unit }) {
     <div className="compare-card card">
       <h2>{unit.name}</h2>
       <p className="compare-rarity">{unit.rarity}</p>
-      <UnitTags unit={unit} />
       <div className="compare-kv">
         <span>Type</span><b>{unit.type}</b>
         <span>Raw Type</span><b>{unit.rawType}</b>

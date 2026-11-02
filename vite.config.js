@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import quietTextHover from './scripts/quiet-text-hover.mjs'
 
 // 'base' must match where the site is served. The GitHub Actions deploy sets
 // VITE_BASE_PATH="/<repo>/" for GitHub Pages project sites; local builds fall
@@ -10,6 +11,7 @@ const deployBase = process.env.VITE_BASE_PATH || (process.env.GITHUB_ACTIONS && 
 export default defineConfig({
   base: deployBase,
   plugins: [react()],
+  css: { postcss: { plugins: [quietTextHover()] } },
   // `npm run preview` may sit behind a proxy host (e.g. sandbox previews);
   // static output is served as-is, so any host is fine.
   preview: {
@@ -19,7 +21,7 @@ export default defineConfig({
     // Dev-only: allow testing with the production hostname mapped locally
     // (e.g. --host-resolver-rules) — never used in production builds.
     // '.e2b.app' covers the sandbox preview host.
-    allowedHosts: ['apexballvalueswiki.github.io', '.e2b.app'],
+    allowedHosts: ['apexballvalueswiki.github.io', 'zenithvalues.github.io', '.e2b.app'],
   },
   build: {
     // Split large third-party libraries into their own chunks so the main
@@ -31,6 +33,9 @@ export default defineConfig({
           if (!id.includes('node_modules')) return undefined;
           if (id.includes('framer-motion')) return 'vendor-motion';
           if (id.includes('lenis')) return 'vendor-lenis';
+          // Keep Three.js out of the entry preload; the hero atmosphere imports it only
+          // for capable, fine-pointer, motion-enabled devices.
+          if (id.includes('/three/')) return 'vendor-three';
           if (id.includes('react-router') || id.includes('/react/') || id.includes('/react-dom/') || id.includes('scheduler')) {
             return 'vendor-react';
           }

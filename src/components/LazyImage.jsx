@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { resolveImageUrl } from '../utils/localAssets';
 
 /**
  * LazyImage — lazy loads images with blur-up placeholder
@@ -37,7 +38,7 @@ export default function LazyImage({ src, alt, className, style, width, height })
       )}
       {inView && (
         <img
-          src={src}
+          src={resolveImageUrl(src)}
           alt={alt}
           width={width}
           height={height}

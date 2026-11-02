@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { APEX_KV_URL } from '../../utils/apexClient';
+import { APEX_KV_URL, getAdminHeaders } from '../../utils/apexClient';
 import Dropdown from '../Dropdown';
 
 // BUG REPORTS — upgraded admin view: category + status filters, search,
@@ -38,7 +38,7 @@ export default function BugReportAdmin() {
   async function loadReports() {
     setLoading(true);
     try {
-      const response = await fetch(`${APEX_KV_URL}/bug-reports`);
+      const response = await fetch(`${APEX_KV_URL}/bug-reports`, { headers: getAdminHeaders(), cache: 'no-store' });
       if (response.ok) {
         const data = await response.json();
         data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -79,7 +79,7 @@ export default function BugReportAdmin() {
     try {
       const response = await fetch(`${APEX_KV_URL}/bug-reports/resolve`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAdminHeaders(),
         body: JSON.stringify({ id, resolved: true }),
       });
       if (response.ok) {
@@ -105,7 +105,7 @@ export default function BugReportAdmin() {
       try {
         const response = await fetch(`${APEX_KV_URL}/bug-reports/resolve`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAdminHeaders(),
           body: JSON.stringify({ id, resolved: true }),
         });
         if (response.ok) done += 1;
@@ -122,7 +122,7 @@ export default function BugReportAdmin() {
     try {
       const response = await fetch(`${APEX_KV_URL}/bug-reports/delete`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAdminHeaders(),
         body: JSON.stringify({ id }),
       });
       if (response.ok) {

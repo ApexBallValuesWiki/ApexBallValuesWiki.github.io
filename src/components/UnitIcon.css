@@ -7,21 +7,26 @@
   border-radius: var(--radius-sm, 12px);
   overflow: visible;
   box-sizing: border-box;
+  transition: transform 340ms var(--ease-out);
 }
 
+.unit-icon:hover {
+  transform: scale(1.05);
+}
+
+/* Zero-blur radial gradient glow (eliminates Gaussian blur render targets on Firefox Mobile) */
 .unit-icon-glow {
   position: absolute;
-  inset: -3px;
-  border-radius: var(--radius-sm, 12px);
-  background: var(--icon-glow, rgba(255, 255, 255, 0.25));
-  filter: blur(10px);
-  opacity: 0.18;
+  inset: -6px;
+  border-radius: calc(var(--radius-sm, 12px) + 4px);
+  background: radial-gradient(circle, var(--icon-glow, rgba(255, 255, 255, 0.25)) 0%, transparent 72%);
+  opacity: 0.28;
   pointer-events: none;
-  transition: opacity 200ms var(--ease-out);
+  transition: opacity 320ms var(--ease-out);
 }
 
 .unit-icon:hover .unit-icon-glow {
-  opacity: 0.38;
+  opacity: 0.56;
 }
 
 .unit-icon-squircle {
@@ -37,7 +42,7 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  transition: border-color 180ms var(--ease-out), box-shadow 180ms var(--ease-out);
+  transition: border-color 280ms var(--ease-out), box-shadow 280ms var(--ease-out);
 }
 
 .unit-icon:hover .unit-icon-squircle {
@@ -53,11 +58,11 @@
   object-fit: contain !important;
   display: block !important;
   border-radius: calc(var(--radius-sm, 12px) - 2px);
-  transition: transform 220ms var(--ease-out);
+  transition: transform 360ms var(--ease-out);
 }
 
 .unit-icon:hover .unit-icon-img {
-  transform: scale(1.04);
+  transform: scale(1.05);
 }
 
 .unit-icon-fallback {

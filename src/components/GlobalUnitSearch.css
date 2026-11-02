@@ -132,7 +132,7 @@
   font-size: 0.78rem;
   font-weight: 900;
   color: var(--text-dim);
-  font-family: ui-monospace, monospace;
+  font-family: var(--font);
   flex-shrink: 0;
 }
 
