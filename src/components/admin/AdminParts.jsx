@@ -261,8 +261,12 @@ export function RangeTextInput({ label, min, max, onCommit, placeholder }) {
   const external = formatRangeForInput(min, max);
   const [raw, setRaw] = useState(external);
   const [invalid, setInvalid] = useState(false);
+  const [focused, setFocused] = useState(false);
   const lastExternal = useRef(external);
-  if (external !== lastExternal.current) {
+  // Keep the editor's EXACT keystrokes while the field is focused. Rebuilding
+  // the text on every commit made "1300000" snap to "1.3K" on the 4th digit,
+  // so the remaining digits appended to the suffix instead of the number.
+  if (!focused && external !== lastExternal.current) {
     lastExternal.current = external;
     if (raw !== external) setRaw(external);
   }
@@ -283,7 +287,8 @@ export function RangeTextInput({ label, min, max, onCommit, placeholder }) {
         type="text"
         value={raw}
         onChange={handleChange}
-        onBlur={() => setRaw(formatRangeForInput(min, max))}
+        onFocus={() => setFocused(true)}
+        onBlur={() => { setFocused(false); setRaw(formatRangeForInput(min, max)); }}
         placeholder={placeholder || 'e.g. 5 or 1M-2M'}
         aria-invalid={invalid || undefined}
       />
@@ -306,14 +311,18 @@ export function ValueEditor({ unit, form = {}, tradeValue = 0, selectedRow, upda
   // Local input state so typing feels natural
   const [rangeInput, setRangeInput] = useState(() => formatRangeForInput(form.baseValue, form.baseValueMax));
   const [rangeInvalid, setRangeInvalid] = useState(false);
+  const [rangeFocused, setRangeFocused] = useState(false);
 
   // Sync local input when form changes externally (unit switch, load, etc.)
   const prevSlug = useMemo(() => String(form.baseValue) + '|' + String(form.baseValueMax), [form.baseValue, form.baseValueMax]);
   const lastSynced = useRef(prevSlug);
   if (prevSlug !== lastSynced.current) {
     lastSynced.current = prevSlug;
-    const next = formatRangeForInput(form.baseValue, form.baseValueMax);
-    if (rangeInput !== next) setRangeInput(next);
+    // Never reformat the text mid-typing; normalize only when idle / on blur.
+    if (!rangeFocused) {
+      const next = formatRangeForInput(form.baseValue, form.baseValueMax);
+      if (rangeInput !== next) setRangeInput(next);
+    }
   }
 
   function commitRange() {
@@ -369,7 +378,8 @@ export function ValueEditor({ unit, form = {}, tradeValue = 0, selectedRow, upda
             type="text"
             value={rangeInput}
             onChange={(e) => onRangeInput(e.target.value)}
-            onBlur={() => setRangeInput(formatRangeForInput(form.baseValue, form.baseValueMax))}
+            onFocus={() => setRangeFocused(true)}
+            onBlur={() => { setRangeFocused(false); setRangeInput(formatRangeForInput(form.baseValue, form.baseValueMax)); }}
             onKeyDown={(e) => { if (e.key === 'Enter') { commitRange(); e.target.blur(); } }}
             placeholder="e.g. 20M or 1M-2M"
             aria-invalid={rangeInvalid || undefined}

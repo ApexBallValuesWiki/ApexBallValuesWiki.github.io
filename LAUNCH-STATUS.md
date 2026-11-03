@@ -21,7 +21,36 @@ read the same Cloudflare KV namespace. `apex-td-project.zip` pushes to the Test
 Realm repo, `apex-td-final.zip` pushes to the production repo. This closes the
 16-day drift: production receives the newer staging feature set.
 
-## LATEST PASS — card polish, names, tint and calculator suffixes (`2026-11-02.5`)
+## LATEST PASS — compact-number typing + Balling correct-answer fixes (post-`.5` quick fixes)
+
+Two reported bugs fixed in the `.5` source. Same worker version
+(`2026-11-02.5`), same seven-account roster, ads still OFF, no deployment.
+
+- **K/M/B/T suffixes no longer appear or reformat while typing.** Admin Value /
+  Gems range fields, Spreadsheet Mode cells and the Trade Calculator's inline
+  currency amount keep the raw text exactly as typed while focused; the compact
+  form is applied only on blur or when the field is updated externally. Typing
+  `1300000` no longer snaps to `1.3K000`, `1.3M` no longer becomes `1300000`
+  mid-entry, and `6.2M` in the calculator no longer clamps to `2000000`.
+  Parsing of `K/M/B/T` on commit is unchanged.
+- **Balling now accepts correct answers even when shiny rows reuse the normal
+  unit's art or name.** `eligiblePool()` keeps exactly one answer per unique
+  artwork and prefers the non-shiny row, so a duplicate render can never be
+  picked as an unmatchable answer. Same-name variants with distinct art are
+  grouped: clicking a suggestion pins its slug, ambiguous labels show the
+  rarity (`LaserBall · Transcendents`), and a typed bare name, `Shiny …` name
+  or punctuation variant matches the whole alias group.
+
+**Verification for this pass**: `npm test` → 222 tests in 41 files (new
+`src/utils/balling.test.js`); `npm run lint` → 95 warnings / 0 errors;
+`npm run build` → 762 pre-rendered pages and all social cards; new browser
+suite `/home/user/_audit/tools/verify_bugfixes.mjs` → 22/22 checks against a
+mocked bundle containing a shared-art shiny row; all prior browser suites still
+green (59/59 feature, 29/29 build, 18/18 new-feature, 29/29 regression);
+worker mock 49/49; `/tmp/validate_zips.py` → 94/94 package checks; both ZIPs
+pass `unzip -t`. No live site, worker, KV or git writes.
+
+## PREVIOUS PASS — card polish, names, tint and calculator suffixes (`2026-11-02.5`)
 
 Follow-up polish requested after reviewing the WIKI card screenshots. All
 items are implemented and browser-verified against the local `dist`:
@@ -62,14 +91,14 @@ which this pass deliberately removes. The seven-account roster (including
 `knwasdo@gmail.com`) and the invite/claim onboarding are unchanged. Ads stay
 OFF; this is still a code package with no live writes.
 
-**Verification for `.5`**: `npm test` → 213 tests in 40 files; `npm run lint`
+**Verification for the original `.5` package**: `npm test` → 213 tests in 40 files; `npm run lint`
 → 95 warnings / 0 errors; `npm audit --omit=dev` → 0 vulnerabilities;
 `npm run build` → 762 pre-rendered pages and all social cards; browser suites
 → 59/59 feature checks, 29/29 build, 18/18 new-feature, 29/29 regression;
 worker mock → 49/49; `/tmp/validate_zips.py` → 94/94 package checks; both ZIPs
 pass `unzip -t`. Ads OFF; no live writes, no deployment.
 
-## PREVIOUS PASS — seven features + a seventh editor (November 2, 2026, `2026-11-02.4`)
+## EARLIER PASS — seven features + a seventh editor (November 2, 2026, `2026-11-02.4`)
 
 Historical record of the previous package. The `/glossary` page, click-to-pin
 popovers and WIKI card tags described below were **removed or changed in `.5`**;

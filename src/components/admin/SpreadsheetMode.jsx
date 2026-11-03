@@ -61,8 +61,10 @@ function NumCell({ rowIdx, col, value, disabled, onChange, onKey }) {
       onFocus={(e) => { setFocused(true); e.target.select?.(); }}
       onBlur={() => setFocused(false)}
       onChange={(e) => {
-        const parsed = col.type === 'num' ? parseCompactValue(e.target.value) : null;
-        onChange(col.key, parsed !== null ? String(parsed) : e.target.value);
+        // Store exactly what was typed. makeSpreadsheetPatch() parses
+        // K/M/B/T on save, so rewriting "1.3M" into "1300000" on the last
+        // keystroke only made suffixes impossible to type.
+        onChange(col.key, e.target.value);
       }}
       onKeyDown={(e) => onKey(e, rowIdx, col.key)}
       aria-label={col.label}

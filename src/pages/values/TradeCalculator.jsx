@@ -843,8 +843,33 @@ function TradeSide({ side, label, entries, setEntries, computed, valueEntries, r
   const total = computed.reduce((sum, e) => sum + (e.tradeValue || 0), 0);
   const sideClass = side === 'A' ? 'calc-side-you' : 'calc-side-them';
 
-  const updateQuantity = (id, quantity) => {
-    setEntries((prev) => prev.map((e) => (e.id !== id ? e : { ...e, quantity: clampQuantity(e.slug, quantity) })));
+  // Currency amounts are typed as free text (K/M/B/T), so partial input like
+  // "6." or "6.2" must NOT be collapsed to 0/6 mid-keystroke. Keep a local
+  // draft for the input and only publish a number once the text parses.
+  const [quantityDrafts, setQuantityDrafts] = useState({});
+  const clearQuantityDraft = (id) => setQuantityDrafts((prev) => {
+    if (!(id in prev)) return prev;
+    const next = { ...prev };
+    delete next[id];
+    return next;
+  });
+
+  const updateQuantity = (id, raw) => {
+    const target = entries.find((e) => e.id === id);
+    if (!target) return;
+    if (isCurrencySlug(target.slug)) {
+      setQuantityDrafts((prev) => ({ ...prev, [id]: raw }));
+      if (parseCompactValue(raw) === null) return; // still typing a decimal/suffix
+    }
+    setEntries((prev) => prev.map((e) => (e.id !== id ? e : { ...e, quantity: clampQuantity(e.slug, raw) })));
+  };
+
+  const stepQuantity = (id, delta) => {
+    clearQuantityDraft(id);
+    setEntries((prev) => prev.map((e) => (e.id !== id ? e : {
+      ...e,
+      quantity: clampQuantity(e.slug, (Number(e.quantity) || 0) + delta),
+    })));
   };
 
   const addLinked = (valueEntry) => {
@@ -952,7 +977,7 @@ function TradeSide({ side, label, entries, setEntries, computed, valueEntries, r
                   <button
                     type="button"
                     className="calc-qty-btn"
-                    onClick={() => updateQuantity(entry.id, entry.quantity - (isCurrency ? 1000 : 1))}
+                    onClick={() => stepQuantity(entry.id, -(isCurrency ? 1000 : 1))}
                     disabled={isCurrency ? entry.quantity <= 0 : entry.quantity <= 1}
                   >
                     −
@@ -964,14 +989,15 @@ function TradeSide({ side, label, entries, setEntries, computed, valueEntries, r
                     min={isCurrency ? undefined : 1}
                     max={isCurrency ? undefined : 9999}
                     step={isCurrency ? undefined : 1}
-                    value={entry.quantity}
+                    value={isCurrency ? (quantityDrafts[entry.id] ?? entry.quantity) : entry.quantity}
                     onChange={(e) => updateQuantity(entry.id, e.target.value)}
+                    onBlur={() => clearQuantityDraft(entry.id)}
                     aria-label={isCurrency ? `Amount for ${resolved.name}` : `Quantity for ${resolved.name}`}
                   />
                   <button
                     type="button"
                     className="calc-qty-btn"
-                    onClick={() => updateQuantity(entry.id, entry.quantity + (isCurrency ? 1000 : 1))}
+                    onClick={() => stepQuantity(entry.id, isCurrency ? 1000 : 1)}
                     disabled={!isCurrency && entry.quantity >= 9999}
                   >
                     +

@@ -98,7 +98,7 @@ describe('ballonomics logic', () => {
 });
 
 describe('balling logic', () => {
-  const IMAGED = UNITS.map((u, i) => (i < 3 ? { ...u, image_url: 'data:image/webp;base64,AAA' } : u));
+  const IMAGED = UNITS.map((u, i) => (i < 3 ? { ...u, image_url: `data:image/webp;base64,AAA${i}` } : u));
 
   it('eligiblePool keeps only units with data-URI art', () => {
     expect(ballPool(IMAGED).map((e) => e.slug)).toEqual(['a', 'b', 'c']);

@@ -1,1 +1,1 @@
-release: 2026-11-02.5 WIKI card polish, unit display names, hero tint and calculator suffixes
+release: 2026-11-02.5 quick fixes - natural K/M/B/T suffix typing and Balling correct-answer matching

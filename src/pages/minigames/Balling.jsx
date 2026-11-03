@@ -8,6 +8,11 @@ import {
   PIXEL_STAGES,
   applyWrongGuess,
   eligiblePool,
+  normalizeBallingName,
+  buildGuessGroups,
+  isCorrectGuess,
+  ballingNameKey,
+  ballingNameAliases,
   pickAnswer,
   stagePoints,
   loadStats,
@@ -32,9 +37,7 @@ function quickBudget(quickChain) {
   return Math.max(3, 10 - Math.max(0, quickChain));
 }
 
-function normalizeGuess(value) {
-  return value.trim().toLowerCase().replace(/\s+/g, ' ');
-}
+const normalizeGuess = normalizeBallingName;
 
 /** Draw `img` onto the display canvas at a pixel-grid resolution. */
 function drawPixelated(canvas, img, stage) {
@@ -68,10 +71,24 @@ export default function Balling() {
 
   const pool = useMemo(() => eligiblePool(allValueEntries), [allValueEntries]);
   const { imageMap } = useWikiImageOverrides(pool.map((e) => e.slug));
-  const nameIndex = useMemo(
-    () => pool.map((entry) => ({ slug: entry.slug, name: entry.name, normal: normalizeGuess(entry.name) })),
-    [pool]
-  );
+  const guessGroups = useMemo(() => buildGuessGroups(pool), [pool]);
+  const nameIndex = useMemo(() => pool.map((entry) => {
+    const normal = normalizeGuess(entry.name);
+    const group = guessGroups.get(normal);
+    const ambiguous = (group?.entries.length || 0) > 1;
+    const rarity = entry.rarity || (/^shiny-/i.test(entry.slug) ? 'Shiny' : 'Normal');
+    // Two variants can still share a name with different art. Show the rarity
+    // so players can tell them apart in the suggestion list.
+    const label = ambiguous ? `${entry.name} · ${rarity}` : entry.name;
+    return {
+      slug: entry.slug,
+      name: entry.name,
+      normal,
+      label,
+      image_url: entry.image_url,
+      aliases: ballingNameAliases(entry),
+    };
+  }), [pool, guessGroups]);
 
   const dailyAnswer = useMemo(
     () => (dayKey ? pickAnswer(pool, `${DAILY_SALT}:${dayKey}:${userSeed}`) : null),
@@ -83,6 +100,8 @@ export default function Balling() {
   const [quick, setQuick] = useState(null); // { answer, solved, lost, guesses }
   const [stageIndex, setStageIndex] = useState(0);
   const [guess, setGuess] = useState('');
+  const [selectedSlug, setSelectedSlug] = useState(null);
+  const clearGuess = () => { setGuess(''); setSelectedSlug(null); };
   const [quickChain, setQuickChain] = useState(0);
   const [message, setMessage] = useState('');
   const [shareMessage, setShareMessage] = useState('');
@@ -187,7 +206,13 @@ export default function Balling() {
     event.preventDefault();
     if (!answer || finished) return;
     const normalized = normalizeGuess(guess);
-    const match = nameIndex.find((entry) => entry.normal === normalized || entry.slug === normalized.replace(/\s+/g, '-'));
+    // Clicking a suggestion pins its exact slug; typing a bare name matches the
+    // whole name group (normal + shiny variants) instead of only the first row.
+    const match = (selectedSlug && nameIndex.find((entry) => entry.slug === selectedSlug))
+      || nameIndex.find((entry) => entry.normal === normalized || normalizeGuess(entry.label) === normalized)
+      || nameIndex.find((entry) => entry.slug === normalized.replace(/\s+/g, '-'))
+      || nameIndex.find((entry) => entry.aliases.includes(normalized)
+        || entry.aliases.includes(ballingNameKey(normalized)));
     if (!match) {
       setMessage('Pick a unit from the list.');
       return;
@@ -195,12 +220,12 @@ export default function Balling() {
     const wrongCount = run.guesses.length;
     if (run.guesses.some((g) => g.slug === match.slug)) {
       setMessage('Already guessed that one.');
-      setGuess('');
+      clearGuess();
       return;
     }
 
-    const correct = match.slug === answer.slug;
-    const guesses = [...run.guesses, { slug: match.slug, name: match.name, correct }];
+    const correct = isCorrectGuess(match, answer, guessGroups);
+    const guesses = [...run.guesses, { slug: match.slug, name: match.label, correct }];
     const allowed = mode === 'quick' ? quickBudget(quickChain) : PIXEL_STAGES.length;
 
     if (correct) {
@@ -233,7 +258,7 @@ export default function Balling() {
       incrementStat('balling_solved', 1);
       if (stageIndex === 0) incrementStat('balling_pixel_perfect', 1);
       setMessage(`Spotted it at ${PIXEL_STAGES[stageIndex] || 'full'}px — ${stagePoints(stageIndex)} points.`);
-      setGuess('');
+      clearGuess();
       return;
     }
 
@@ -262,7 +287,7 @@ export default function Balling() {
       const remaining = allowed - wrongCount - 1;
       setMessage(`Not ${match.name} — sharpening to ${pxNow}px. ${remaining} ${remaining === 1 ? 'guess' : 'guesses'} left.`);
     }
-    setGuess('');
+    clearGuess();
   }
 
   function startQuick() {
@@ -272,7 +297,7 @@ export default function Balling() {
       lost: false,
       guesses: [],
     });
-    setGuess('');
+    clearGuess();
     setMessage('');
     setShareMessage('');
   }
@@ -303,7 +328,9 @@ export default function Balling() {
     const guessedSlugs = new Set(run.guesses.map((g) => g.slug));
     const available = nameIndex.filter((entry) => !guessedSlugs.has(entry.slug));
     if (!q) return available.slice(0, 24);
-    return available.filter((entry) => entry.normal.includes(q) || entry.slug.includes(q.replace(/\s+/g, '-'))).slice(0, 32);
+    return available.filter((entry) => entry.normal.includes(q)
+      || normalizeGuess(entry.label).includes(q)
+      || entry.slug.includes(q.replace(/\s+/g, '-'))).slice(0, 32);
   }, [guess, run.guesses, nameIndex]);
 
   if (timeState.status === 'loading') {
@@ -404,8 +431,11 @@ export default function Balling() {
 
             <form className="ball-guess-form" onSubmit={submitGuess}>
               <div className="ball-guess-row">
-                <Autocomplete className="ball-combobox" ariaLabel="Your guess" value={guess} onChange={setGuess}
-                  onSelect={(option) => setGuess(option.label)} options={suggestions.map((entry) => ({ value: entry.slug, label: entry.name, icon: imageMap[entry.slug] }))} placeholder="Name that ball…" />
+                <Autocomplete className="ball-combobox" ariaLabel="Your guess" value={guess}
+                  onChange={(value) => { setGuess(value); setSelectedSlug(null); }}
+                  onSelect={(option) => { setGuess(option.label); setSelectedSlug(option.value); }}
+                  options={suggestions.map((entry) => ({ value: entry.slug, label: entry.label, icon: imageMap[entry.slug] }))}
+                  placeholder="Name that ball…" />
                 <button type="submit">Guess</button>
                 <button
                   type="button"
