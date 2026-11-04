@@ -45,6 +45,25 @@ export function formatRelativeTime(input) {
   return `${Math.floor(months / 12)}y ago`;
 }
 
+// ---- Special non-numeric market markers -------------------------------------
+// 'O/C' (one-of-one / overcomp — nobody active can offer for it) and 'N/A'
+// (not assignable) are legitimate values for Value, Gems AND Coins. They are
+// stored as strings, never coerced to 0. Kept here so the input parsers, the
+// form normalizer, the spreadsheet and the display layer all agree.
+export const SPECIAL_BASE_VALUES = ['O/C', 'N/A'];
+
+export function isSpecialBaseValue(raw) {
+  if (raw === null || raw === undefined) return null;
+  const text = String(raw).trim().toUpperCase();
+  if (!text) return null;
+  const compact = text.replace(/\s+/g, '');
+  if (SPECIAL_BASE_VALUES.includes(compact)) return compact;
+  const letters = compact.replace(/[^A-Z0-9]/g, '');
+  if (letters === 'OC') return 'O/C';
+  if (letters === 'NA') return 'N/A';
+  return null;
+}
+
 // ---- Compact K / M / B / T number entry & site-wide display ----------------
 // Editors type "20M" instead of 20000000; visitors see the same suffixes on
 // every large number across the site. Both directions live here so the admin
@@ -73,9 +92,15 @@ export function hasCompactSuffix(input) {
 }
 
 /** Parse an admin range such as `1M-2M` or `90-100`. */
-export function parseCompactRange(input) {
+export function parseCompactRange(input, { allowSpecial = false } = {}) {
   const raw = String(input ?? '').trim();
   if (!raw) return { min: '', max: '', valid: false };
+  // O/C and N/A are whole-field markers: no range applies, so the max is
+  // always cleared. Only value editors opt in — other callers stay numeric.
+  if (allowSpecial) {
+    const special = isSpecialBaseValue(raw);
+    if (special) return { min: special, max: '', valid: true, special: true };
+  }
   const dash = raw.indexOf('-', 1); // skip a leading minus sign
   if (dash === -1) {
     const value = parseCompactValue(raw);
@@ -92,6 +117,8 @@ export function parseCompactRange(input) {
 
 /** Render a numeric form value as a compact, editable string. */
 export function formatRangeForInput(min, max) {
+  const special = isSpecialBaseValue(min);
+  if (special) return special; // a marker has no range — ignore any stale max
   const low = parseCompactValue(min);
   const high = parseCompactValue(max);
   const lowText = low === null ? (min ?? '') : formatCompactNumber(low);

@@ -33,9 +33,9 @@ function parseSheetNumber(raw, field) {
   const text = String(raw).trim();
   // Commas are allowed only as thousands separators; malformed input must
   // never silently turn into a different number.
-  const match = text.match(/^((?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?)([kmb])?$/i);
+  const match = text.match(/^((?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?)([kmbt])?$/i);
   if (!match) throw new Error(`Invalid ${field.replaceAll('_', ' ')}: ${String(raw)}. Enter a non-negative number${SPECIAL_FIELDS.has(field) ? ', O/C or N/A' : ''}.`);
-  const scale = { k: 1e3, m: 1e6, b: 1e9 }[match[2]?.toLowerCase()] || 1;
+  const scale = { k: 1e3, m: 1e6, b: 1e9, t: 1e12 }[match[2]?.toLowerCase()] || 1;
   const result = Number(match[1].replace(/,/g, '')) * scale;
   if (!Number.isFinite(result)) throw new Error(`The ${field.replaceAll('_', ' ')} is too large.`);
   return result;

@@ -29,3 +29,14 @@ describe('spreadsheet values', () => {
     expect(makeSpreadsheetInitialRow(row)).toMatchObject({ base_value: 200, gems: 'O/C', coins: 0, notes: 'remember', trend: 'falling' });
   });
 });
+
+describe('spreadsheet special markers', () => {
+  it('accepts O/C and N/A in Value, Gems and Coins from the spreadsheet', () => {
+    expect(makeSpreadsheetPatch({ base_value: 'n/a', gems: 'o/c', coins: 'O / C' })).toEqual({
+      base_value: 'N/A', baseValue: 'N/A', gems: 'O/C', coins: 'O/C',
+    });
+  });
+  it('parses the T suffix consistently with the rest of the site', () => {
+    expect(makeSpreadsheetPatch({ base_value: '2T' }).base_value).toBe(2_000_000_000_000);
+  });
+});

@@ -3,7 +3,7 @@ import { DEMAND_COLORS, DEMAND_LABELS, SCARCITY_COLORS, SCARCITY_LABELS, UNIT_RA
 import './SpreadsheetMode.css';
 import Dropdown from '../Dropdown';
 import { makeSpreadsheetRow } from '../../utils/spreadsheetValues';
-import { parseCompactValue, formatSiteNumber } from '../../utils/formatNumber';
+import { parseCompactValue, formatSiteNumber, isSpecialBaseValue } from '../../utils/formatNumber';
 import { resolveImageUrl } from '../../utils/localAssets';
 
 // SPREADSHEET MODE — bulk value editing. Design goals (v2):
@@ -49,7 +49,10 @@ function ChipSelect({ value, options, colors = {}, onChange, title, disabled }) 
 
 function NumCell({ rowIdx, col, value, disabled, onChange, onKey }) {
   const [focused, setFocused] = useState(false);
-  const numeric = col.type === 'num' && value !== '' && value != null && parseCompactValue(value) !== null;
+  // O/C and N/A are legitimate values in the Value / Gems / Coins columns.
+  // They are not numbers, so leave them exactly as the editor typed them.
+  const special = isSpecialBaseValue(value);
+  const numeric = col.type === 'num' && !special && value !== '' && value != null && parseCompactValue(value) !== null;
   const display = !focused && numeric ? formatSiteNumber(parseCompactValue(value)) : (value ?? '');
   return (
     <input
@@ -68,7 +71,7 @@ function NumCell({ rowIdx, col, value, disabled, onChange, onKey }) {
       }}
       onKeyDown={(e) => onKey(e, rowIdx, col.key)}
       aria-label={col.label}
-      title={numeric ? `${formatSiteNumber(parseCompactValue(value), { full: true })} — K/M/B/T accepted` : undefined}
+      title={special ? `${special} — no numeric value applies` : (numeric ? `${formatSiteNumber(parseCompactValue(value), { full: true })} — K/M/B/T accepted` : undefined)}
     />
   );
 }
@@ -176,7 +179,7 @@ function UnitAvatar({ imageUrl }) {
       <div className="sms-toolbar">
         <div className="sms-toolbar-left">
           <h2>📊 Spreadsheet Mode</h2>
-          <p className="sms-hint">{dirtyCount > 0 ? `${dirtyCount} unit${dirtyCount > 1 ? 's' : ''} modified — Save All publishes just those` : 'Edit many units at once · Tab / Enter / ↑↓ to move'}</p>
+          <p className="sms-hint">{dirtyCount > 0 ? `${dirtyCount} unit${dirtyCount > 1 ? 's' : ''} modified — Save All publishes just those` : 'Edit many units at once · K/M/B/T · O/C and N/A in Value, Gems, Coins · Tab / Enter / ↑↓'}</p>
         </div>
         <div className="sms-toolbar-right">
           <input className="admin-search sms-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Filter units…" aria-label="Filter units" />

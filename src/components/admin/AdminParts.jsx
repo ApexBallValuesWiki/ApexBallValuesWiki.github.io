@@ -8,7 +8,7 @@ import ValueTrendGraph from '../ValueTrendGraph';
 import { DEMAND_LABELS, SCARCITY_LABELS, getRarityGlow, isShinyRarity, UNIT_RARITIES } from '../../data/taxonomy';
 import { upgradeToForm, ensureArray, linesToObject, objectToLines } from '../../utils/adminForms';
 import { computeTradeValue } from '../../utils/calculator';
-import { parseCompactRange, formatRangeForInput, formatSiteNumber } from '../../utils/formatNumber';
+import { parseCompactRange, formatRangeForInput, formatSiteNumber, isSpecialBaseValue } from '../../utils/formatNumber';
 import { getDisplayName } from '../../utils/teamMembers';
 import EditorLeaderboard from './EditorLeaderboard';
 import { UNIT_TAGS, normalizeUnitTag } from '../../utils/originTag';
@@ -257,7 +257,7 @@ export function UnitPicker({ units = [], total = 0, query = '', setQuery, filter
 // Text input for min-max ranges that keeps a LOCAL raw string while typing,
 // so '-' can be typed freely (the old controlled rebuild ate trailing
 // dashes: '5-' instantly snapped back to '5').
-export function RangeTextInput({ label, min, max, onCommit, placeholder }) {
+export function RangeTextInput({ label, min, max, onCommit, placeholder, allowSpecial = false }) {
   const external = formatRangeForInput(min, max);
   const [raw, setRaw] = useState(external);
   const [invalid, setInvalid] = useState(false);
@@ -274,7 +274,7 @@ export function RangeTextInput({ label, min, max, onCommit, placeholder }) {
   function handleChange(event) {
     const val = event.target.value;
     setRaw(val);
-    const parsed = parseCompactRange(val);
+    const parsed = parseCompactRange(val, { allowSpecial });
     setInvalid(!parsed.valid && val.trim() !== '');
     if (parsed.valid) onCommit(parsed.min, parsed.max);
   }
@@ -288,25 +288,36 @@ export function RangeTextInput({ label, min, max, onCommit, placeholder }) {
         value={raw}
         onChange={handleChange}
         onFocus={() => setFocused(true)}
-        onBlur={() => { setFocused(false); setRaw(formatRangeForInput(min, max)); }}
+        onBlur={() => {
+          setFocused(false);
+          // Normalize from the LOCAL text, so a just-typed O/C / N/A is never
+          // replaced by the previous numeric value before state propagates.
+          const parsed = parseCompactRange(raw, { allowSpecial });
+          setRaw(parsed.valid ? formatRangeForInput(parsed.min, parsed.max) : formatRangeForInput(min, max));
+        }}
         placeholder={placeholder || 'e.g. 5 or 1M-2M'}
         aria-invalid={invalid || undefined}
       />
-      <small className="admin-compact-hint">K / M / B / T supported · e.g. 20M = {formatSiteNumber(20_000_000, { full: true })}</small>
+      <small className="admin-compact-hint">
+        K / M / B / T supported{allowSpecial ? ' · O/C and N/A are valid too' : ''} · e.g. 20M = {formatSiteNumber(20_000_000, { full: true })}
+      </small>
     </label>
   );
 }
 
 export function ValueEditor({ unit, form = {}, tradeValue = 0, selectedRow, updateField, saveValue, resetValue, refresh, saving, message, messageAction, dirty, imageMap = {}, wikiRows = [], commitRangeRef }) {
   const safeUnit = unit || { slug: 'ball', name: 'Ball', rarity: 'Normie', type: 'DPS' };
+  const valueSpecial = isSpecialBaseValue(form.baseValue);
+  const gemsSpecial = isSpecialBaseValue(form.gems);
+  const coinsSpecial = isSpecialBaseValue(form.coins);
   const compGems = computeTradeValue(form.gems, form.demand, form.scarcity);
   const compCoins = computeTradeValue(form.coins, form.demand, form.scarcity);
 
-  // Compute scaled max values when range exists
-  const hasRange = form.baseValueMax && Number(form.baseValueMax) > Number(form.baseValue || 0);
+  // Compute scaled max values when range exists. Markers have no range.
+  const hasRange = !valueSpecial && form.baseValueMax && Number(form.baseValueMax) > Number(form.baseValue || 0);
   const tradeValueMax = hasRange ? computeTradeValue(form.baseValueMax, form.demand, form.scarcity) : null;
-  const gemsMax = form.gemsMax ? computeTradeValue(form.gemsMax, form.demand, form.scarcity) : null;
-  const coinsMax = form.coinsMax ? computeTradeValue(form.coinsMax, form.demand, form.scarcity) : null;
+  const gemsMax = !gemsSpecial && form.gemsMax ? computeTradeValue(form.gemsMax, form.demand, form.scarcity) : null;
+  const coinsMax = !coinsSpecial && form.coinsMax ? computeTradeValue(form.coinsMax, form.demand, form.scarcity) : null;
 
   // Local input state so typing feels natural
   const [rangeInput, setRangeInput] = useState(() => formatRangeForInput(form.baseValue, form.baseValueMax));
@@ -326,8 +337,8 @@ export function ValueEditor({ unit, form = {}, tradeValue = 0, selectedRow, upda
   }
 
   function commitRange() {
-    const parsed = parseCompactRange(rangeInput);
-    setRangeInvalid(!parsed.valid);
+    const parsed = parseCompactRange(rangeInput, { allowSpecial: true });
+    setRangeInvalid(!parsed.valid && rangeInput.trim() !== '');
     updateField('baseValue', parsed.min);
     updateField('baseValueMax', parsed.max);
     return { baseValue: parsed.min, baseValueMax: parsed.max };
@@ -336,7 +347,7 @@ export function ValueEditor({ unit, form = {}, tradeValue = 0, selectedRow, upda
   // Live-parse so K/M/B/T works while typing, not only on blur/save.
   function onRangeInput(value) {
     setRangeInput(value);
-    const parsed = parseCompactRange(value);
+    const parsed = parseCompactRange(value, { allowSpecial: true });
     setRangeInvalid(!parsed.valid && value.trim() !== '');
     if (parsed.valid) {
       updateField('baseValue', parsed.min);
@@ -356,14 +367,14 @@ export function ValueEditor({ unit, form = {}, tradeValue = 0, selectedRow, upda
       <div className="admin-preview-value">
         <span>Exact Live Outputs — numbers publish exactly as typed</span>
         <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', marginTop: 4 }}>
-          <strong style={{ color: 'var(--c-info)' }} title={tradeValueMax ? `${formatFullNumber(tradeValue)} - ${formatFullNumber(tradeValueMax)} exact` : `${formatFullNumber(tradeValue)} exact`}>
-            Value: {tradeValueMax ? `${formatCompactNumber(tradeValue)}-${formatCompactNumber(tradeValueMax)}` : formatCompactNumber(tradeValue)}
+          <strong style={{ color: 'var(--c-info)' }} title={valueSpecial ? `${valueSpecial} — no numeric value applies` : (tradeValueMax ? `${formatFullNumber(tradeValue)} - ${formatFullNumber(tradeValueMax)} exact` : `${formatFullNumber(tradeValue)} exact`)}>
+            Value: {valueSpecial || (tradeValueMax ? `${formatCompactNumber(tradeValue)}-${formatCompactNumber(tradeValueMax)}` : formatCompactNumber(tradeValue))}
           </strong>
-          <strong style={{ color: 'var(--c-purple)' }} title={gemsMax ? `${formatFullNumber(compGems)} - ${formatFullNumber(gemsMax)} exact` : `${formatFullNumber(compGems)} exact`}>
-            Gems: {gemsMax ? `${formatCompactNumber(compGems)}-${formatCompactNumber(gemsMax)}` : formatCompactNumber(compGems)}
+          <strong style={{ color: 'var(--c-purple)' }} title={gemsSpecial ? `${gemsSpecial} — no numeric value applies` : (gemsMax ? `${formatFullNumber(compGems)} - ${formatFullNumber(gemsMax)} exact` : `${formatFullNumber(compGems)} exact`)}>
+            Gems: {gemsSpecial || (gemsMax ? `${formatCompactNumber(compGems)}-${formatCompactNumber(gemsMax)}` : formatCompactNumber(compGems))}
           </strong>
-          <strong style={{ color: 'var(--c-warning)' }} title={coinsMax ? `${formatFullNumber(compCoins)} - ${formatFullNumber(coinsMax)} exact` : `${formatFullNumber(compCoins)} exact`}>
-            Coins: {coinsMax ? `${formatCompactNumber(compCoins)}-${formatCompactNumber(coinsMax)}` : formatCompactNumber(compCoins)}
+          <strong style={{ color: 'var(--c-warning)' }} title={coinsSpecial ? `${coinsSpecial} — no numeric value applies` : (coinsMax ? `${formatFullNumber(compCoins)} - ${formatFullNumber(coinsMax)} exact` : `${formatFullNumber(compCoins)} exact`)}>
+            Coins: {coinsSpecial || (coinsMax ? `${formatCompactNumber(compCoins)}-${formatCompactNumber(coinsMax)}` : formatCompactNumber(compCoins))}
           </strong>
         </div>
       </div>
@@ -372,19 +383,23 @@ export function ValueEditor({ unit, form = {}, tradeValue = 0, selectedRow, upda
 
       <div className="admin-form-grid">
         <label className="admin-field">
-          <span>Value (type 90-100 or 1M-2M for a range)</span>
+          <span>Value (90-100 or 1M-2M for a range; O/C or N/A also allowed)</span>
           <input
             className="admin-text-input"
             type="text"
             value={rangeInput}
             onChange={(e) => onRangeInput(e.target.value)}
             onFocus={() => setRangeFocused(true)}
-            onBlur={() => { setRangeFocused(false); setRangeInput(formatRangeForInput(form.baseValue, form.baseValueMax)); }}
+            onBlur={() => {
+              setRangeFocused(false);
+              const parsed = parseCompactRange(rangeInput, { allowSpecial: true });
+              setRangeInput(parsed.valid ? formatRangeForInput(parsed.min, parsed.max) : formatRangeForInput(form.baseValue, form.baseValueMax));
+            }}
             onKeyDown={(e) => { if (e.key === 'Enter') { commitRange(); e.target.blur(); } }}
             placeholder="e.g. 20M or 1M-2M"
             aria-invalid={rangeInvalid || undefined}
           />
-          <small className="admin-compact-hint">K / M / B / T supported · 20M = {formatSiteNumber(20_000_000, { full: true })}</small>
+          <small className="admin-compact-hint">K / M / B / T, O/C and N/A supported · 20M = {formatSiteNumber(20_000_000, { full: true })}</small>
         </label>
         <RangeTextInput
           label="Gems (type 10-20 for range)"
@@ -392,6 +407,7 @@ export function ValueEditor({ unit, form = {}, tradeValue = 0, selectedRow, upda
           max={form.gemsMax}
           onCommit={(nextMin, nextMax) => { updateField('gems', nextMin); updateField('gemsMax', nextMax); }}
           placeholder="e.g. 1K-2K or 5"
+          allowSpecial
         />
         <RangeTextInput
           label="Coins (type 5-10 for range)"
@@ -399,6 +415,7 @@ export function ValueEditor({ unit, form = {}, tradeValue = 0, selectedRow, upda
           max={form.coinsMax}
           onCommit={(nextMin, nextMax) => { updateField('coins', nextMin); updateField('coinsMax', nextMax); }}
           placeholder="e.g. 5-10 or 3"
+          allowSpecial
         />
         <AdminSelect label="Demand" value={form.demand} onChange={(value) => updateField('demand', value)} options={DEMAND_LABELS} />
         <AdminSelect label="Scarcity" value={form.scarcity} onChange={(value) => updateField('scarcity', value)} options={SCARCITY_LABELS} />

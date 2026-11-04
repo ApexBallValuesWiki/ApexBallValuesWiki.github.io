@@ -21,9 +21,9 @@ read the same Cloudflare KV namespace. `apex-td-project.zip` pushes to the Test
 Realm repo, `apex-td-final.zip` pushes to the production repo. This closes the
 16-day drift: production receives the newer staging feature set.
 
-## LATEST PASS — compact-number typing + Balling correct-answer fixes (post-`.5` quick fixes)
+## LATEST PASS — compact-number typing, Balling answers + O/C and N/A values (post-`.5` quick fixes)
 
-Two reported bugs fixed in the `.5` source. Same worker version
+Three reported bugs fixed in the `.5` source. Same worker version
 (`2026-11-02.5`), same seven-account roster, ads still OFF, no deployment.
 
 - **K/M/B/T suffixes no longer appear or reformat while typing.** Admin Value /
@@ -40,13 +40,27 @@ Two reported bugs fixed in the `.5` source. Same worker version
   grouped: clicking a suggestion pins its slug, ambiguous labels show the
   rarity (`LaserBall · Transcendents`), and a typed bare name, `Shiny …` name
   or punctuation variant matches the whole alias group.
+- **`O/C` and `N/A` are valid Value, Gems and Coins entries again.** The
+  compact-number parsers treated those markers as invalid text, so the admin
+  fields flagged them red and reset them to the old number on blur. The three
+  value inputs now opt in to marker parsing, keep the marker on blur, show it
+  in the "Exact Live Outputs" preview and publish it as a string (never `0`).
+  `isSpecialBaseValue()` is now one canonical definition shared by the input
+  layer, `normalizeValueForm()`, Spreadsheet Mode and the public cards; it
+  accepts case/spacing/punctuation variants (`o/c`, `n/a`, `O / C`, `OC`,
+  `N.A.`) and normalizes them. A marker clears any stale min-max range, and
+  the spreadsheet also gains the `T` suffix for consistency. Markers still
+  show as `O/C` / `N/A` on the public WIKI/Values cards.
 
-**Verification for this pass**: `npm test` → 222 tests in 41 files (new
-`src/utils/balling.test.js`); `npm run lint` → 95 warnings / 0 errors;
-`npm run build` → 762 pre-rendered pages and all social cards; new browser
-suite `/home/user/_audit/tools/verify_bugfixes.mjs` → 22/22 checks against a
-mocked bundle containing a shared-art shiny row; all prior browser suites still
-green (59/59 feature, 29/29 build, 18/18 new-feature, 29/29 regression);
+**Verification for this pass**: `npm test` → 229 tests in 41 files (new
+`src/utils/balling.test.js` plus marker tests in `formatNumber`,
+`adminForms` and `spreadsheetValues`); `npm run lint` → 95 warnings / 0 errors;
+`npm audit --omit=dev` → 0 vulnerabilities; `npm run build` → 762 pre-rendered
+pages and all social cards; new browser suite
+`/home/user/_audit/tools/verify_bugfixes.mjs` → 36/36 checks, including a
+mocked shared-art shiny row and a full marker save → public card round trip
+in both the single-unit editor and Spreadsheet Mode; all prior browser suites
+still green (59/59 feature, 29/29 build, 18/18 new-feature, 29/29 regression);
 worker mock 49/49; `/tmp/validate_zips.py` → 94/94 package checks; both ZIPs
 pass `unzip -t`. No live site, worker, KV or git writes.
 

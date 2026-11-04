@@ -82,3 +82,24 @@ describe('lines <-> object', () => {
     expect(linesToObject('key: val\nnope\nx: 1')).toEqual({ key: 'val', x: '1' });
   });
 });
+
+describe('normalizeValueForm — special markers', () => {
+  it('keeps O/C and N/A for Value, Gems and Coins and clears stale ranges', () => {
+    const out = normalizeValueForm({
+      baseValue: 'o/c', baseValueMax: 500,
+      gems: 'n/a', gemsMax: 40,
+      coins: 'O / C', coinsMax: 90,
+    });
+    expect(out).toMatchObject({
+      baseValue: 'O/C', baseValueMax: null,
+      gems: 'N/A', gemsMax: null,
+      coins: 'O/C', coinsMax: null,
+    });
+  });
+
+  it('still parses compact numbers instead of turning them into zero', () => {
+    expect(normalizeValueForm({ baseValue: '1.3M', gems: '6.2M' })).toMatchObject({
+      baseValue: 1_300_000, gems: 6_200_000,
+    });
+  });
+});

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   parseCompactValue, parseCompactRange, hasCompactSuffix,
   formatRangeForInput, formatSiteNumber, formatCompactNumber,
+  isSpecialBaseValue,
 } from './formatNumber';
 
 describe('compact K/M/B/T numbers', () => {
@@ -42,5 +43,34 @@ describe('compact K/M/B/T numbers', () => {
     expect(formatSiteNumber(999)).toBe('999');
     expect(formatSiteNumber(20_000_000, { full: true })).toBe('20,000,000');
     expect(formatCompactNumber(1_500_000)).toBe('1.5M');
+  });
+});
+
+describe('special market markers (O/C, N/A)', () => {
+  it('normalizes case, spaces and punctuation', () => {
+    expect(isSpecialBaseValue('O/C')).toBe('O/C');
+    expect(isSpecialBaseValue('o/c')).toBe('O/C');
+    expect(isSpecialBaseValue(' O / C ')).toBe('O/C');
+    expect(isSpecialBaseValue('OC')).toBe('O/C');
+    expect(isSpecialBaseValue('n.a.')).toBe('N/A');
+    expect(isSpecialBaseValue('N/A')).toBe('N/A');
+    expect(isSpecialBaseValue('1.3M')).toBeNull();
+    expect(isSpecialBaseValue('')).toBeNull();
+  });
+
+  it('only value editors opt in to marker parsing', () => {
+    expect(parseCompactRange('O/C', { allowSpecial: true }))
+      .toEqual({ min: 'O/C', max: '', valid: true, special: true });
+    expect(parseCompactRange('n / a', { allowSpecial: true }))
+      .toEqual({ min: 'N/A', max: '', valid: true, special: true });
+    expect(parseCompactRange('O/C').valid).toBe(false);
+    expect(parseCompactRange('1M-2M', { allowSpecial: true })).toEqual({ min: 1_000_000, max: 2_000_000, valid: true });
+  });
+
+  it('renders a marker for editing without a bogus range', () => {
+    expect(formatRangeForInput('O/C', 5_000_000)).toBe('O/C');
+    expect(formatRangeForInput('N/A', null)).toBe('N/A');
+    expect(formatSiteNumber('O/C')).toBe('O/C');
+    expect(formatSiteNumber('N/A')).toBe('N/A');
   });
 });

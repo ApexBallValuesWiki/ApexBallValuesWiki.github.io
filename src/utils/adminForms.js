@@ -1,6 +1,11 @@
 import { VALUE_OVERRIDES } from '../data/values';
 import { GENERATED_VALUE_OVERRIDES } from '../data/generated/units.generated';
 import { attacksToLines, linesToAttacks } from './attacks';
+import { parseCompactValue, isSpecialBaseValue } from './formatNumber';
+
+// Canonical definition lives with the number parsers so every input surface
+// accepts exactly the same markers. Re-exported for existing callers.
+export { SPECIAL_BASE_VALUES, isSpecialBaseValue } from './formatNumber';
 
 export { attacksToLines, linesToAttacks };
 
@@ -75,14 +80,10 @@ export function valueRowToForm(row, slug) {
   };
 }
 
-// Special non-numeric base values: 'O/C' (one-of-one / overcomp — nobody
-// active can offer for it) and 'N/A' (not assignable). Stored as strings.
-export const SPECIAL_BASE_VALUES = ['O/C', 'N/A'];
-
-export function isSpecialBaseValue(raw) {
-  const cleaned = String(raw ?? '').trim().toUpperCase().replace(/\s+/g, '');
-  return SPECIAL_BASE_VALUES.includes(cleaned) ? cleaned : null;
-}
+const asNumber = (raw, fallback = 0) => {
+  const parsed = parseCompactValue(raw);
+  return parsed === null ? (Number(raw) || fallback) : parsed;
+};
 
 export function normalizeValueForm(data) {
   const gems = data?.gems;
@@ -93,12 +94,13 @@ export function normalizeValueForm(data) {
   const specialGems = isSpecialBaseValue(gems);
   const specialCoins = isSpecialBaseValue(coins);
   return {
-    baseValue: special || (Number(data?.baseValue) || 0),
-    baseValueMax: (data?.baseValueMax !== '' && data?.baseValueMax != null) ? Number(data.baseValueMax) : null,
-    gems: specialGems || ((gems !== '' && gems != null) ? Number(gems) : 0),
-    gemsMax: specialGems ? null : ((gemsMax !== '' && gemsMax != null) ? Number(gemsMax) : null),
-    coins: specialCoins || ((coins !== '' && coins != null) ? Number(coins) : 0),
-    coinsMax: specialCoins ? null : ((coinsMax !== '' && coinsMax != null) ? Number(coinsMax) : null),
+    baseValue: special || asNumber(data?.baseValue),
+    // A marker replaces the number entirely — a stale range must not survive.
+    baseValueMax: special ? null : ((data?.baseValueMax !== '' && data?.baseValueMax != null) ? asNumber(data.baseValueMax) : null),
+    gems: specialGems || asNumber(gems),
+    gemsMax: specialGems ? null : ((gemsMax !== '' && gemsMax != null) ? asNumber(gemsMax) : null),
+    coins: specialCoins || asNumber(coins),
+    coinsMax: specialCoins ? null : ((coinsMax !== '' && coinsMax != null) ? asNumber(coinsMax) : null),
     demand: data?.demand || 'Normal',
     scarcity: data?.scarcity || 'Standard',
     trend: data?.trend || 'stable',

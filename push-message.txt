@@ -1,1 +1,1 @@
-release: 2026-11-02.5 quick fixes - natural K/M/B/T suffix typing and Balling correct-answer matching
+release: 2026-11-02.5 quick fixes - natural K/M/B/T typing, Balling correct answers, O/C and N/A values
