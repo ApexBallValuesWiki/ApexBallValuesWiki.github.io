@@ -1,9 +1,11 @@
 # APEX WIKI & Values — release status (updated November 5, 2026)
 
-**This is a code package, not a deployment.** Nothing was pushed, no live worker
-or KV record was modified, no destructive write/delete test was run against the
-shared live endpoint. Production and staging still serve their old builds until
-you run `push.cmd`.
+**This is a code package, not a deployment.** A release *branch* was pushed and
+opened as **pull request #1** on the production repo; `main` was not touched,
+nothing was merged, and no live worker or KV record was modified. No destructive
+write/delete test was run against the shared live endpoint. Production and
+staging still serve their old builds until the PR is merged (or you run
+`push.cmd`).
 
 **Read `DEPLOY-WORKER.md` FIRST.** The frontend in this package expects worker
 `2026-11-02.5`. A read-only check during the previous pass showed the live
@@ -21,9 +23,72 @@ read the same Cloudflare KV namespace. `apex-td-project.zip` pushes to the Test
 Realm repo, `apex-td-final.zip` pushes to the production repo. This closes the
 16-day drift: production receives the newer staging feature set.
 
-## LATEST PASS — link images, trade PNG, Nose, live rarity counts (November 5, 2026)
+## LATEST PASS — human copy, duotone unit art, real in-game icons (November 5, 2026, night)
 
-**Still a code package, still R$0, still `https://apexballvalueswiki.github.io`.**
+Three corrections from the operator's latest review are now in the source,
+built output and verifiers:
+
+- **Plain, human copy.** `Compare any offer before you accept it` is gone — the
+  trade card now says `Compare any trade.` The home tagline is
+  `Unit values, stats and trades.` and `INSTANT VERDICT` is just `VERDICT`.
+  A verifier fails if the old AI-marketing phrases come back.
+- **Grey first, colour second, on every website unit image.**
+  `src/components/UnitIcon.jsx` / `.css` (the shared component used by the WIKI,
+  Values, calculator, compare, admin and dropdown surfaces) now desaturates the
+  artwork completely with `filter: grayscale(1)`, isolates the tile, and blends
+  the rarity colour back in through a `mix-blend-mode: color` layer. Colour is
+  no longer laid over the original hue. `ThemeCutout` and the hero showcase
+  already used the same grey-first order.
+- **Every per-unit link image uses that unit's own in-game icon.**
+  `scripts/lib/social-cards-core.mjs` previously only looked at nine bundled
+  PNGs, so most unit cards had an empty portrait. It now reads the real icon
+  from `public/overrides/staticOverrides.json` — 325 embedded WebP data URIs
+  plus 17 files under `public/images/units/` — with a shiny-variant fallback and
+  the bundled PNGs as a last resort. All **321** `unit-*.png` cards were
+  regenerated; a new verifier hashes every portrait and proves no shared
+  ShowmanBall/fallback art is used (272 distinct portraits, max repeat 2 =
+  a base unit and its shiny counterpart). Cards are greyscale, palette-optimised
+  (~28 MB, down from ~43 MB) and still 1200x630 with no external assets.
+
+Verification: `verify_link_and_trade.mjs` is now **19/19** (added human-copy,
+duotone and per-unit icon-identity checks), `UnitIcon.test.jsx` 3/3, and all
+321 portraits were rendered and reviewed. `dist/` rebuilt: 764 prerendered
+routes with every social card present. Ads remain OFF, the site stays on
+`github.io`, R$0 spent, and nothing was merged or deployed. This work and the
+monochrome redesign belong to the second commit on the same PR branch.
+
+## PREVIOUS PASS — full monochrome link-image redesign (November 5, 2026, evening)
+
+The operator reviewed the shared-link preview and asked for a whole new look:
+keep the Billboard layout, drop the big `321+` number, and make the entire
+embed black and white. **Done across all 323 cards**, not just the home one.
+
+- **Pure monochrome.** `scripts/lib/social-cards-core.mjs` now builds every
+  card in black / white / grey only. Unit art is converted to high-contrast
+  greyscale before embedding, and each finished PNG is forced through a final
+  `.greyscale()` pass — so no accent colour can leak into an embed. A verifier
+  checks R=G=B on the home card, the calculator card and sampled unit cards.
+- **New Billboard composition.** Hairline frame with corner ticks, small
+  tracked-out masthead, one large circular unit portrait, an oversized `APEX`
+  wordmark, a short tagline, and a slim three-part index strip
+  (`UNIT WIKI · LIVE VALUES · TRADE CALC`). The giant `321+` block and the
+  colourful gradient / chips / rotated art collage are gone.
+- **One consistent system.** The `/values/calculator` card (YOU GIVE /
+  THEY GIVE panels + verdict bar) and all 321 `unit-*.png` cards use the same
+  frame, masthead, footer, typography and monochrome portraits. Rarity is now
+  shown as an outlined white pill instead of a colour.
+- **Legible at embed size.** Heavy DejaVu/Liberation type, high contrast and
+  very few words; the design was reviewed at a simulated 340×179 thumbnail.
+- Cards are still 1200×630 and generated locally by `npm run cards`
+  (323 files). No external fonts, images or CDNs. `dist/` rebuilt;
+  `verify_link_and_trade.mjs` gained the monochrome checks.
+
+Ads remain OFF, site stays on `github.io`, R$0 spent. The monochrome
+cards are part of the second commit on the same PR branch.
+
+## PREVIOUS PASS — link images, trade PNG, Nose, live rarity counts (November 5, 2026)
+
+**A code package, R$0, `https://apexballvalueswiki.github.io`.**
 Ads stay OFF; nothing was pushed, deployed, or written to the worker/KV/site.
 
 - **Better Link Image.** The shared-link (Open Graph / Twitter) preview is now a
@@ -383,7 +448,7 @@ Evidence: `/home/user/_audit/browser/build-verify.json`,
 2. **Push both packages** with `push.cmd` (Test Realm first is a useful smoke test, then production). Each `push.cmd` performs a non-force push. Edit `push-message.txt` if you want a different commit message.
 3. **Verify**: live `/version` = `2026-11-02.5`, production `/terms` = 200, one value edited on the Test Realm appears on production within ~60 s, Moonlight and the new editor can sign in, no `TagError`, no ad requests.
 4. **Legal review**: the pages are technical preparation, not legal advice. Have an independent adult/qualified reviewer check the operator identity, the 15-day SLA, the child-safety statements and the retention wording before publication. No postal address is published; `gustavo.romao.borges0@gmail.com` is the published privacy/takedown channel; `gustavo.rb1410@gmail.com` remains the admin/owner address.
-5. **AdSense** (`ENABLE-ADS.md`): apply **after** this deploy. Google requires the account holder to be 18+; if the operator is 18+, they can own the account and payments themselves, otherwise a parent/guardian must. Use the account holder's real date of birth — Google verifies identity via a mailed PIN and payment checks. Never share bank details, passwords or PINs with anyone. A Google-certified CMP (the free built-in one is sufficient) and real per-placement ad-unit IDs are required before `VITE_ADS_ENABLED=true`. Ads stay OFF meanwhile; `ads.txt` is inert. See `ADSENSE-FREE-SETUP.md` for the free `github.io` path.
+5. **AdSense** (`ENABLE-ADS.md`): apply **after** this deploy. Google requires the account holder to be 18+; the operator is 18+ and owns the account and payments. Use the account holder's real date of birth — Google verifies identity via a mailed PIN and payment checks. Never share bank details, passwords or PINs with anyone. A Google-certified CMP (the free built-in one is sufficient) and real per-placement ad-unit IDs are required before `VITE_ADS_ENABLED=true`. Ads stay OFF meanwhile; `ads.txt` is inert. See `ADSENSE-FREE-SETUP.md` for the free `github.io` path.
 6. **Staging confidentiality**: `AccessGate` is a client-side UI gate. GitHub Pages static files remain directly fetchable by anonymous visitors. For genuine team-only staging, use Cloudflare Access on a protected origin or private hosting. This is a hosting limitation, not a code bug.
 
 ## Deliberate limitations / open decisions

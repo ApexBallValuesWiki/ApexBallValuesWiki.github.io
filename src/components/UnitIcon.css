@@ -42,6 +42,8 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  /* Keep the colour blend inside this tile instead of blending with the page. */
+  isolation: isolate;
   transition: border-color 280ms var(--ease-out), box-shadow 280ms var(--ease-out);
 }
 
@@ -58,6 +60,8 @@
   object-fit: contain !important;
   display: block !important;
   border-radius: calc(var(--radius-sm, 12px) - 2px);
+  /* Monochrome FIRST. Luminance detail survives; the original hue does not. */
+  filter: grayscale(1) contrast(1.2) brightness(1.06);
   transition: transform 360ms var(--ease-out);
 }
 
@@ -76,4 +80,18 @@
   color: var(--text, #ffffff);
   font-size: 1.05rem;
   background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.05), #0a0a10 80%);
+}
+
+
+/* Colour pass. `mix-blend-mode: color` keeps the grey image's luminance and
+   only supplies hue/saturation, so dark parts stay dark and highlights stay
+   bright. The default is near-white (no rarity colour) = neutral grey icon. */
+.unit-icon-tint {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: var(--icon-glow, rgba(255, 255, 255, 0.35));
+  mix-blend-mode: color;
+  opacity: 0.85;
 }

@@ -42,6 +42,10 @@ function UnitIcon({ slug, name, glowColor, shiny = false, size = 64, imageUrl = 
         ) : (
           <div className="unit-icon-fallback">{name?.[0] ?? '?'}</div>
         )}
+        {/* Duotone pass: the artwork is greyscaled first, then the rarity
+            colour is blended back in. Colour is never laid over the original
+            hue, which used to make every unit look muddy. */}
+        <span className="unit-icon-tint" aria-hidden="true" />
       </div>
     </div>
   );

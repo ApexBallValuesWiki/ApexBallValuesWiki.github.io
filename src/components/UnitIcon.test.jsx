@@ -14,4 +14,9 @@ describe('unit artwork priority', () => {
   it('keeps the live image if no explicit unit image was supplied', () => {
     expect(renderToStaticMarkup(<UnitIcon slug="baller" name="Baller" />)).toContain('src="/live-original.png"');
   });
+  it('adds the duotone colour layer over greyscale artwork', () => {
+    const html = renderToStaticMarkup(<UnitIcon slug="baller" name="Baller" glowColor="#4cc9f0" />);
+    expect(html).toContain('unit-icon-tint');
+    expect(html).toContain('--icon-glow:#4cc9f0');
+  });
 });
