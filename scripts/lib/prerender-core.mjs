@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { ALL_UNITS } from '../../src/data/units.js';
 import { UNIT_RARITIES } from '../../src/data/taxonomy.js';
 import { ITEM_GROUPS } from '../../src/data/items.js';
+import { buildStaticBody } from './static-content.mjs';
 
 const ROOT = process.env.APEX_PROJECT_ROOT || dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const DIST = join(ROOT, 'dist');
@@ -77,6 +78,8 @@ addRoute('/minigames', { title: 'Minigames — Ball TD arcade', priority: '0.7' 
 addRoute('/minigames/ball-knowledge', { title: 'Ball Knowledge — daily reset tracker', priority: '0.5' });
 addRoute('/minigames/ballonomics', { title: 'Ballonomics — higher or lower values game', priority: '0.5' });
 addRoute('/minigames/balling', { title: 'Balling — pixel reveal guessing game', priority: '0.5' });
+addRoute('/about', { title: 'About — Apex WIKI & Values', description: 'Who runs Apex WIKI & Values, what the site contains, how it handles data, and how to contact the operator.', priority: '0.5' });
+addRoute('/contact', { title: 'Contact — Apex WIKI & Values', description: 'Contact the operator of Apex WIKI & Values for privacy, parental, copyright, removal and correction requests.', priority: '0.5' });
 addRoute('/credits', { title: 'Credits', priority: '0.3' });
 addRoute('/privacy', { title: 'Privacy & Storage', priority: '0.3' });
 addRoute('/terms', { title: 'Terms of Use', priority: '0.3' });
@@ -120,12 +123,18 @@ for (const unit of ALL_UNITS) {
     priority: '0.8',
     prerenderBody: body,
   });
+  const valueBody = [
+    `<h1>${esc(unit.name)} — trade value</h1>`,
+    `<p>Live trade value, demand, trend and gem/coin ratio for ${esc(unit.name)} (${esc(unit.rarity)}) on ${esc(SITE_NAME)}.</p>`,
+    `<p>Values on this site are community-observed opinions, not official prices. They change over time, are not financial advice, and we do not buy, sell, broker or guarantee any in-game item.</p>`,
+  ].join('\n      ');
   addRoute(`/values/units/${enc(unit.rarity)}/${enc(unit.slug)}`, {
     title: `${unit.name} Value — live trade value`,
     description: `Live trade value, demand, trend and gem/coin ratio for ${unit.name} (${unit.rarity}) on ${SITE_NAME}.`,
     image: `unit-${unit.slug}.png`,
     type: 'article',
     priority: '0.8',
+    prerenderBody: valueBody,
   });
 }
 
@@ -177,12 +186,19 @@ function renderRoute(route) {
     `<meta name="description" content="${esc(route.description)}" />`
   );
   html = html.replace('</head>', `${buildHeadBlock(route)}\n  </head>`);
-  if (route.prerenderBody) {
-    html = html.replace(
-      '<div id="root"></div>',
-      `<div id="root">\n      ${route.prerenderBody}\n    </div>`
-    );
-  }
+  // EVERY page gets a genuine, readable HTML snapshot inside #root. React's
+  // createRoot() replaces it on boot, so a crawler that never runs JavaScript
+  // still sees the real page content instead of an empty div.
+  const staticCtx = {
+    esc,
+    basePath: BASE_PATH,
+    rarities: UNIT_RARITIES,
+    itemGroups: Object.keys(ITEM_GROUPS),
+  };
+  html = html.replace(
+    '<div id="root"></div>',
+    `<div id="root">\n      ${buildStaticBody(route, staticCtx)}\n    </div>`
+  );
   return html;
 }
 
@@ -211,9 +227,15 @@ for (const route of routes) {
 // 404.html = the SPA shell (not a copy of Home): GitHub Pages serves it at
 // the unknown URL, the router boots there, and the wildcard route renders
 // the real NotFound page with the visitor's original path shown.
+const notFoundRoute = {
+  path: '/404',
+  title: 'Page not found',
+  description: 'This page does not exist. Use the links below to get back to the Apex WIKI & Values home page, WIKI or trade values.',
+};
 const shellHtml = template
   .replace(/<title>[^<]*<\/title>/, '<title>Page not found | ' + SITE_NAME + '</title>')
-  .replace('</head>', IS_TEST_REALM ? '  <meta name="robots" content="noindex,nofollow" />\n  </head>' : '</head>');
+  .replace('</head>', IS_TEST_REALM ? '  <meta name="robots" content="noindex,nofollow" />\n  </head>' : '</head>')
+  .replace('<div id="root"></div>', `<div id="root">\n      ${buildStaticBody(notFoundRoute, { esc, basePath: BASE_PATH, rarities: UNIT_RARITIES, itemGroups: Object.keys(ITEM_GROUPS) })}\n    </div>`);
 writeFileSync(join(DIST, '404.html'), shellHtml);
 writeFileSync(join(DIST, '.nojekyll'), '');
 writeFileSync(

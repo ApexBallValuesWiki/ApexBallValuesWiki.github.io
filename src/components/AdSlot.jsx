@@ -7,12 +7,17 @@ import {
   adSenseScriptLoaded,
 } from '../utils/ads';
 import { PRIVACY_CHANGE_EVENT } from '../utils/privacyChoices';
+import { applyAdSensePrivacySignals, CMP_STATE_EVENT } from '../utils/cmp';
 
 // One placement per page, one push per DOM node. Waiting for the library's
 // load event and never reusing a slot ID prevents the "TagError: X/Y" that
 // the old build reproduced on every production page.
 // TFAT=1 is a conservative child-treatment signal, NOT parental consent or a
-// replacement for a certified CMP. Ads are disabled in this build.
+// replacement for a certified CMP. Before every push we apply the official
+// AdSense privacy signals: pauseAdRequests blocks the request until a
+// Google-certified CMP grants consent, and requestNonPersonalizedAds=1 makes
+// non-personalised ads the default for this mixed-age audience.
+// Ads are disabled in this build.
 export default function AdSlot({ placement = 'home', ready = true }) {
   const slotId = AD_SLOTS[placement] || null;
   const [allowed, setAllowed] = useState(false);
@@ -27,11 +32,13 @@ export default function AdSlot({ placement = 'home', ready = true }) {
     };
     window.addEventListener('apex-ads-state', update);
     window.addEventListener(PRIVACY_CHANGE_EVENT, update);
+    window.addEventListener(CMP_STATE_EVENT, update);
     window.addEventListener('apex-ads-script-loaded', update);
     update();
     return () => {
       window.removeEventListener('apex-ads-state', update);
       window.removeEventListener(PRIVACY_CHANGE_EVENT, update);
+      window.removeEventListener(CMP_STATE_EVENT, update);
       window.removeEventListener('apex-ads-script-loaded', update);
     };
   }, [ready, slotId]);
@@ -40,6 +47,7 @@ export default function AdSlot({ placement = 'home', ready = true }) {
     if (!allowed || !slotId || !areAdsAllowed() || !adSenseScriptLoaded() || pushedRef.current) return;
     pushedRef.current = true;
     try {
+      applyAdSensePrivacySignals();
       (window.adsbygoogle = window.adsbygoogle || []).push({});
     } catch (error) {
       pushedRef.current = false;

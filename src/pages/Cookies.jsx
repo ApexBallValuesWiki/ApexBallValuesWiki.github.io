@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
 import { openPrivacyChoices } from '../utils/privacyChoices';
-import { OPERATOR } from './Privacy';
+import { OPERATOR } from '../data/operator';
 import './Legal.css';
+
+const External = ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer">{children} ↗</a>;
 
 export default function Cookies() {
   return (
@@ -37,7 +39,7 @@ export default function Cookies() {
 
       <section className="legal-section">
         <h2>5. Third parties</h2>
-        <p>Only GitHub Pages (hosting) and Cloudflare (the shared values database) receive ordinary network information required to deliver the site. If advertising is enabled later, Google and its partners will be listed here and in the privacy policy before any ad request is made, together with a certified consent platform and opt-out links.</p>
+        <p>Only GitHub Pages (hosting) and Cloudflare (the shared values database) receive ordinary network information required to deliver the site. If advertising is enabled after approval, the partner will be <strong>Google AdSense</strong> (publisher <code>pub-2832011907708910</code>), named here and in the <Link to="/privacy">Privacy policy</Link> before any ad request is made. Consent will be handled by Google's <strong>free, certified "Privacy &amp; messaging" CMP</strong> — no paid consent service is used. Personalised advertising is never targeted at children, non-personalised ads are the default, and the Test Realm can never serve ads. Opt out or change your choice through the Google consent message, "Privacy choices" in the footer, <External href="https://myadcenter.google.com/">My Ad Center</External>, or <External href="https://www.aboutads.info/choices/">aboutads.info</External>.</p>
       </section>
 
       <section className="legal-section">

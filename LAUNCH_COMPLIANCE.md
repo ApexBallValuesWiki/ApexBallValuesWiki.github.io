@@ -2,7 +2,14 @@
 
 # Launch, privacy and AdSense checklist
 
-**Status: NOT READY for public launch or advertising.** Updated October 30, 2026. This document is an engineering handoff, not legal advice, a declaration of compliance, or a guarantee of Google approval. The intended audience includes children under 13. The operator's identity, privacy contact and advertising CMP have not been selected. `ADS_LAUNCH_READY` is deliberately `false`; changing it alone is unsafe.
+**Status: NOT READY for public launch or advertising.** Updated October 30, 2026.
+> **NOTE (November 4, 2026):** this October handoff is superseded by
+> `LAUNCH-STATUS.md`. The operator identity, private contact and SLA are now
+> published in `/privacy`, `/terms`, `/about` and `/contact` (and in the raw
+> HTML of every page). A free Google-certified CMP adapter is wired and fails
+> closed, and the advertising-partner disclosures are live. The remaining
+> legal-review items below are unchanged: this is engineering preparation, not
+> legal advice, and an independent reviewer should still check it. This document is an engineering handoff, not legal advice, a declaration of compliance, or a guarantee of Google approval. The intended audience includes children under 13. The operator's identity, privacy contact and advertising CMP have not been selected. `ADS_LAUNCH_READY` is deliberately `false`; changing it alone is unsafe.
 
 ## Urgent: current shared worker
 
@@ -28,7 +35,7 @@ The staging `AccessGate` now checks saved credentials with the worker and fails 
 
 ## Owner and legal review — required before launch
 
-- [ ] Provide the operator's legal name/entity, relevant address or other required identification, and a working private privacy/contact channel in `/privacy` and `/terms`. Set up a process to handle parental, privacy, copyright and removal requests, including verification and response deadlines. The current pages explicitly say these details are pending.
+- [x] Provide the operator's legal name/entity and a working private privacy/contact channel in `/privacy` and `/terms` — **DONE (November 4, 2026)**: `src/data/operator.js` publishes the operator, private email and 15-day SLA in `/privacy`, `/terms`, `/cookies`, `/disclaimer`, `/about` and `/contact`, plus their raw HTML. No physical postal address is published by design; it is supplied privately where a legal formality requires one. The parental/privacy/copyright/removal process and response deadline are documented. Independent legal review is still recommended.
 - [ ] Have qualified counsel determine applicable laws for all served regions, including COPPA, GDPR/UK GDPR, Brazil's LGPD, relevant US state privacy laws and children's best-interest requirements. Document the audience classification. A mixed audience alone does **not** establish eligibility for a COPPA mixed-audience age-screen exception; confirm whether children are a primary audience.
 - [ ] Inventory personal data, third parties, recipients, cross-border transfers, retention periods, incident response and deletion. GitHub Pages, Cloudflare Worker/KV, external image hosts, WorldTimeAPI/TimeAPI.io and outbound social/game links need review. Update the notices with actual practices and service agreements, including server logs and any region-specific rights. A privacy notice does not itself create compliance.
 - [ ] Assess verifiable parental notice/consent or other lawful grounds **before** collecting or disclosing children's personal information where required. The site currently has no parental-consent verification system. The fixed-choice bug report reduces free-text collection but network providers may still receive IP addresses and other request metadata. The local stats choice is not parental consent.

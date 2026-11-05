@@ -1,4 +1,4 @@
-# APEX WIKI & Values — release status (November 2, 2026)
+# APEX WIKI & Values — release status (updated November 4, 2026)
 
 **This is a code package, not a deployment.** Nothing was pushed, no live worker
 or KV record was modified, no destructive write/delete test was run against the
@@ -21,7 +21,58 @@ read the same Cloudflare KV namespace. `apex-td-project.zip` pushes to the Test
 Realm repo, `apex-td-final.zip` pushes to the production repo. This closes the
 16-day drift: production receives the newer staging feature set.
 
-## LATEST PASS — compact-number typing, Balling answers + O/C and N/A values (post-`.5` quick fixes)
+## LATEST PASS — R$0 AdSense-readiness prep (November 4, 2026)
+
+**Everything that can be fixed without spending money is now fixed.** No domain,
+no DNS, no CNAME, no purchase, no paid CMP. Site stays on
+`https://apexballvalueswiki.github.io`. Ads are still OFF; nothing was pushed,
+deployed, or written to the worker/KV. The operator is 18+, so they own the
+AdSense account and payments — no parent/guardian account-holder step.
+
+- **Site verification:** `<meta name="google-adsense-account"
+  content="ca-pub-2832011907708910">` installed in `index.html` and all built
+  pages; `ads.txt` unchanged. Passive tag — loads nothing, serves no ads.
+- **Crawlable content:** `scripts/lib/static-content.mjs` emits a genuine,
+  readable HTML snapshot into `#root` for **every** built page (765 HTML files).
+  Previously non-JS crawlers saw an empty div. Full legal/About/Contact text,
+  real descriptions and internal links are in the raw HTML. A progressive-
+  enhancement rule (`html.apex-js .apex-static{display:none}`) hides the
+  snapshot from JS visitors, so there is no text-page flash; no-JS clients get
+  the complete readable page. React's `createRoot` replaces it on boot.
+- **About + Contact:** new `/about` and `/contact` pages, routes, lazy imports,
+  footer links, consent-banner links, sitemap entries and prerendered pages.
+  Operator identity moved to `src/data/operator.js` as the single source of
+  truth for React pages AND the static HTML (a verifier checks for drift).
+- **Honest legal text:** Privacy §5 / Cookies §5 now name Google AdSense and
+  `pub-2832011907708910`, Google's free certified CMP, the non-personalised
+  default, child-safety wording and opt-out links, while still stating clearly
+  that ads are currently disabled.
+- **Certified CMP adapter (`src/utils/cmp.js`):** reads Google Funding Choices
+  consent-mode API + IAB TCF v2, and **fails closed** — no CMP or refused/
+  unknown consent means no ad script and no ad request, even with
+  `VITE_ADS_ENABLED=true`. Applies Google's official `pauseAdRequests` and
+  `requestNonPersonalizedAds=1` (`&npa=1`) signals before every push.
+  `consentGate()` in `ads.js` delegates ad consent to the CMP once enabled.
+- **Free configurability:** `VITE_ADS_SLOT_HOME`, `VITE_ADS_SLOT_CALCULATOR`
+  and optional `VITE_ADS_CMP_URL` — no code edit needed later. No script is
+  bundled by default.
+- **Guides rewritten:** `ADSENSE-FREE-SETUP.md` (EN/PT) and `ENABLE-ADS.md`
+  now describe exactly what is done and what only the operator can do.
+
+**Verification for this pass:** `npm test` → 239 tests in 43 files (10 new CMP
+tests); lint 94 warnings / 0 errors on 268 files; `npm audit --omit=dev` → 0;
+`npm run build` → 764 prerendered pages + all social cards; `node --check`
+worker OK; browser suites 36/36 bugfixes, 59/59 v4, 29/29 build,
+18/18 new-features, 29/29 fixes-v3, 49 worker; new `verify_free_prep.mjs`
+36/36, `verify_free_prep_browser.mjs` 11, `verify_adsense_meta.mjs` 7/7.
+Package validator 94/94, both ZIPs pass `unzip -t`.
+
+**Still operator-only (all free):** real DOB + postal PIN + tax/payment details
+inside their own Google account, publishing Google's free consent message,
+clicking verify/submit, running `push.cmd`, and an independent adult/legal
+review of the notices. `github.io` rejection/reapply is free.
+
+## PREVIOUS PASS — compact-number typing, Balling answers + O/C and N/A values (post-`.5` quick fixes)
 
 Three reported bugs fixed in the `.5` source. Same worker version
 (`2026-11-02.5`), same seven-account roster, ads still OFF, no deployment.
@@ -51,6 +102,16 @@ Three reported bugs fixed in the `.5` source. Same worker version
   `N.A.`) and normalizes them. A marker clears any stale min-max range, and
   the spreadsheet also gains the `T` suffix for consistency. Markers still
   show as `O/C` / `N/A` on the public WIKI/Values cards.
+
+**AdSense ownership verification (ads still OFF):** the operator supplied
+`<meta name="google-adsense-account" content="ca-pub-2832011907708910">`;
+it is installed in `index.html` and the prerender copies it into all 763 built
+HTML pages plus `404.html`. It is a passive ownership tag — no external script,
+no ad unit, no cookies. `ads.txt` remains correct. The `adsbygoogle.js` script
+and `<ins>` ad units are still injected dynamically by `src/utils/ads.js` /
+`src/components/AdSlot.jsx` only behind the five existing gates, so no ads are
+served before approval and consent. `/home/user/_audit/tools/verify_adsense_meta.mjs`
+→ 7/7 checks (tag on every page, zero static ad scripts, zero static `<ins>`).
 
 **Verification for this pass**: `npm test` → 229 tests in 41 files (new
 `src/utils/balling.test.js` plus marker tests in `formatNumber`,
@@ -278,8 +339,8 @@ Evidence: `/home/user/_audit/browser/build-verify.json`,
 1. **Deploy the worker first** (`DEPLOY-WORKER.md`): create/bind `APEX_OVERRIDES`, set `APEX_SESSION_SECRET` via `wrangler secret put`, deploy, then check `/health` shows `kvBound:true`, `sessions:true` and `statusEndpoint:true`, and `GET /status` returns `workerVersion: 2026-11-02.5`. Back up KV first. Rotate every editor passcode; the Test Realm credentials were shared in plain text. **Onboard Moonlight and the new `knwasdo@gmail.com` editor with invite links** from `/admin` → Team & access (§6) — no KV editing, no passcode in the repository. Deploying the frontend before the worker logs one harmless `/status` 404 and falls back to the three legacy endpoints.
 2. **Push both packages** with `push.cmd` (Test Realm first is a useful smoke test, then production). Each `push.cmd` performs a non-force push. Edit `push-message.txt` if you want a different commit message.
 3. **Verify**: live `/version` = `2026-11-02.5`, production `/terms` = 200, one value edited on the Test Realm appears on production within ~60 s, Moonlight and the new editor can sign in, no `TagError`, no ad requests.
-4. **Legal review**: the pages are technical preparation, not legal advice. Have the operator's parent/guardian review the operator identity, the 15-day SLA, the child-safety statements and the retention wording before publication. No postal address is published; `gustavo.romao.borges0@gmail.com` is the published privacy/takedown channel; `gustavo.rb1410@gmail.com` remains the admin/owner address.
-5. **AdSense** (`ENABLE-ADS.md`): apply **after** this deploy. Google requires the account holder to be 18+, so a parent/guardian must own the account and payments. A Google-certified CMP and real per-placement ad-unit IDs are required before `VITE_ADS_ENABLED=true`. Ads stay OFF meanwhile; `ads.txt` is inert.
+4. **Legal review**: the pages are technical preparation, not legal advice. Have an independent adult/qualified reviewer check the operator identity, the 15-day SLA, the child-safety statements and the retention wording before publication. No postal address is published; `gustavo.romao.borges0@gmail.com` is the published privacy/takedown channel; `gustavo.rb1410@gmail.com` remains the admin/owner address.
+5. **AdSense** (`ENABLE-ADS.md`): apply **after** this deploy. Google requires the account holder to be 18+; if the operator is 18+, they can own the account and payments themselves, otherwise a parent/guardian must. Use the account holder's real date of birth — Google verifies identity via a mailed PIN and payment checks. Never share bank details, passwords or PINs with anyone. A Google-certified CMP (the free built-in one is sufficient) and real per-placement ad-unit IDs are required before `VITE_ADS_ENABLED=true`. Ads stay OFF meanwhile; `ads.txt` is inert. See `ADSENSE-FREE-SETUP.md` for the free `github.io` path.
 6. **Staging confidentiality**: `AccessGate` is a client-side UI gate. GitHub Pages static files remain directly fetchable by anonymous visitors. For genuine team-only staging, use Cloudflare Access on a protected origin or private hosting. This is a hosting limitation, not a code bug.
 
 ## Deliberate limitations / open decisions

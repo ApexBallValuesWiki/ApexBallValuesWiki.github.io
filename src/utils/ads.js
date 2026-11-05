@@ -8,6 +8,7 @@
 // ID three times, which produced AdSense "TagError: X/Y" on every page.
 // See ENABLE-ADS.md for the exact enablement + CMP checklist.
 import { adsConsentAllowed } from './privacyChoices';
+import { cmpAuthorizesAds } from './cmp';
 
 export const AD_CLIENT = 'ca-pub-2832011907708910';
 export const ADS_LAUNCH_READY = import.meta.env.VITE_ADS_ENABLED === 'true';
@@ -16,11 +17,13 @@ const PRODUCTION_HOSTS = new Set(['apexballvalueswiki.github.io']);
 const TEST_REALM_HOSTS = new Set(['zenithvalues.github.io']);
 const CONTENT_PATHS = new Set(['/', '/wiki', '/values', '/values/calculator']);
 
-// One real slot ID per placement. Add further IDs from your AdSense account
-// before enabling more placements; never reuse an ID twice on one page.
+// One real slot ID per placement, overridable without a code edit. The
+// operator can set VITE_ADS_SLOT_HOME / VITE_ADS_SLOT_CALCULATOR in the
+// production repo's GitHub Actions variables after creating more ad units.
+// Never reuse one ID twice on the SAME page (the old TagError cause).
 export const AD_SLOTS = {
-  home: '2911497117',
-  calculator: '2911497117',
+  home: import.meta.env.VITE_ADS_SLOT_HOME || '2911497117',
+  calculator: import.meta.env.VITE_ADS_SLOT_CALCULATOR || '2911497117',
 };
 
 let maintenanceClear = false;
@@ -71,10 +74,21 @@ export function setAdsRoute(path) {
   notifyChange();
 }
 
+/**
+ * Consent gate. While ads are OFF (every shipped build) the existing
+ * first-party toggle is enough. Once ads are actually enabled, consent is
+ * delegated to the Google-certified CMP, which FAILS CLOSED: no CMP present,
+ * or a refused/unknown decision, means no ad script and no ad request.
+ * This also avoids showing two conflicting consent banners.
+ */
+function consentGate() {
+  return ADS_LAUNCH_READY ? cmpAuthorizesAds() : adsConsentAllowed();
+}
+
 export function areAdsAllowed() {
   return ADS_LAUNCH_READY
     && isAdsAllowedHost()
-    && adsConsentAllowed()
+    && consentGate()
     && maintenanceClear
     && isAdsAllowedPath(currentPath);
 }

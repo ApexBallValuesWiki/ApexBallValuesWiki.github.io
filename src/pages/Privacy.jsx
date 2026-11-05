@@ -1,17 +1,12 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { clearApexLocalData, openPrivacyChoices } from '../utils/privacyChoices';
+import { OPERATOR, LAST_UPDATED } from '../data/operator';
 import './Legal.css';
 
 const External = ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer">{children} ↗</a>;
-export const OPERATOR = {
-  name: 'Gustavo Romão Borges',
-  entity: 'Individual (pessoa física)',
-  jurisdiction: 'São João da Boa Vista, São Paulo, Brasil',
-  email: 'gustavo.romao.borges0@gmail.com',
-  sla: '15 days',
-};
-const LAST_UPDATED = 'November 2, 2026';
+// Re-export keeps the other legal pages' existing imports working.
+export { OPERATOR, LAST_UPDATED } from '../data/operator';
 
 export default function Privacy() {
   const [cleared, setCleared] = useState(false);
@@ -71,13 +66,15 @@ export default function Privacy() {
       <section id="ads" className="legal-section">
         <h2>5. Advertising</h2>
         <p><strong>Advertising is disabled in this build on both the public site and the Test Realm.</strong> No AdSense tag, advertising cookie, or advertising request is loaded. The Test Realm can never serve ads.</p>
-        <p>If advertising is enabled in a future release, Google and its partners may use cookies, IP addresses or similar identifiers to deliver, measure and personalise ads, and may combine visits to this and other sites. That will only happen after a certified consent platform is in place, after the applicable child-safety settings are configured, and only for visitors who have opted in. Personalised advertising will not be targeted at children.</p>
+        <p>If advertising is enabled after approval, the advertising partner will be <strong>Google AdSense</strong> (publisher <code>pub-2832011907708910</code>, as declared in <code>ads.txt</code>). Google and its partners may then use cookies, IP addresses or similar identifiers to deliver, measure and personalise ads, and may combine visits to this and other sites.</p>
+        <p>That will only happen after a <strong>Google-certified consent platform</strong> is in place — Google's own free "Privacy &amp; messaging" CMP, not a paid third-party service — after the applicable child-safety settings are configured, and only for visitors who have opted in. The site requests <strong>non-personalised ads by default</strong> and never targets personalised advertising at children. You can withdraw or change consent at any time through the Google consent message and through "Privacy choices" in the footer.</p>
         <ul>
           <li><External href="https://business.safety.google/privacy/">How Google uses data from partner sites</External></li>
           <li><External href="https://myadcenter.google.com/">Google My Ad Center</External> and <External href="https://www.aboutads.info/choices/">aboutads.info choices</External></li>
-          <li>Ad partners and their privacy links will be published here before any ads are enabled.</li>
+          <li><External href="https://policies.google.com/technologies/partner-sites">Google's partner-site technologies</External> — the complete list of advertising partners and their privacy links.</li>
+          <li><Link to="/cookies">Cookie notice</Link> — how consent and storage work on this site.</li>
         </ul>
-        <p>An <code>ads.txt</code> file may be present for future publisher verification; its presence does not enable ads.</p>
+        <p>An <code>ads.txt</code> file is present for publisher verification; its presence does not enable ads. See <Link to="/about">About this site</Link> for how the site is funded.</p>
       </section>
 
       <section id="children" className="legal-section">

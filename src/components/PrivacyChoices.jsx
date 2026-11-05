@@ -11,8 +11,10 @@ import './PrivacyChoices.css';
 // First-party consent control for all OPTIONAL storage. Essential settings
 // and the offline cache never depend on this choice. Optional statistics and
 // advertising default to OFF and nothing optional is written before consent.
-// This is NOT a Google-certified CMP; ads remain disabled until AdSense
-// approval and a CMP review (see ENABLE-ADS.md).
+// This first-party control governs OPTIONAL ON-DEVICE STORAGE. It is NOT a
+// Google-certified CMP: once ads are enabled, advertising consent is read
+// from Google's free "Privacy & messaging" CMP by src/utils/cmp.js, which
+// fails closed. See ENABLE-ADS.md.
 export default function PrivacyChoices() {
   const [open, setOpen] = useState(() => getPrivacyChoice() === null);
   const [customize, setCustomize] = useState(false);
@@ -68,7 +70,7 @@ export default function PrivacyChoices() {
             </label>
             <label style={{ fontSize: '0.8rem', display: 'flex', gap: 8, alignItems: 'center' }}>
               <input type="checkbox" checked={ads} onChange={(e) => setAds(e.target.checked)} />
-              Advertising cookies (used only if ads are enabled on this site)
+              Optional statistics and ad cookies (ad consent is handled by Google's consent message when ads are on)
             </label>
           </div>
         )}
@@ -77,6 +79,10 @@ export default function PrivacyChoices() {
         <Link to="/cookies" onClick={() => setOpen(false)}>Cookie notice</Link>
         {' · '}
         <Link to="/terms" onClick={() => setOpen(false)}>Terms</Link>
+        {' · '}
+        <Link to="/about" onClick={() => setOpen(false)}>About</Link>
+        {' · '}
+        <Link to="/contact" onClick={() => setOpen(false)}>Contact</Link>
       </div>
       <div className="privacy-choice-actions">
         <button type="button" onClick={() => choose(false, false)}>Reject optional</button>

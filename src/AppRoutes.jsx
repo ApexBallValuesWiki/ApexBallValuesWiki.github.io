@@ -39,6 +39,8 @@ const Terms = lazyWithRetry(() => import('./pages/Terms'));
 const Cookies = lazyWithRetry(() => import('./pages/Cookies'));
 const Disclaimer = lazyWithRetry(() => import('./pages/Disclaimer'));
 const Changelog = lazyWithRetry(() => import('./pages/Changelog'));
+const About = lazyWithRetry(() => import('./pages/About'));
+const Contact = lazyWithRetry(() => import('./pages/Contact'));
 const ThemeStudio = lazyWithRetry(() => import('./pages/ThemeStudio'));
 
 const WikiHome = lazyWithRetry(() => import('./pages/wiki/WikiHome'));
@@ -97,6 +99,8 @@ export default function AppRoutes() {
       <Route path="/admin/reset-password" element={page(<AdminHome />)} />
       <Route path="/theme-editor" element={page(<ThemeStudio />)} />
       <Route path="/themes" element={<Navigate to="/theme-editor" replace />} />
+      <Route path="/about" element={page(<About />)} />
+      <Route path="/contact" element={page(<Contact />)} />
       <Route path="/credits" element={page(<Credits />)} />
       <Route path="/privacy" element={page(<Privacy />)} />
       <Route path="/terms" element={page(<Terms />)} />

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { OPERATOR } from './Privacy';
+import { OPERATOR } from '../data/operator';
 import './Legal.css';
 
 export default function Disclaimer() {
