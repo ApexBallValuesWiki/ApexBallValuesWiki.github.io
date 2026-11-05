@@ -1,29 +1,19 @@
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import PageShell from '../../components/PageShell';
 import PageIntro from '../../components/PageIntro';
 import UnitExplorer from '../../components/UnitExplorer';
 import ThemeCutout, { getCutoutForRarity } from '../../components/ThemeCutout';
 import { getRarityGlow } from '../../data/taxonomy';
-import { UNITS_BY_RARITY } from '../../data/units';
 import { WIKI_NAV } from '../../config/navigation';
+import { useData } from '../../context/DataContext';
+import { buildRarityBrowse } from '../../utils/rarityBrowse';
 // Decorative site icons only; unit records keep their existing artwork.
 import compareIcon from '../../assets/units/provided/golemball.png';
 import searchIcon from '../../assets/units/provided/mummyball.png';
 import omegaIcon from '../../assets/units/provided/omegaknight-omk.png';
 import shinyIcon from '../../assets/units/provided/wukongball.png';
 import './WikiHome.css';
-
-const TIER_CARDS = [
-  'Omegas',
-  'Transcendents',
-  'Mythics',
-  'Legendaries',
-  'Awesome',
-  'Rares',
-  'Odds',
-  'Normie',
-  '???',
-];
 
 const WIKI_PORTALS = [
   { to: '/wiki/compare', icon: compareIcon, label: 'Compare Units', sub: 'Side-by-side level stats & cost' },
@@ -32,6 +22,10 @@ const WIKI_PORTALS = [
   { to: '/wiki/units/Shiny%20Omegas', icon: shinyIcon, label: 'Shiny Index', sub: 'Shiny variants & stat multipliers' },
 ];
 export default function WikiHome() {
+  // Counts come from the LIVE roster, so editor-added / deleted units and
+  // rarity edits are reflected immediately on the Browse by Rarity cards.
+  const { unitValues } = useData();
+  const rarityCards = useMemo(() => buildRarityBrowse(unitValues), [unitValues]);
   return (
     <PageShell sidebarTitle="WIKI" navTree={WIKI_NAV}>
       <PageIntro
@@ -73,11 +67,8 @@ export default function WikiHome() {
         </div>
 
         <div className="hub-tier-grid">
-          {TIER_CARDS.map((rarity) => {
+          {rarityCards.map(({ rarity, count, shinyRarity, shinyCount }) => {
             const glow = getRarityGlow(rarity);
-            const count = (UNITS_BY_RARITY[rarity] || []).length;
-            const shinyRarity = `Shiny ${rarity}`;
-            const shinyCount = (UNITS_BY_RARITY[shinyRarity] || []).length;
             return (
               <div
                 key={rarity}

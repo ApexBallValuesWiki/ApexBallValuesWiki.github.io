@@ -25,6 +25,9 @@ const credits = [
   { name: 'Silly Goober', role: 'Admin', emoji: '🎩', icon: 'hammer', tier: 'lead' },
   { name: 'Horren Balls', role: 'Editor', emoji: '📃', icon: 'tube', tier: 'tester' },
   { name: 'Izak', role: 'Editor', emoji: '📃', icon: 'tube', tier: 'tester' },
+  { name: 'Moonlight', role: 'Editor', emoji: '🌙', icon: 'tube', tier: 'tester' },
+  { name: 'Knwasdo', role: 'Editor', emoji: '📝', icon: 'tube', tier: 'tester' },
+  { name: 'Nose', role: 'Editor', emoji: '📃', icon: 'tube', tier: 'tester' },
 ];
 
 export default function Credits() {

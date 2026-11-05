@@ -9,13 +9,17 @@ import { UNIT_RARITIES, getRarityGlow, isShinyRarity } from '../../data/taxonomy
 import { useData } from '../../context/DataContext';
 import { decodeRouteParam, encodeRouteParam } from '../../utils/routeParams';
 import { withUnitDisplayName } from '../../utils/unitNames';
+import { liveRarities } from '../../utils/rarityBrowse';
 import '../values/ValueUnitsList.css';
 
 export default function UnitsList() {
   const params = useParams();
   const rarity = decodeRouteParam(params.rarity);
-  const isValidRarity = UNIT_RARITIES.includes(rarity);
-  const { getWikiOverride, createdUnits, isUnitDeleted } = useData();
+  const { getWikiOverride, createdUnits, isUnitDeleted, unitValues } = useData();
+  // Editor-created rarities must be valid routes too, otherwise a new tier
+  // card would link straight back to the Normie redirect.
+  const validRarities = useMemo(() => liveRarities(unitValues, UNIT_RARITIES), [unitValues]);
+  const isValidRarity = validRarities.includes(rarity);
 
   const units = useMemo(() => {
     if (!isValidRarity) return [];

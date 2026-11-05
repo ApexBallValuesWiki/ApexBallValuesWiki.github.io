@@ -1,1 +1,1 @@
-release: 2026-11-02.5 quick fixes - natural K/M/B/T typing, Balling correct answers, O/C and N/A values
+release: 2026-11-05 better link images, trade PNG export, Nose back on the team, live rarity counts (worker 2026-11-02.5)

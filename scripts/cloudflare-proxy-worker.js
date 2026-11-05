@@ -368,6 +368,10 @@ const TEAM_ROLES = {
   // Added on operator request (2026-11-02): least-privilege Values + WIKI editor.
   // Onboard with an invite link from /admin -> Team & access; no passcode in code.
   'knwasdo@gmail.com': 'editor',
+  // Nose — Editor (Values + WIKI), re-added on operator request (2026-11-05).
+  // Provision credentials out-of-band in the `adminPasswords` KV map or
+  // onboard with an invite link; no passcode is stored in this file.
+  'destroyha3@gmail.com': 'editor',
 };
 
 const TEAM_EMAILS = Object.keys(TEAM_ROLES);
