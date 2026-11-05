@@ -89,9 +89,12 @@
   /* Stronger, higher-contrast base treatment before the accent tint lands. */
   filter: grayscale(1) contrast(1.55) brightness(0.9);
 }
-/* Desktop copies have the same treatment baked in. Avoid re-filtering a
-   large image on every composited hero frame; original PNG fallback keeps it. */
-.apex-hero-portrait.is-prepared .apex-hero-unit { filter: contrast(1.32) brightness(0.94); }
+/* The desktop WebP copies are baked greyscale too, but the filter stays on
+   EVERY state: colour must never be laid over the original hue. This is the
+   rotating landing-page artwork, not the unit icons on WIKI / Values cards. */
+.apex-hero-portrait.is-prepared .apex-hero-unit {
+  filter: grayscale(1) contrast(1.32) brightness(0.94);
+}
 /* Second pass over the alpha mask: an overlay gradient adds depth and punch.
    Both layers stay inside the portrait, so there is no full-screen blend cost
    on mobile Firefox. */

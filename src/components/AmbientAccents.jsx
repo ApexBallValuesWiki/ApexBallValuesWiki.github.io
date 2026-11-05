@@ -35,17 +35,22 @@ export default function AmbientAccents() {
   return (
     <div className="apex-ambient" data-ambient-count={pair.length} aria-hidden="true">
       {pair.map((art) => (
-        <img
-          key={art.slug}
-          className={`apex-ambient-cutout apex-ambient-${art.position}`}
-          src={art.image}
-          alt=""
-          width="280"
-          height="280"
-          loading="lazy"
-          decoding="async"
-          draggable="false"
-        />
+        <span key={art.slug} className={`apex-ambient-unit apex-ambient-${art.position}`}>
+          <img
+            className="apex-ambient-cutout"
+            src={art.image}
+            alt=""
+            width="280"
+            height="280"
+            loading="lazy"
+            decoding="async"
+            draggable="false"
+          />
+          <span
+            className="apex-ambient-tint"
+            style={{ '--ambient-mask': `url(${JSON.stringify(art.image)})` }}
+          />
+        </span>
       ))}
     </div>
   );

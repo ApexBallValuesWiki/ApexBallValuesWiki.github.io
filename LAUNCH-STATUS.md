@@ -23,7 +23,42 @@ read the same Cloudflare KV namespace. `apex-td-project.zip` pushes to the Test
 Realm repo, `apex-td-final.zip` pushes to the production repo. This closes the
 16-day drift: production receives the newer staging feature set.
 
-## LATEST PASS — one unique, monochrome embed for EVERY page (November 5, 2026, night)
+## LATEST PASS — correction: unit-card filter REVERTED, rotating art fixed instead (November 5, 2026, night)
+
+The operator clarified the earlier request: **"I TOLD YOU TO CHANGE THE
+LANDING PAGE ROTATING IMAGES THAT ARE EVERYWHERE IN THE WEBSITE, NOT TO APPLY
+THE DANG FILTER TO THE UNIT IMAGE ON CARDS!! REVER IT IMMEDIATELY."**
+
+- **Reverted.** `src/components/UnitIcon.jsx`, `UnitIcon.css` and
+  `UnitIcon.test.jsx` are back to their original state. No `unit-icon-tint`
+  layer, no `grayscale(1)` filter, no `isolation: isolate`. Unit icons on
+  WIKI / Values cards keep their real in-game colours. Browser check after
+  the revert: 15 unit icons on `/wiki/units/Omegas`, computed `filter: none`,
+  0 tint layers.
+- **What was actually wrong.** The 20 rotating hero characters are the
+  landing-page art reused across the site. On **desktop** the pre-baked WebP
+  copies were in FULL colour and `HeroShowcase.css` removed the greyscale
+  filter for that state (`filter: contrast(1.32) brightness(0.94)`), so the
+  theme accent was blended over the original brown / green / red hues — the
+  "colour over the actual hue" look the operator rejected.
+- **Fixed on the rotating art.** All 20 `src/assets/units/hero-desktop/*.webp`
+  files were baked greyscale (worst RGB channel spread now `0.03`), the
+  `.is-prepared` desktop rule now includes `grayscale(1)` as well, and the
+  drifting `AmbientAccents` cutouts now use `grayscale(1)` plus a masked
+  `mix-blend-mode: color` accent pass instead of `grayscale(0.35)` with no
+  colour pass. `ThemeCutout` already used the correct grey-first order.
+  Verified in headless Chromium: with `--accent: #4cc9f0` the whole rotating
+  character reads as one clean cyan duotone (luminance from the grey base,
+  hue from the accent) rather than a mix of original colours.
+- Everything else from the previous pass (one embed per page, real per-unit
+  icons, human copy, Nose, live rarity counts) is unchanged.
+
+Current totals after the correction: `npm test` 44 files / **249 tests**,
+lint 0 errors, `npm audit --omit=dev` 0, all 11 browser/worker suites green,
+`verify_link_and_trade.mjs` **26/26**, package validator **136/136**, both
+ZIPs pass `unzip -t`.
+
+## PREVIOUS PASS — one unique, monochrome embed for EVERY page (November 5, 2026, night)
 
 The operator shared a link and saw the OLD coloured calculator card, and
 pointed out that the landing page, WIKI, Values and other pages all showed the
@@ -67,7 +102,7 @@ worker/KV/site write. PR #1 on GitHub still has only its original single
 commit — pushing the prepared second commit needs a fresh one-time
 authorization.
 
-## PREVIOUS PASS — human copy, duotone unit art, real in-game icons (November 5, 2026, night)
+## PREVIOUS PASS — human copy, real in-game icons, corrected rotating art (November 5, 2026, night)
 
 Three corrections from the operator's latest review are now in the source,
 built output and verifiers:
@@ -76,13 +111,17 @@ built output and verifiers:
   trade card now says `Compare any trade.` The home tagline is
   `Unit values, stats and trades.` and `INSTANT VERDICT` is just `VERDICT`.
   A verifier fails if the old AI-marketing phrases come back.
-- **Grey first, colour second, on every website unit image.**
-  `src/components/UnitIcon.jsx` / `.css` (the shared component used by the WIKI,
-  Values, calculator, compare, admin and dropdown surfaces) now desaturates the
-  artwork completely with `filter: grayscale(1)`, isolates the tile, and blends
-  the rarity colour back in through a `mix-blend-mode: color` layer. Colour is
-  no longer laid over the original hue. `ThemeCutout` and the hero showcase
-  already used the same grey-first order.
+- **Grey first, colour second — on the ROTATING decorative artwork, not the
+  unit icons on WIKI / Values cards.** The operator's correction was explicit:
+  the target is the landing-page rotating character art that appears across
+  the site. `UnitIcon` was changed by mistake and has been fully **reverted** —
+  unit cards keep their original in-game colours and `filter: none`.
+  The actual fix is on the decorative art: the 20 desktop hero WebP copies
+  were baked greyscale (they were full colour, so the theme accent had been
+  laid over the original hue), `HeroShowcase.css` now applies `grayscale(1)`
+  to every slide including the `.is-prepared` desktop state, and
+  `AmbientAccents` drifting cutouts now use `grayscale(1)` plus a masked
+  `mix-blend-mode: color` accent pass. `ThemeCutout` already used this order.
 - **Every per-unit link image uses that unit's own in-game icon.**
   `scripts/lib/social-cards-core.mjs` previously only looked at nine bundled
   PNGs, so most unit cards had an empty portrait. It now reads the real icon
@@ -95,7 +134,7 @@ built output and verifiers:
   (~28 MB, down from ~43 MB) and still 1200x630 with no external assets.
 
 Verification: `verify_link_and_trade.mjs` is now **19/19** (added human-copy,
-duotone and per-unit icon-identity checks), `UnitIcon.test.jsx` 3/3, and all
+rotating-art and per-unit icon-identity checks), and all
 321 portraits were rendered and reviewed. `dist/` rebuilt: 764 prerendered
 routes with every social card present. Ads remain OFF, the site stays on
 `github.io`, R$0 spent, and nothing was merged or deployed. This work and the
