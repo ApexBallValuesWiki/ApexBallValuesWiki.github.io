@@ -12,6 +12,9 @@ export const TEAM_MEMBERS = {
   'bigbig4780@gmail.com': { name: 'Horren Balls', roleKey: 'editor', roleLabel: 'Editor', icon: '📃' },
   'mnlghtapexhelper@gmail.com': { name: 'Moonlight', roleKey: 'editor', roleLabel: 'Editor', icon: '🌙' },
   'knwasdo@gmail.com': { name: 'Knwasdo', roleKey: 'editor', roleLabel: 'Editor', icon: '📝' },
+  // Nose — Editor (Values + WIKI), re-added on operator request 2026-11-05.
+  // No passcode lives here; onboard via /admin -> Team & access -> Invite link.
+  'destroyha3@gmail.com': { name: 'Nose', roleKey: 'editor', roleLabel: 'Editor', icon: '📃' },
 };
 
 export function getTeamMember(email) {

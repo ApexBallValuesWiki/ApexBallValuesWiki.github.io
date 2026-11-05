@@ -35,6 +35,14 @@ describe('team roster', () => {
     expect(getDisplayName('mnlghtapexhelper@gmail.com')).toContain('Moonlight');
   });
 
+  it('re-registers Nose as a least-privilege editor', () => {
+    const worker = workerRoster();
+    expect(worker['destroyha3@gmail.com']).toBe('editor');
+    const member = getTeamMember('destroyha3@gmail.com');
+    expect(member.name).toBe('Nose');
+    expect(member.roleKey).toBe('editor');
+  });
+
   it('keeps credentials out of both rosters', () => {
     const block = workerSource.match(/const TEAM_ROLES = \{([\s\S]*?)\n\};/)?.[1] || '';
     expect(block).not.toMatch(/\b(passcode|password|secret)\s*:/i);

@@ -6,6 +6,7 @@ import ThemeCutout, { getCutoutForRarity } from '../../components/ThemeCutout';
 import { VALUES_NAV } from '../../config/navigation';
 import { UNIT_RARITIES, getRarityGlow, isShinyRarity } from '../../data/taxonomy';
 import { useScrollToHighlight } from '../../utils/useScrollToHighlight';
+import { liveRarities } from '../../utils/rarityBrowse';
 import { useLiveValues } from '../../hooks/useLiveValues';
 import { decodeRouteParam, encodeRouteParam } from '../../utils/routeParams';
 import '../../components/EntityGrid.css';
@@ -16,7 +17,8 @@ export default function ValueUnitsList() {
   const rarity = decodeRouteParam(params.rarity);
   const highlighted = useScrollToHighlight();
   const { unitValues, error } = useLiveValues();
-  const isValidRarity = UNIT_RARITIES.includes(rarity);
+  const validRarities = useMemo(() => liveRarities(unitValues, UNIT_RARITIES), [unitValues]);
+  const isValidRarity = validRarities.includes(rarity);
 
   const units = useMemo(
     () => (isValidRarity ? unitValues.filter((u) => u.rarity === rarity) : []),

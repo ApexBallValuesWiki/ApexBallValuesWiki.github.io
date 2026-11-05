@@ -6,27 +6,19 @@ import UnitExplorer from '../../components/UnitExplorer';
 import UnitIcon from '../../components/UnitIcon';
 import ThemeCutout, { getCutoutForRarity } from '../../components/ThemeCutout';
 import { getRarityGlow, isShinyRarity } from '../../data/taxonomy';
-import { UNITS_BY_RARITY } from '../../data/units';
 import { VALUES_NAV } from '../../config/navigation';
 import { useData } from '../../context/DataContext';
+import { buildRarityBrowse } from '../../utils/rarityBrowse';
 import { formatCompactNumber } from '../../utils/formatNumber';
 import marketDecoration from '../../assets/units/provided/dictatorball.png';
 import '../wiki/WikiHome.css';
 
-const TIER_CARDS = [
-  'Omegas',
-  'Transcendents',
-  'Mythics',
-  'Legendaries',
-  'Awesome',
-  'Rares',
-  'Odds',
-  'Normie',
-  '???',
-];
-
 export default function ValuesHome() {
   const { unitValues, wikiRows } = useData();
+
+  // Live counts (see rarityBrowse.js): adding, deleting or re-rarifying a
+  // unit in /admin updates these numbers on the next data refresh.
+  const rarityCards = useMemo(() => buildRarityBrowse(unitValues), [unitValues]);
 
   const wikiImageMap = useMemo(() => {
     const map = {};
@@ -123,11 +115,8 @@ export default function ValuesHome() {
         </div>
 
         <div className="hub-tier-grid">
-          {TIER_CARDS.map((rarity) => {
+          {rarityCards.map(({ rarity, count, shinyRarity, shinyCount }) => {
             const glow = getRarityGlow(rarity);
-            const count = (UNITS_BY_RARITY[rarity] || []).length;
-            const shinyRarity = `Shiny ${rarity}`;
-            const shinyCount = (UNITS_BY_RARITY[shinyRarity] || []).length;
             const topUnit = topByRarity[rarity];
             return (
               <div

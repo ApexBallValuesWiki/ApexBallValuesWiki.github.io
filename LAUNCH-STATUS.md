@@ -1,4 +1,4 @@
-# APEX WIKI & Values — release status (updated November 4, 2026)
+# APEX WIKI & Values — release status (updated November 5, 2026)
 
 **This is a code package, not a deployment.** Nothing was pushed, no live worker
 or KV record was modified, no destructive write/delete test was run against the
@@ -10,7 +10,7 @@ you run `push.cmd`.
 worker at `2026-11-02.2` with `sessions:false` and no provisioned passcode for
 the new editor. Deploy the `.5` worker, keep the KV namespace and session
 secret bound, then use **`/admin` → Team & access → Invite link** to onboard
-editors (including the newly added `knwasdo@gmail.com`) — no KV editing needed
+editors (including `knwasdo@gmail.com` and the re-added `destroyha3@gmail.com` / Nose) — no KV editing needed
 anymore. If the frontend goes out before the
 worker it still works via the legacy three-endpoint fallback; the Team & access
 panel shows a clear "server needs its update" message until `.5` is live.
@@ -21,9 +21,52 @@ read the same Cloudflare KV namespace. `apex-td-project.zip` pushes to the Test
 Realm repo, `apex-td-final.zip` pushes to the production repo. This closes the
 16-day drift: production receives the newer staging feature set.
 
-## LATEST PASS — R$0 AdSense-readiness prep (November 4, 2026)
+## LATEST PASS — link images, trade PNG, Nose, live rarity counts (November 5, 2026)
 
-**Everything that can be fixed without spending money is now fixed.** No domain,
+**Still a code package, still R$0, still `https://apexballvalueswiki.github.io`.**
+Ads stay OFF; nothing was pushed, deployed, or written to the worker/KV/site.
+
+- **Better Link Image.** The shared-link (Open Graph / Twitter) preview is now a
+  branded 1200×630 card: collage of real unit art, rarity chips, a
+  `321+ UNITS` count chip, the APEX logo and the site URL. Unit pages keep their
+  own per-unit cards. `/values/calculator` gets a dedicated
+  `social/trade-calculator.png` with YOU GIVE / THEY GIVE panels and a verdict
+  bar. All cards are generated locally by `npm run cards` (323 files, ~28 MB);
+  no external images, fonts or CDNs.
+- **Better Trade Calculator export image.** `src/utils/tradeCardRender.js`
+  renders a redesigned 1800×1120 PNG: themed background, brand header,
+  YOU GIVE / THEY GIVE panels with real unit art and rarity colours, VS
+  medallion, totals, a clear WIN/LOSS/FAIR verdict band with a split value bar,
+  and a footer with the site URL, an "estimates, not official prices" note and
+  the generation time. `🖼️ Export Image` copies to the clipboard and falls back
+  to a file download; a new `⬇️ Save PNG` button always saves directly. The old
+  ad-hoc canvas helpers were removed.
+- **Nose is back.** `destroyha3@gmail.com` / Nose is a least-privilege **Editor**
+  in both `src/utils/teamMembers.js` and the worker `TEAM_ROLES` (the auth source
+  of truth — 8 accounts), on `/credits` and in `DEPLOY-WORKER.md`. No passcode is
+  stored. Onboard Nose with `/admin` → Team & access → Invite link after the `.5`
+  worker is live.
+- **Live Browse-by-Rarity counts.** `src/utils/rarityBrowse.js` builds both hubs
+  from the live `unitValues` roster instead of a frozen `UNITS_BY_RARITY` table.
+  Adding a unit, deleting a unit, changing a shiny counterpart or publishing a
+  rarity override updates the counts at once; editor-created rarities are valid
+  routes on both `/wiki/units/:rarity` and `/values/units/:rarity`.
+  `rarityBrowse.test.js` (9 tests) plus `verify_live_rarity_counts.mjs` (12
+  headless-browser checks) prove add/delete, custom rarities, published rarity overrides and shiny counterparts.
+
+Verification for this pass: `npm test` 44 files / 249 tests, lint 94 warnings /
+0 errors on 271 files, `npm audit --omit=dev` 0, `npm run build` 764 prerendered
+routes with all social cards, `verify_build.mjs` 29, `verify_free_prep.mjs`
+36/36, `verify_free_prep_browser.mjs` 11, `verify_adsense_meta.mjs` 7/7,
+`verify_live_rarity_counts.mjs` 12/12, `verify_link_and_trade.mjs` 14/14,
+`verify_free_prep_browser.mjs` 11, `worker_verify.mjs` 49 (roster-size assertion
+updated for the 8 accounts), plus `verify_bugfixes.mjs` 36/36,
+`verify_v4_features.mjs` 59/59, `verify_new_features.mjs` 18/18 and
+`verify_fixes_v3.mjs` 29/29. Results are in `/home/user/_audit/browser/`.
+
+## PREVIOUS PASS — R$0 AdSense-readiness prep (November 4, 2026)
+
+**Everything that can be fixed without spending money was fixed in this pass.** No domain,
 no DNS, no CNAME, no purchase, no paid CMP. Site stays on
 `https://apexballvalueswiki.github.io`. Ads are still OFF; nothing was pushed,
 deployed, or written to the worker/KV. The operator is 18+, so they own the

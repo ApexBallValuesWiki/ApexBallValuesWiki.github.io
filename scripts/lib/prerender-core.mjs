@@ -97,7 +97,12 @@ addRoute('/bug-report', { title: 'Report a Bug', priority: '0.3' });
 addRoute('/values', { title: 'Trade Values — live Ball TD values', priority: '0.9' });
 addRoute('/values/units', { title: 'Unit Values', priority: '0.7' });
 addRoute('/values/units/search', { title: 'Search Values', priority: '0.4' });
-addRoute('/values/calculator', { title: 'Trade Calculator', priority: '0.7' });
+addRoute('/values/calculator', {
+  title: 'Trade Calculator',
+  description: 'Compare any Ball Tower Defense trade before accepting it. Live value totals, overpay check and shareable trade links.',
+  image: 'trade-calculator.png',
+  priority: '0.7',
+});
 
 // Unit rarity + detail pages (both WIKI and Values sides)
 for (const rarity of UNIT_RARITIES) {

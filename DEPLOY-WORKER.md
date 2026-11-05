@@ -10,7 +10,7 @@ needs any KV editing).
 
 ## 0. What is new in `2026-11-02.5`
 
-The worker roster now has **7 accounts**; `knwasdo@gmail.com` is a
+The worker roster now has **8 accounts**; `knwasdo@gmail.com` and `destroyha3@gmail.com` (Nose) are
 least-privilege `editor` (Values + WIKI editing only). Do **not** create a
 passcode by hand: after deploying, an owner/admin opens
 `/admin → Team & access → Invite link` and sends the one-time link. The
