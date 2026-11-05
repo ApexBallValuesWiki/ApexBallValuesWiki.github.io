@@ -45,10 +45,10 @@ jobs:
             # canonical URL: /Apex-Ball-TD-WIKI/Apex-Ball-TD-WIKI/...
             echo "site=https://$OWNER.github.io" >> "$GITHUB_OUTPUT"
           fi
-      # Social cards stay gitignored (regenerable artifacts) — build them in
-      # CI so every deploy ships og:image previews without committing ~30 MB
-      # of PNGs to the repo.
-      - run: npm run cards
+      # Social cards stay gitignored (regenerable artifacts). `npm run build`
+      # runs `generate-social-cards` before Vite copies public/ into dist/, so
+      # every deploy ships one card per route without committing PNGs to git.
+      # Running it twice would double the ~3-minute card render on every push.
       - run: npm run build
         env:
           VITE_BASE_PATH: ${{ steps.pages.outputs.base }}

@@ -7,18 +7,18 @@
 // Config (both are set by the GitHub Actions deploy):
 //   VITE_BASE_PATH   e.g. "/apex-td-project/"  (defaults to "/")
 //   VITE_SITE_URL    e.g. "https://apexballvalueswiki.github.io" (default below)
-import { mkdirSync, readFileSync, writeFileSync, readdirSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { ALL_UNITS } from '../../src/data/units.js';
 import { UNIT_RARITIES } from '../../src/data/taxonomy.js';
 import { ITEM_GROUPS } from '../../src/data/items.js';
 import { buildStaticBody } from './static-content.mjs';
+import { buildRouteManifest, SITE_NAME, esc } from './route-manifest.mjs';
 
 const ROOT = process.env.APEX_PROJECT_ROOT || dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const DIST = join(ROOT, 'dist');
-const SITE_NAME = 'Apex WIKI & Values';
 const BASE_PATH = (process.env.VITE_BASE_PATH || '/').replace(/\/+$/, '');
 const SITE_URL_RAW = (process.env.VITE_SITE_URL || 'https://apexballvalueswiki.github.io').replace(/\/+$/, '');
 // SITE_URL must be the ORIGIN only. If a deploy script passes the full
@@ -30,131 +30,34 @@ const SITE_URL = BASE_PATH && SITE_URL_RAW.endsWith(BASE_PATH)
 // User/org pages sites have BASE_PATH="" (public production); project sites
 // have a non-empty subfolder (the restricted Test Realm).
 const IS_TEST_REALM = Boolean(BASE_PATH);
-const DEFAULT_DESCRIPTION =
-  'Apex WIKI & Values — the complete companion for Ball Tower Defense by Cash Grab Studios $$$$. Unit database, live trade values, and trade calculator.';
-
-const WINDOWS_ILLEGAL = /[<>:"\\|?*]/;
-const enc = encodeURIComponent;
-
 function absoluteUrl(routePath) {
   return `${SITE_URL}${BASE_PATH}${routePath === '/' ? '/' : routePath}`;
 }
 
-function cardUrl(fileName) {
-  return `${SITE_URL}${BASE_PATH}/social/${fileName}`;
-}
-
-function esc(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
-// Route manifest
-
-const routes = [];
-const seen = new Set();
-
-function addRoute(path, meta) {
-  if (seen.has(path)) return;
-  seen.add(path);
-  routes.push({
-    path,
-    title: meta.title,
-    description: meta.description || DEFAULT_DESCRIPTION,
-    image: meta.image || 'default.png',
-    type: meta.type || 'website',
-    priority: meta.priority || '0.6',
-    prerenderBody: meta.prerenderBody || null,
-    fsPathOk: !WINDOWS_ILLEGAL.test(path),
-  });
-}
-
-// Core pages
-addRoute('/', { title: `${SITE_NAME} — Ball Tower Defense`, description: DEFAULT_DESCRIPTION, priority: '1.0' });
-addRoute('/minigames', { title: 'Minigames — Ball TD arcade', priority: '0.7' });
-addRoute('/minigames/ball-knowledge', { title: 'Ball Knowledge — daily reset tracker', priority: '0.5' });
-addRoute('/minigames/ballonomics', { title: 'Ballonomics — higher or lower values game', priority: '0.5' });
-addRoute('/minigames/balling', { title: 'Balling — pixel reveal guessing game', priority: '0.5' });
-addRoute('/about', { title: 'About — Apex WIKI & Values', description: 'Who runs Apex WIKI & Values, what the site contains, how it handles data, and how to contact the operator.', priority: '0.5' });
-addRoute('/contact', { title: 'Contact — Apex WIKI & Values', description: 'Contact the operator of Apex WIKI & Values for privacy, parental, copyright, removal and correction requests.', priority: '0.5' });
-addRoute('/credits', { title: 'Credits', priority: '0.3' });
-addRoute('/privacy', { title: 'Privacy & Storage', priority: '0.3' });
-addRoute('/terms', { title: 'Terms of Use', priority: '0.3' });
-addRoute('/cookies', { title: 'Cookie & Storage Notice', priority: '0.3' });
-addRoute('/disclaimer', { title: 'Fan-Content & IP Disclaimer', priority: '0.3' });
-addRoute('/changelog', { title: "What's new — Changelog", priority: '0.4' });
-addRoute('/invite', { title: 'Team invite — APEX WIKI & Values', priority: '0.1' });
-addRoute('/values/afford', { title: 'What can I afford? — APEX Values', priority: '0.6' });
-addRoute('/wiki', { title: 'WIKI — Ball Tower Defense database', priority: '0.9' });
-addRoute('/wiki/compare', { title: 'Compare Units', priority: '0.5' });
-addRoute('/wiki/units', { title: 'Units', priority: '0.7' });
-addRoute('/wiki/units/search', { title: 'Search Units', priority: '0.4' });
-addRoute('/wiki/items', { title: 'Items', priority: '0.6' });
-addRoute('/bug-report', { title: 'Report a Bug', priority: '0.3' });
-addRoute('/values', { title: 'Trade Values — live Ball TD values', priority: '0.9' });
-addRoute('/values/units', { title: 'Unit Values', priority: '0.7' });
-addRoute('/values/units/search', { title: 'Search Values', priority: '0.4' });
-addRoute('/values/calculator', {
-  title: 'Trade Calculator',
-  description: 'Compare any Ball Tower Defense trade before accepting it. Live value totals, overpay check and shareable trade links.',
-  image: 'trade-calculator.png',
-  priority: '0.7',
-});
-
-// Unit rarity + detail pages (both WIKI and Values sides)
-for (const rarity of UNIT_RARITIES) {
-  addRoute(`/wiki/units/${enc(rarity)}`, { title: `${rarity} Units — WIKI`, priority: '0.6' });
-  addRoute(`/values/units/${enc(rarity)}`, { title: `${rarity} Unit Values`, priority: '0.6' });
-}
-
-for (const unit of ALL_UNITS) {
-  const description =
-    `${unit.name} is a ${unit.rarity}${unit.type ? ` ${unit.type}` : ''} unit in Ball Tower Defense. ` +
-    `Full stats, upgrade costs, and how to obtain — on ${SITE_NAME}.`;
-  const body = [
-    `<h1>${esc(unit.name)}</h1>`,
-    `<p>${esc(description)}</p>`,
-    unit.placementLimit ? `<p>Placement limit: ${esc(unit.placementLimit)}.</p>` : '',
-    unit.totalCost ? `<p>Total cost: ${esc(unit.totalCost)}.</p>` : '',
-  ].filter(Boolean).join('\n      ');
-  addRoute(`/wiki/units/${enc(unit.rarity)}/${enc(unit.slug)}`, {
-    title: `${unit.name} (${unit.rarity}) — Ball TD WIKI`,
-    description,
-    image: `unit-${unit.slug}.png`,
-    type: 'article',
-    priority: '0.8',
-    prerenderBody: body,
-  });
-  const valueBody = [
-    `<h1>${esc(unit.name)} — trade value</h1>`,
-    `<p>Live trade value, demand, trend and gem/coin ratio for ${esc(unit.name)} (${esc(unit.rarity)}) on ${esc(SITE_NAME)}.</p>`,
-    `<p>Values on this site are community-observed opinions, not official prices. They change over time, are not financial advice, and we do not buy, sell, broker or guarantee any in-game item.</p>`,
-  ].join('\n      ');
-  addRoute(`/values/units/${enc(unit.rarity)}/${enc(unit.slug)}`, {
-    title: `${unit.name} Value — live trade value`,
-    description: `Live trade value, demand, trend and gem/coin ratio for ${unit.name} (${unit.rarity}) on ${SITE_NAME}.`,
-    image: `unit-${unit.slug}.png`,
-    type: 'article',
-    priority: '0.8',
-    prerenderBody: valueBody,
-  });
-}
-
-// Items
-for (const [group, items] of Object.entries(ITEM_GROUPS)) {
-  addRoute(`/wiki/items/${enc(group)}`, { title: `${group} — Items`, priority: '0.6' });
-  for (const item of items) {
-    addRoute(`/wiki/items/${enc(group)}/${enc(item.slug)}`, {
-      title: `${item.name} — ${group}`,
-      description: `${item.name} (${group}) in Ball Tower Defense — details on ${SITE_NAME}.`,
-      type: 'article',
-      priority: '0.7',
-    });
+// Discord / X / WhatsApp cache embeds by URL. A card whose filename never
+// changes keeps showing the OLD cached image even after a redeploy. Hashing
+// the generated card set gives every deploy a fresh, stable URL, so all
+// per-page previews refresh as soon as the new build goes live.
+function cardSetVersion() {
+  try {
+    const dir = join(DIST, 'social');
+    const hash = createHash('sha1');
+    for (const name of readdirSync(dir).sort()) {
+      hash.update(name).update(':').update(String(statSync(join(dir, name)).size)).update(';');
+    }
+    return hash.digest('hex').slice(0, 10);
+  } catch {
+    return '1';
   }
 }
+const CARD_VERSION = cardSetVersion();
+function cardUrl(fileName) {
+  return `${SITE_URL}${BASE_PATH}/social/${fileName}?v=${CARD_VERSION}`;
+}
+
+// Route manifest (shared with the social-card generator so EVERY
+// prerendered page points at its own generated OG image).
+const routes = buildRouteManifest();
 
 // HTML template rewriting
 

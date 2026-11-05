@@ -11,20 +11,20 @@
 // Unit art is converted to high-contrast black & white before embedding.
 // Requires the devDependency `sharp`.
 //
-// Three kinds of card:
-//   default.png           — main LINK IMAGE (Discord / X / WhatsApp preview)
-//   trade-calculator.png  — dedicated preview for shared trade links
-//   unit-<slug>.png       — per-unit link previews
+// ONE card per public route (the shared route manifest is the source of
+// truth): default.png for /, trade-calculator.png for the calculator,
+// unit-<slug>.png / unit-value-<slug>.png for unit pages, and a unique
+// page-<hash>.png for every other WIKI, Values, minigame, item, rarity and
+// legal page. Every card is pure black / white / grey Billboard.
 //
-// Set APEX_CARDS_PREVIEW_DIR to render just three sample cards into that
-// folder (handy for reviewing a design change without regenerating all 323).
+// Set APEX_CARDS_PREVIEW_DIR to render a small sample instead of every card.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { ALL_UNITS } from '../../src/data/units.js';
+import { buildRouteManifest, cardSpecFor } from './route-manifest.mjs';
 
 const ROOT = process.env.APEX_PROJECT_ROOT || dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const OUT_DIR = join(ROOT, 'public', 'social');
@@ -69,7 +69,7 @@ const WIKI_IMAGES = (() => {
       const url = row?.image_url || row?.imageUrl || row?.image;
       // Most rows embed a WebP data URI; 17 rows point at a file in
       // public/images/units/. Both are real in-game icons.
-      if (typeof url === 'string' && (url.startsWith('data:image/') || url.startsWith('/images/'))) {
+      if (typeof url === 'string' && (url.startsWith('data:image/') || url.startsWith('/images/') || url.startsWith('http'))) {
         map.set(slug, url);
       }
     }
@@ -107,7 +107,16 @@ async function monoWikiUri(slug) {
       // Hash dedupes the distinct icons shared across normal/shiny rows.
       return await monoUri(`wiki:${createHash('sha1').update(buffer).digest('hex')}`, buffer);
     }
-    const rel = url.replace(/^\/+/, '');
+    let rel;
+    if (url.startsWith('/')) {
+      rel = url.replace(/^\/+/, '');
+    } else {
+      // bake-data.mjs rewrites remote Supabase image URLs to local file
+      // names. If CI ever serves one, resolve the same local name here so
+      // the card still shows that unit's real icon (never an external fetch).
+      const tail = url.split('?')[0].split('/').pop() || '';
+      rel = `images/units/${tail.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(-160)}`;
+    }
     if (rel.includes('..')) return null;
     const file = join(ROOT, 'public', rel);
     return existsSync(file) ? await monoFileUri(file) : null;
@@ -279,7 +288,7 @@ ${footer(`${SITE_URL}/values/calculator`, 'STATS · VALUES · TRADES')}
 /* ------------------------------------------------------------------ */
 /* PER-UNIT LINK IMAGE                                                 */
 /* ------------------------------------------------------------------ */
-async function cardSvg({ name, rarity = 'Normie', type, slug }) {
+async function cardSvg({ name, rarity = 'Normie', type, slug, side = 'WIKI', pathLabel = SITE_URL }) {
   const art = await unitArtUri(slug);
   const nameLines = wrapName(name);
   const size = nameLines.some((line) => line.length > 12) ? 58 : 72;
@@ -299,7 +308,7 @@ async function cardSvg({ name, rarity = 'Normie', type, slug }) {
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
 ${defs()}
 ${background()}
-${masthead(`UNIT FILE  ·  ${rarityLabel}`)}
+${masthead(`${side === 'VALUES' ? 'UNIT VALUE' : 'UNIT FILE'}  ·  ${rarityLabel}`)}
 ${portrait}
   <line x1="530" y1="130" x2="530" y2="500" stroke="#FFFFFF" stroke-opacity="0.14" stroke-width="1.5"/>
 
@@ -312,8 +321,56 @@ ${portrait}
   ${type ? `<text x="560" y="${typeY}" font-family="${SANS}" font-size="24" font-weight="400" fill="#9A9A9A">${escXml(type)}</text>` : ''}
 
   <line x1="560" y1="470" x2="1120" y2="470" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="1.5"/>
-  <text x="560" y="506" font-family="${MONO}" font-size="17" fill="#C9C9C9" letter-spacing="2">WIKI · VALUES · TRADES</text>
-${footer(SITE_URL, 'APEX UNIT INDEX')}
+  <text x="560" y="506" font-family="${MONO}" font-size="17" fill="#C9C9C9" letter-spacing="2">${escXml(side === 'VALUES' ? 'VALUE · DEMAND · TREND' : 'STATS · UPGRADES · HOW TO GET')}</text>
+${footer(pathLabel, side === 'VALUES' ? 'APEX VALUE INDEX' : 'APEX UNIT INDEX')}
+</svg>`;
+}
+
+/* ------------------------------------------------------------------ */
+/* PER-PAGE LINK IMAGE — every non-unit route gets its own card        */
+/* ------------------------------------------------------------------ */
+function fitTitle(text, maxWidth = 545) {
+  const words = String(text || '').split(/\s+/).filter(Boolean);
+  for (const size of [84, 76, 68, 60, 52, 46]) {
+    const lines = [];
+    let line = '';
+    for (const word of words) {
+      const next = line ? `${line} ${word}` : word;
+      if (next.length * size * 0.6 > maxWidth && line) { lines.push(line); line = word; }
+      else line = next;
+    }
+    if (line) lines.push(line);
+    if (lines.length <= 2 && lines.every((l) => l.length * size * 0.6 <= maxWidth)) {
+      return { lines, size };
+    }
+  }
+  return { lines: [String(text || '').slice(0, 26)], size: 46 };
+}
+
+async function pageCardSvg(spec) {
+  const emblem = await monoFileUri(join(PROVIDED_ASSETS, spec.emblem));
+  const { lines, size } = fitTitle(spec.title);
+  const topY = 246;
+  const lineH = size * 1.08;
+  const subY = topY + lines.length * lineH + 18;
+  const pillW = spec.eyebrow.length * 12 + 44;
+  const pageNo = String(spec.index).padStart(3, '0');
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+${defs()}
+${background()}
+${masthead(`PAGE ${pageNo}  ·  2026`)}
+  <line x1="650" y1="130" x2="650" y2="500" stroke="#FFFFFF" stroke-opacity="0.14" stroke-width="1.5"/>
+${heroPortrait(emblem)}
+
+  <rect x="68" y="142" width="${pillW}" height="44" rx="22" fill="#FFFFFF" fill-opacity="0.07" stroke="#FFFFFF" stroke-opacity="0.62" stroke-width="2"/>
+  <text x="${68 + pillW / 2}" y="171" font-family="${MONO}" font-size="16" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="2">${escXml(spec.eyebrow)}</text>
+
+  ${lines
+    .map((line, i) => `<text x="64" y="${topY + i * lineH}" font-family="${SANS}" font-size="${size}" font-weight="900" fill="#FFFFFF" letter-spacing="-3">${escXml(line)}</text>`)
+    .join('\n  ')}
+  <text x="68" y="${subY}" font-family="${SANS}" font-size="22" font-weight="400" fill="#8C8C8C" letter-spacing="1">${escXml(spec.subtitle)}</text>
+${indexStrip(spec.strip)}
+${footer(spec.pathLabel, 'STATS · VALUES · TRADES')}
 </svg>`;
 }
 
@@ -332,46 +389,41 @@ async function writeCard(fileName, svg, { targetDir = OUT_DIR } = {}) {
 }
 
 async function main() {
+  const routes = buildRouteManifest();
   const previewDir = process.env.APEX_CARDS_PREVIEW_DIR;
-  if (previewDir) {
-    let total = 0;
-    total += await writeCard('default.png', await defaultCardSvg(), { targetDir: previewDir });
-    total += await writeCard('trade-calculator.png', await tradeCardSvg(), { targetDir: previewDir });
-    const samples = ['showmanball', 'forestball', 'laserminigunner-lmg', 'ball', 'shiny-beachball']
-      .map((slug) => ALL_UNITS.find((u) => u.slug === slug))
-      .filter(Boolean);
-    let previewCount = 2;
-    for (const sample of samples) {
-      total += await writeCard(`unit-${sample.slug}.png`, await cardSvg({
-        name: sample.name, rarity: sample.rarity, type: sample.type, slug: sample.slug,
-      }), { targetDir: previewDir });
-      previewCount += 1;
-    }
-    console.log(`[cards] wrote ${previewCount} preview cards to ${previewDir} (${(total / 1024).toFixed(0)} KB)`);
-    return;
-  }
+  const previewPaths = new Set([
+    '/', '/values/calculator', '/wiki', '/values', '/minigames', '/about',
+    '/privacy', '/values/afford', '/wiki/items', '/wiki/units/Omegas',
+  ]);
+  const previewUnitSlugs = new Set(['showmanball', 'forestball', 'ball']);
 
-  mkdirSync(OUT_DIR, { recursive: true });
   let total = 0;
   let count = 0;
-
-  total += await writeCard('default.png', await defaultCardSvg());
-  count += 1;
-  total += await writeCard('trade-calculator.png', await tradeCardSvg());
-  count += 1;
-
-  for (const unit of ALL_UNITS) {
-    const svg = await cardSvg({
-      name: unit.name,
-      rarity: unit.rarity,
-      type: unit.type,
-      slug: unit.slug,
+  for (const [i, route] of routes.entries()) {
+    const spec = cardSpecFor(route, i);
+    if (previewDir) {
+      const isUnitSample = spec.kind === 'unit' && previewUnitSlugs.has(spec.unit?.slug);
+      const isWantedPage = previewPaths.has(route.path);
+      if (spec.kind !== 'home' && spec.kind !== 'calculator' && !isUnitSample && !isWantedPage) continue;
+      // Skip the Values twin in preview mode; two unit samples are enough.
+      if (spec.kind === 'unit' && spec.side === 'VALUES') continue;
+    }
+    let svg;
+    if (spec.kind === 'home') svg = await defaultCardSvg();
+    else if (spec.kind === 'calculator') svg = await tradeCardSvg();
+    else if (spec.kind === 'unit') svg = await cardSvg({
+      name: spec.unit.name, rarity: spec.unit.rarity, type: spec.unit.type,
+      slug: spec.unit.slug, side: spec.side, pathLabel: spec.pathLabel,
     });
-    total += await writeCard(`unit-${unit.slug}.png`, svg);
+    else svg = await pageCardSvg(spec);
+    total += await writeCard(spec.fileName, svg, previewDir ? { targetDir: previewDir } : {});
     count += 1;
   }
-
-  console.log(`[cards] wrote ${count} monochrome social cards to public/social/ (~${(total / 1024 / 1024).toFixed(1)} MB total)`);
+  if (previewDir) {
+    console.log(`[cards] wrote ${count} preview cards to ${previewDir} (${(total / 1024).toFixed(0)} KB)`);
+    return;
+  }
+  console.log(`[cards] wrote ${count} monochrome social cards (one per route) to public/social/ (~${(total / 1024 / 1024).toFixed(1)} MB total)`);
 }
 
 main().catch((error) => {

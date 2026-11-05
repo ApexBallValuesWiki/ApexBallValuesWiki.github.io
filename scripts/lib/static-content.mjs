@@ -177,7 +177,7 @@ export function buildStaticBody(route, ctx) {
       sections.push(`<h2>Explore the site</h2><ul>
         <li>${link('/wiki', 'WIKI')} — unit statistics, upgrade costs, placement limits and items.</li>
         <li>${link('/values', 'Trade values')} — community-observed values, demand and trends.</li>
-        <li>${link('/values/calculator', 'Trade calculator')} — compare an offer before accepting it.</li>
+        <li>${link('/values/calculator', 'Trade calculator')} — check value totals and overpay.</li>
         <li>${link('/values/afford', 'What can I afford?')} — find units within your budget.</li>
         <li>${link('/minigames', 'Minigames')} — small browser games.</li>
       </ul>`);

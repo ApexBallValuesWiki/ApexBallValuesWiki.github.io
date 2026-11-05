@@ -1,1 +1,1 @@
-release: 2026-11-05 monochrome link images, real per-unit icons, duotone unit art, human copy, trade PNG export, Nose back on the team, live rarity counts (worker 2026-11-02.5)
+release: 2026-11-05 one monochrome embed per page, monochrome link images, real per-unit icons, duotone unit art, human copy, trade PNG export, Nose back on the team, live rarity counts (worker 2026-11-02.5)

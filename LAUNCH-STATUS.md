@@ -23,7 +23,51 @@ read the same Cloudflare KV namespace. `apex-td-project.zip` pushes to the Test
 Realm repo, `apex-td-final.zip` pushes to the production repo. This closes the
 16-day drift: production receives the newer staging feature set.
 
-## LATEST PASS — human copy, duotone unit art, real in-game icons (November 5, 2026, night)
+## LATEST PASS — one unique, monochrome embed for EVERY page (November 5, 2026, night)
+
+The operator shared a link and saw the OLD coloured calculator card, and
+pointed out that the landing page, WIKI, Values and other pages all showed the
+same generic preview. Two separate problems, both now fixed in the code:
+
+- **The live site is still the old build.** PR #1 has not been merged or
+  deployed, so `https://apexballvalueswiki.github.io` still serves the
+  pre-monochrome card. Discord / X / WhatsApp also cache embeds by image URL.
+  Nothing in this local package can change a live or cached embed; the code
+  has to be merged and deployed first. (The `?v=` step below handles the
+  cache half of that.)
+- **Every page now has its OWN card.** `scripts/lib/route-manifest.mjs` is the
+  single source of truth for the 764 prerendered routes AND their link images.
+  `prerender-core.mjs` writes each route's `og:image` / `twitter:image`;
+  `social-cards-core.mjs` renders that exact file. `/` keeps `default.png`,
+  `/values/calculator` keeps `trade-calculator.png`, WIKI unit pages use
+  `unit-<slug>.png`, Values unit pages now use their own
+  `unit-value-<slug>.png`, and all 120 other pages (WIKI, Values, minigames,
+  rarity lists, items, legal, tools, about/contact) get a unique
+  `page-<hash>.png` with that page's title, section label, page number and URL.
+  Verified: **764 pages / 764 distinct OG image URLs / 0 missing files**.
+- **All 764 cards are pure black & white.** The same Billboard frame,
+  masthead, footer, greyscale portraits and final `.greyscale()` pass are used
+  everywhere, including the calculator card. Sampled page, unit and calculator
+  cards all measure R=G=B.
+- **Cache busting.** `prerender-core.mjs` hashes the generated card set and
+  appends `?v=<hash>` to every OG/Twitter image URL. Discord / X / WhatsApp
+  therefore re-fetch the new image after a deploy instead of serving a cached
+  old one, while unchanged builds keep a stable URL.
+- **Copy is plain everywhere.** The calculator's embed description was also
+  AI-sounding (`Compare any Ball Tower Defense trade before accepting it`);
+  it is now `Value totals, overpay check and shareable trade links for Ball
+  Tower Defense trades.` The crawler-visible home text was updated too.
+
+`npm run cards` now renders 764 cards (~68.5 MB, ~3.5 min) and
+`npm run build` regenerates them once in CI (the duplicate `npm run cards`
+workflow step was removed). `verify_link_and_trade.mjs` is **23/23**, with new
+checks for per-page uniqueness, cache busting, real files and monochrome page
+cards. Ads remain OFF, `github.io`, R$0; no merge, deployment, `main` push or
+worker/KV/site write. PR #1 on GitHub still has only its original single
+commit — pushing the prepared second commit needs a fresh one-time
+authorization.
+
+## PREVIOUS PASS — human copy, duotone unit art, real in-game icons (November 5, 2026, night)
 
 Three corrections from the operator's latest review are now in the source,
 built output and verifiers:
@@ -55,7 +99,10 @@ duotone and per-unit icon-identity checks), `UnitIcon.test.jsx` 3/3, and all
 321 portraits were rendered and reviewed. `dist/` rebuilt: 764 prerendered
 routes with every social card present. Ads remain OFF, the site stays on
 `github.io`, R$0 spent, and nothing was merged or deployed. This work and the
-monochrome redesign belong to the second commit on the same PR branch.
+monochrome redesign are prepared locally as the second commit on the same PR
+branch. **PR #1 on GitHub still has only its original single commit**: pushing
+that second commit needs a fresh one-time GitHub authorization, so the remote
+PR has not been updated yet. `main` is untouched.
 
 ## PREVIOUS PASS — full monochrome link-image redesign (November 5, 2026, evening)
 
