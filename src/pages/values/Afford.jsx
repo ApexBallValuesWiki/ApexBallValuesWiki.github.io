@@ -9,6 +9,7 @@ import { useData } from '../../context/DataContext';
 import { VALUES_NAV } from '../../config/navigation';
 import { UNIT_RARITIES, getRarityGlow, isShinyRarity } from '../../data/taxonomy';
 import { parseCompactValue, formatSiteNumber } from '../../utils/formatNumber';
+import { priceRange, shinyOCRank, relevancyRank } from '../../utils/valueRules';
 import './Afford.css';
 
 const QUICK_BUDGETS = [100_000, 1_000_000, 10_000_000, 100_000_000, 300_000_000, 1_000_000_000];
@@ -18,15 +19,16 @@ const MODES = [
   { id: 'coins', label: 'Coins', icon: '🪙' },
 ];
 const SORTS = [
+  { id: 'relevancy', label: 'Sort by relevancy' },
   { id: 'best', label: 'Best value (closest to budget)' },
   { id: 'high', label: 'Highest first' },
   { id: 'low', label: 'Lowest first' },
   { id: 'name', label: 'Name A–Z' },
 ];
 
-// Shiny Omega and O/C units have no numeric price. From a 300M budget they are
-// treated as affordable at an estimated 300M so they appear in the results.
-// "???" (Secret) units stay excluded — they have no usable value at all.
+// O/C and Shiny Omega units have no numeric price. They are still listed from
+// a 300M budget, but O/C shows "O/C" (never a made-up 300M) and "N/A%" instead
+// of a percentage, because O/C values vary wildly from one copy to another.
 const SPECIAL_PRICE = 300_000_000;
 
 function isSecretRarity(rarity) {
@@ -37,10 +39,19 @@ function isShinyOmega(unit) {
   return /shiny\s*omega/i.test(String(unit?.rarity || ''));
 }
 
-function isOC(unit) {
+// O/C and N/A are both "no fixed price" markers. O/C wins if a row carries
+// both (e.g. value O/C, gems N/A). Neither is ever shown as 300M or a percent.
+function specialMarker(unit) {
   const fields = [unit?.specialValue, unit?.specialGems, unit?.specialCoins,
     unit?.baseValue, unit?.gems, unit?.coins];
-  return fields.some((value) => /^O\/C$/i.test(String(value ?? '').trim()));
+  const tags = fields.map((value) => String(value ?? '').trim());
+  if (tags.some((value) => /^O\/C$/i.test(value))) return 'O/C';
+  if (tags.some((value) => /^N\/A$/i.test(value))) return 'N/A';
+  return null;
+}
+
+function isOC(unit) {
+  return specialMarker(unit) === 'O/C';
 }
 
 function isSpecialEligible(unit) {
@@ -48,32 +59,44 @@ function isSpecialEligible(unit) {
 }
 
 function priceOf(unit, mode) {
-  const numeric = Number(unit?.[mode]);
-  if (Number.isFinite(numeric) && numeric > 0) {
-    return { price: numeric, label: formatSiteNumber(numeric), special: false, note: '' };
+  const { min, max, hasRange } = priceRange(unit, mode);
+  if (min > 0) {
+    return {
+      // The TOP of the range is the conservative "can I actually afford it"
+      // number; the full range is shown on the card.
+      price: max,
+      min,
+      max,
+      hasRange,
+      label: hasRange ? `${formatSiteNumber(min)}–${formatSiteNumber(max)}` : formatSiteNumber(min),
+      special: false,
+      oc: false,
+      note: '',
+    };
   }
   if (isSpecialEligible(unit)) {
+    const marker = specialMarker(unit);
     return {
       price: SPECIAL_PRICE,
-      label: formatSiteNumber(SPECIAL_PRICE),
+      min: SPECIAL_PRICE,
+      max: SPECIAL_PRICE,
+      hasRange: false,
+      label: marker || formatSiteNumber(SPECIAL_PRICE),
       special: true,
-      note: isOC(unit) ? 'O/C' : 'SHINY OMEGA',
+      noPrice: Boolean(marker),
+      note: marker || 'SHINY OMEGA',
     };
   }
   return null;
 }
 
-/**
- * Reverse research page: enter a budget, see which units you could actually
- * afford. Deliberately a standalone research page (not a calculator feature) —
- * it reads the same live values but works in the opposite direction.
- */
+/** Reverse research page: enter a budget, see which units you could afford. */
 export default function Afford() {
   const { unitValues } = useData();
   const [rawBudget, setRawBudget] = useState('20M');
   const [mode, setMode] = useState('tradeValue');
   const [rarity, setRarity] = useState('all');
-  const [sort, setSort] = useState('best');
+  const [sort, setSort] = useState('relevancy');
   const [query, setQuery] = useState('');
   const [includeShiny, setIncludeShiny] = useState(false);
 
@@ -88,9 +111,8 @@ export default function Afford() {
 
   const units = useMemo(() => (unitValues || []).reduce((list, unit) => {
     if (!unit || unit.kind === 'item') return list;
-    if (isSecretRarity(unit.rarity)) return list; // no "???" units
+    if (isSecretRarity(unit.rarity)) return list;
     const special = isSpecialEligible(unit);
-    // Eligible Shiny Omega / O-C units appear even with "Include Shiny" off.
     if (!includeShiny && !special && isShinyRarity(unit.rarity)) return list;
     if (rarity !== 'all' && unit.rarity !== rarity) return list;
     if (query.trim() && !String(unit.name || '').toLowerCase().includes(query.trim().toLowerCase())) return list;
@@ -103,19 +125,37 @@ export default function Afford() {
     if (!valid) return [];
     const within = units
       .filter((unit) => unit.price <= budget)
-      .map((unit) => ({ ...unit, share: unit.price / budget }));
+      .map((unit) => ({
+        ...unit,
+        share: unit.noPrice ? null : unit.max / budget,
+        shareMin: unit.noPrice ? null : unit.min / budget,
+        ocRank: unit.noPrice ? shinyOCRank(unit) : Number.POSITIVE_INFINITY,
+        pin: relevancyRank(unit),
+      }));
     within.sort((a, b) => {
+      if (sort === 'relevancy') {
+        // Pinned units first (in the order given), then the Shiny O/C ranking,
+        // then everything else by price, highest first.
+        const aPinned = a.pin !== null;
+        const bPinned = b.pin !== null;
+        if (aPinned !== bPinned) return aPinned ? -1 : 1;
+        if (aPinned && bPinned && a.pin !== b.pin) return a.pin - b.pin;
+        if (a.ocRank !== b.ocRank) return a.ocRank - b.ocRank;
+        return b.price - a.price;
+      }
       if (sort === 'high') return b.price - a.price;
       if (sort === 'low') return a.price - b.price;
       if (sort === 'name') return String(a.name).localeCompare(String(b.name));
-      return b.share - a.share || b.price - a.price;
+      return (b.share ?? 0) - (a.share ?? 0) || b.price - a.price;
     });
     return within;
   }, [units, budget, valid, sort]);
 
-  const total = matches.reduce((sum, unit) => sum + unit.price, 0);
+  const total = matches.reduce((sum, unit) => sum + (unit.noPrice ? 0 : unit.price), 0);
   const nearest = matches[0];
-  const specialCount = matches.filter((unit) => unit.special).length;
+  const ocCount = matches.filter((unit) => unit.note === 'O/C').length;
+  const naCount = matches.filter((unit) => unit.note === 'N/A').length;
+  const otherSpecialCount = matches.filter((unit) => unit.special && !unit.oc).length;
 
   return (
     <PageShell sidebarTitle="VALUES" navTree={VALUES_NAV}>
@@ -172,26 +212,19 @@ export default function Afford() {
             placeholder="Filter by unit name…"
             aria-label="Filter by unit name"
           />
-          <Dropdown
-            compact
-            className="afford-dd"
-            value={rarity}
-            onChange={setRarity}
-            options={rarityOptions}
-            ariaLabel="Rarity filter"
-          />
-          <Dropdown
-            compact
-            className="afford-dd"
-            value={sort}
-            onChange={setSort}
-            options={sortOptions}
-            ariaLabel="Sort results"
-          />
-          <label className="afford-check">
-            <input type="checkbox" checked={includeShiny} onChange={(event) => setIncludeShiny(event.target.checked)} />
-            Include Shiny
-          </label>
+          <Dropdown compact className="afford-dd" value={rarity} onChange={setRarity} options={rarityOptions} ariaLabel="Rarity filter" />
+          <Dropdown compact className="afford-dd" value={sort} onChange={setSort} options={sortOptions} ariaLabel="Sort results" />
+          <button
+            type="button"
+            className={`afford-shiny-toggle${includeShiny ? ' on' : ''}`}
+            aria-pressed={includeShiny}
+            onClick={() => setIncludeShiny((value) => !value)}
+            title="Show shiny units in the results (Shiny Omega / O/C are always included)"
+          >
+            <span className="afford-shiny-icon" aria-hidden="true">✦</span>
+            <span className="afford-shiny-label">Include Shiny</span>
+            <span className="afford-shiny-state">{includeShiny ? 'ON' : 'OFF'}</span>
+          </button>
         </div>
       </section>
 
@@ -201,9 +234,11 @@ export default function Afford() {
         <>
           <div className="afford-summary">
             <div><strong>{matches.length}</strong><span>units within {formatSiteNumber(budget)}</span></div>
-            <div><strong>{formatSiteNumber(nearest?.price || 0)}</strong><span>best-value pick{nearest ? ` · ${nearest.name}` : ''}</span></div>
+            <div><strong>{nearest?.label || '—'}</strong><span>top pick{nearest ? ` · ${nearest.name}` : ''}</span></div>
             <div><strong>{formatSiteNumber(total)}</strong><span>combined value of results</span></div>
-            {specialCount > 0 && <div><strong>{specialCount}</strong><span>Shiny Omega / O/C included at {formatSiteNumber(SPECIAL_PRICE)}</span></div>}
+            {ocCount > 0 && <div><strong>{ocCount}</strong><span>O/C units · no fixed price</span></div>}
+            {naCount > 0 && <div><strong>{naCount}</strong><span>N/A units · no fixed price</span></div>}
+            {otherSpecialCount > 0 && <div><strong>{otherSpecialCount}</strong><span>Shiny Omega included at {formatSiteNumber(SPECIAL_PRICE)}</span></div>}
             <Link to={`/values/calculator?budget=${encodeURIComponent(String(budget))}`} className="afford-cta">Open trade calculator →</Link>
           </div>
 
@@ -215,7 +250,7 @@ export default function Afford() {
                 <Link
                   key={`${unit.rarity}-${unit.slug}`}
                   to={`/values/units/${encodeURIComponent(unit.rarity)}/${encodeURIComponent(unit.slug)}`}
-                  className={`afford-card${unit.special ? ' afford-card-special-unit' : ''}`}
+                  className={`afford-card${unit.special ? ' afford-card-special-unit' : ''}${(unit.pin !== null && unit.pin !== undefined) ? ' afford-card-pinned' : ''}`}
                   style={{ '--afford-glow': getRarityGlow(unit.rarity) }}
                 >
                   <div className="afford-card-head">
@@ -223,10 +258,15 @@ export default function Afford() {
                     <div><strong>{unit.name}</strong><small style={{ color: getRarityGlow(unit.rarity) }}>{unit.rarity}</small></div>
                     <span className="afford-card-price">{unit.label}</span>
                   </div>
-                  <div className="afford-bar"><div style={{ width: `${Math.min(100, unit.share * 100)}%` }} /></div>
+                  <div className="afford-bar"><div style={{ width: `${unit.noPrice ? 0 : Math.min(100, (unit.share || 0) * 100)}%` }} /></div>
                   <small className="afford-share">
-                    {Math.round(unit.share * 100)}% of your budget
+                    {unit.noPrice
+                      ? 'N/A% of your budget'
+                      : (unit.hasRange
+                        ? `${Math.round((unit.shareMin || 0) * 100)}–${Math.round(unit.share * 100)}% of your budget`
+                        : `${Math.round(unit.share * 100)}% of your budget`)}
                     {unit.special && <span className="afford-card-note" data-afford-note={unit.note}>{unit.note}</span>}
+                    {unit.pin !== null && unit.pin !== undefined && <span className="afford-card-pin">TOP PICK</span>}
                   </small>
                 </Link>
               ))}
@@ -237,7 +277,11 @@ export default function Afford() {
       )}
 
       <p className="afford-foot">
-        Values are community estimates, not official prices. From a {formatSiteNumber(SPECIAL_PRICE)} budget, Shiny Omega and O/C units are included at an estimated {formatSiteNumber(SPECIAL_PRICE)}.
+        Values are community estimates, not official prices. Value ranges are shown as min–max;
+        the top of the range decides affordability. O/C units have no fixed price, so they show
+        <strong>O/C</strong> and <strong>N/A</strong> units show their marker plus
+        <strong> N/A%</strong> instead of an estimated number or percentage.
+        Shiny Omega units are listed from a {formatSiteNumber(SPECIAL_PRICE)} budget.
       </p>
     </PageShell>
   );

@@ -23,6 +23,7 @@ import { formatCompactNumber, formatFullNumber, formatRelativeTime } from '../..
 import '../wiki/UnitDetail.css';
 import './UnitValueDetail.css';
 import { TermTip } from '../../components/StatMeta';
+import ExistCountBadge from '../../components/ExistCountBadge';
 
 const statGridVariants = {
   initial: {},
@@ -107,6 +108,7 @@ export default function UnitValueDetail() {
             <h1>{unit.name}</h1>
             <div className="unit-badges">
               <span className="badge filled">{unit.rarity}</span>
+              <ExistCountBadge slug={unit.slug} />
               {unit.type && <span className="badge">{unit.type}</span>}
               {unit.category && <span className="badge dim">{unit.category}</span>}
             </div>

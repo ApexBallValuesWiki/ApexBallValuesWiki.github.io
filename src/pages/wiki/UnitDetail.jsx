@@ -1,4 +1,7 @@
 import { useMemo, useState } from 'react';
+import ExistCountBadge from '../../components/ExistCountBadge';
+import { useExistCount } from '../../hooks/useExistCount';
+import { formatExistCount } from '../../utils/existCountStore';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import PageShell from '../../components/PageShell';
@@ -179,6 +182,7 @@ export default function UnitDetail() {
             <h1>{unit.name}</h1>
             <motion.div className="unit-badges" variants={listVariants} initial="initial" animate="animate">
               <motion.span className="badge filled" variants={itemVariants}>{unit.rarity}</motion.span>
+              <ExistCountBadge slug={unit.slug} />
               {unit.type && <motion.span className="badge" variants={itemVariants}>{unit.type}</motion.span>}
               {unit.category && <motion.span className="badge dim" variants={itemVariants}>{unit.category}</motion.span>}
               {unit.rawType && <motion.span className="badge dim" variants={itemVariants}>{unit.rawType}</motion.span>}
@@ -216,6 +220,7 @@ export default function UnitDetail() {
           <h2>Overview</h2>
           <div className="stat-grid">
             <Stat label="Placement Limit" value={unit.placementLimit} />
+            <ExistStat slug={unit.slug} />
             <Stat label="Total Cost" value={unit.totalCost} />
             <Stat label="Type" value={unit.type} />
             <Stat label="Category" value={unit.category} />
@@ -336,6 +341,12 @@ function UpgradeStatBlock({ name, stats, cooldown, range }) {
       ))}
     </div>
   );
+}
+
+function ExistStat({ slug }) {
+  const count = useExistCount(slug);
+  if (count === null) return null;
+  return <div className="stat-box"><div className="stat-value">{formatExistCount(count)}</div><div className="stat-label">Exist Count</div></div>;
 }
 
 function Stat({ label, value, suffix = '' }) {

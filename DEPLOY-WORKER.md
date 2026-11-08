@@ -163,3 +163,32 @@ the browser console and automatically use the three legacy endpoints. Deploy
 the worker first to avoid it.
 
 No destructive write/delete test was executed against the live endpoint.
+
+
+## 7. Optional: fully automatic LIVE exist counts
+
+The frontend and worker now support the game's "X exist" numbers with **no
+manual editing**. See `EXIST-COUNT-AUTOMATIC.md` for the full guide and the
+ready-to-paste Luau publisher script. Short version:
+
+- The worker exposes `GET /exist-counts`, `POST /exist-counts/publish`, and a
+  `scheduled()` cron handler. `existV` is folded into the existing `/status`
+  poll, so the site pays no extra per-minute request.
+- `wrangler.toml` has `[triggers] crons = ["*/15 * * * *"]` (free plan: 5
+  triggers/account, 1-minute minimum, ~96 polls/day).
+- Connect **one** automatic publisher:
+  1. **Game push** — `npx wrangler secret put EXIST_PUBLISH_SECRET`, paste the
+     same key into the server-only Script in `ServerScriptService`, enable
+     *Allow HTTP Requests* in Studio. No cron required.
+  2. **Public feed** — `npx wrangler secret put EXIST_FEED_URL` (JSON or CSV).
+  3. **Open Cloud** — `ROBLOX_API_KEY`, `ROBLOX_UNIVERSE_ID`,
+     `EXIST_DATASTORE_NAME`, `EXIST_DATASTORE_KEY` (needs an API key from the
+     game owner).
+- With **no** source connected the worker publishes an empty map and the site
+  shows no exist count at all. No zeros, no estimates, no scraping.
+- Verify with `GET /health` (`existCounts.mode`), `GET /exist-counts`, and
+  `GET /status` (`existV`). No secrets are ever returned by these endpoints.
+
+Roblox does not expose in-game exist counts through any public API, so a
+publisher on the game side (or a community feed) is required. Ads stay OFF and
+this stays on `github.io`.

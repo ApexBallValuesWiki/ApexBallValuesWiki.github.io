@@ -14,7 +14,7 @@ const ALLOWED_ORIGINS = new Set([
   'https://apexballvalueswiki.github.io',
   'https://zenithvalues.github.io',
 ]);
-const ADMIN_HEADERS = 'Content-Type, X-Admin-Email, X-Admin-Passcode, X-Admin-Session, If-None-Match';
+const ADMIN_HEADERS = 'Content-Type, X-Admin-Email, X-Admin-Passcode, X-Admin-Session, If-None-Match, X-Exist-Timestamp, X-Exist-Signature, X-Exist-Key';
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 
 function isWriteMethod(method) { return method === 'POST' || method === 'DELETE' || method === 'PUT'; }
@@ -108,9 +108,272 @@ const RAW_BUNDLE_CACHE = { key: '', value: null };
 const META_TTL_MS = 3000;
 const CREDENTIAL_TTL_MS = 30000;
 
+// ---- LIVE EXIST COUNTS ------------------------------------------------------
+// Roblox does NOT publish in-game "X exist" numbers through any public API.
+// This worker accepts them from one of three AUTOMATIC publishers and
+// republishes them through the SINGLE existing 60s /status poll:
+//   1. push  — game-side HttpService / a bot POSTs /exist-counts/publish (HMAC)
+//   2. feed  — a public JSON/CSV URL polled by a free Cloudflare cron
+//   3. cloud — Roblox Open Cloud DataStore read with an owner-granted API key
+// With no source configured the worker publishes NO numbers. Nothing is
+// estimated, scraped from the in-game UI, or baked into the static site.
+const EXIST_KV_KEY = 'existCounts';
+const EXIST_META_KEY = 'existCountsMeta';
+const EXIST_MAX_ENTRIES = 1000;
+const EXIST_MAX_COUNT = 1_000_000_000_000;
+const EXIST_MAX_DROP = 0.5;               // refuse a >50% one-shot drop
+const EXIST_PUBLISH_SKEW_MS = 5 * 60 * 1000;
+const EXIST_META_CACHE = { at: 0, value: null };
+const EXIST_META_TTL_MS = 3000;
+let IN_MEMORY_EXIST_FALLBACK = null;
+
+export function normalizeExistSlug(raw) {
+  return String(raw || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 80);
+}
+
+function existNumeric(value) {
+  if (typeof value === 'number') return value;
+  if (typeof value !== 'string') return NaN;
+  const cleaned = value.trim().replace(/[,_\s]/g, '');
+  return /^\d+$/.test(cleaned) ? Number(cleaned) : NaN;
+}
+
+function existNumberFromRow(row) {
+  for (const key of ['count', 'exist', 'exists', 'existCount', 'exist_count', 'total', 'quantity', 'supply']) {
+    const n = existNumeric(row?.[key]);
+    if (Number.isFinite(n)) return n;
+  }
+  return NaN;
+}
+
+function collectExistPlain(obj, out) {
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return;
+  for (const [key, value] of Object.entries(obj)) {
+    const slug = normalizeExistSlug(key);
+    if (!slug) continue;
+    const n = (value && typeof value === 'object') ? existNumberFromRow(value) : existNumeric(value);
+    if (Number.isFinite(n)) out[slug] = Math.trunc(n);
+  }
+}
+
+function collectExistArray(arr, out) {
+  for (const row of arr) {
+    if (!row || typeof row !== 'object') continue;
+    const slug = normalizeExistSlug(row.slug || row.key || row.id || row.unit || row.name || row.item);
+    const n = existNumberFromRow(row);
+    if (slug && Number.isFinite(n)) out[slug] = Math.trunc(n);
+  }
+}
+
+function splitCsvLine(line) {
+  const out = [];
+  let cur = '';
+  let quoted = false;
+  for (let i = 0; i < line.length; i += 1) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (quoted && line[i + 1] === '"') { cur += '"'; i += 1; }
+      else quoted = !quoted;
+    } else if (ch === ',' && !quoted) {
+      out.push(cur.trim());
+      cur = '';
+    } else cur += ch;
+  }
+  out.push(cur.trim());
+  return out;
+}
+
+function collectExistCsv(text, out) {
+  const lines = String(text).split(/\r?\n/).filter((line) => line.trim());
+  if (!lines.length) return;
+  const cells = splitCsvLine;
+  const head = cells(lines[0]).map((h) => h.toLowerCase());
+  const slugIdx = head.findIndex((h) => ['slug', 'unit', 'name', 'item', 'id', 'key'].includes(h));
+  const countIdx = head.findIndex((h) => ['count', 'exists', 'exist', 'existcount', 'exist_count', 'total', 'supply', 'quantity'].includes(h));
+  const start = slugIdx >= 0 && countIdx >= 0 ? 1 : 0;
+  const si = slugIdx >= 0 ? slugIdx : 0;
+  const ci = countIdx >= 0 ? countIdx : 1;
+  for (let i = start; i < lines.length; i += 1) {
+    const row = cells(lines[i]);
+    const slug = normalizeExistSlug(row[si]);
+    const n = existNumeric(row[ci]);
+    if (slug && Number.isFinite(n)) out[slug] = Math.trunc(n);
+  }
+}
+
+/** Accept a plain map, {counts:{...}}, an array of rows, or CSV. */
+export function parseExistPayload(text) {
+  const result = { counts: {}, source: 'feed', at: null };
+  if (typeof text !== 'string' || !text.trim()) return { ...result, error: 'empty payload' };
+  const trimmed = text.trim();
+  if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+    let parsed;
+    try { parsed = JSON.parse(trimmed); } catch { return { ...result, error: 'invalid JSON' }; }
+    if (Array.isArray(parsed)) collectExistArray(parsed, result.counts);
+    else if (parsed && typeof parsed === 'object') {
+      if (parsed.counts && typeof parsed.counts === 'object') collectExistPlain(parsed.counts, result.counts);
+      else if (Array.isArray(parsed.data)) collectExistArray(parsed.data, result.counts);
+      else if (parsed.data && typeof parsed.data === 'object') collectExistPlain(parsed.data, result.counts);
+      else collectExistPlain(parsed, result.counts);
+      if (typeof parsed.source === 'string') result.source = parsed.source.slice(0, 40);
+      if (typeof parsed.at === 'string') result.at = parsed.at.slice(0, 40);
+    } else return { ...result, error: 'unsupported JSON shape' };
+  } else {
+    collectExistCsv(trimmed, result.counts);
+  }
+  return result;
+}
+
+/** Integer-only, bounded, and guarded against a corrupted feed wiping data. */
+export function validateExistCounts(next, previous = {}, { allowReset = false } = {}) {
+  if (!next || typeof next !== 'object' || Array.isArray(next)) return { ok: false, error: 'counts must be an object' };
+  const entries = Object.entries(next);
+  if (!entries.length) return { ok: false, error: 'no counts supplied' };
+  if (entries.length > EXIST_MAX_ENTRIES) return { ok: false, error: 'too many entries' };
+  const clean = {};
+  for (const [rawSlug, rawCount] of entries) {
+    // Names may arrive as "ShowMan Ball"; spaces/case/hyphens are normalised,
+    // but anything else (quotes, slashes, HTML) is a malformed feed.
+    if (!/^[A-Za-z0-9 _-]{1,80}$/.test(String(rawSlug))) return { ok: false, error: `bad slug: ${rawSlug}` };
+    const slug = normalizeExistSlug(rawSlug);
+    if (!slug || !/^[a-z0-9_-]{1,80}$/.test(slug)) return { ok: false, error: `bad slug: ${rawSlug}` };
+    const n = existNumeric(rawCount);
+    if (!Number.isInteger(n) || n < 0 || n > EXIST_MAX_COUNT) return { ok: false, error: `bad count for ${slug}` };
+    const prev = previous?.[slug];
+    if (!allowReset && Number.isInteger(prev) && prev > 100 && n < prev * (1 - EXIST_MAX_DROP)) {
+      return { ok: false, error: `${slug} dropped ${prev} to ${n}; refusing a broken feed` };
+    }
+    clean[slug] = n;
+  }
+  return { ok: true, counts: clean };
+}
+
+function sameExistCounts(a, b) {
+  const ka = Object.keys(a || {});
+  const kb = Object.keys(b || {});
+  return ka.length === kb.length && ka.every((k) => a[k] === b[k]);
+}
+
+async function readExistState(env) {
+  const empty = { v: 0, at: null, source: 'none', counts: {} };
+  try {
+    const raw = env.APEX_OVERRIDES ? await env.APEX_OVERRIDES.get(EXIST_KV_KEY) : IN_MEMORY_EXIST_FALLBACK;
+    if (!raw) return empty;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.counts || typeof parsed.counts !== 'object') return empty;
+    return {
+      v: Number(parsed.v) || 0,
+      at: parsed.at || null,
+      source: parsed.source || 'unknown',
+      counts: parsed.counts,
+    };
+  } catch { return empty; }
+}
+
+/** Tiny metadata so /status never has to read the full counts object. */
+async function readExistMeta(env) {
+  if (EXIST_META_CACHE.value && Date.now() - EXIST_META_CACHE.at < EXIST_META_TTL_MS) return EXIST_META_CACHE.value;
+  let meta = { v: 0, at: null, source: 'none', units: 0 };
+  try {
+    const raw = env.APEX_OVERRIDES ? await env.APEX_OVERRIDES.get(EXIST_META_KEY) : null;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      meta = { v: Number(parsed.v) || 0, at: parsed.at || null, source: parsed.source || 'none', units: Number(parsed.units) || 0 };
+    } else {
+      const state = await readExistState(env);
+      meta = { v: state.v, at: state.at, source: state.source, units: Object.keys(state.counts).length };
+    }
+  } catch { /* neutral: clients simply show no numbers */ }
+  EXIST_META_CACHE.value = meta;
+  EXIST_META_CACHE.at = Date.now();
+  return meta;
+}
+
+/** Bumps the version ONLY when a count actually changed. */
+async function writeExistState(env, counts, source) {
+  const previous = await readExistState(env);
+  if (sameExistCounts(previous.counts, counts)) return { ...previous, unchanged: true };
+  const next = {
+    v: previous.v + 1,
+    at: new Date().toISOString(),
+    source: String(source || 'unknown').slice(0, 40),
+    counts,
+  };
+  const meta = { v: next.v, at: next.at, source: next.source, units: Object.keys(counts).length };
+  const serialized = JSON.stringify(next);
+  if (env.APEX_OVERRIDES) {
+    await env.APEX_OVERRIDES.put(EXIST_KV_KEY, serialized);
+    await env.APEX_OVERRIDES.put(EXIST_META_KEY, JSON.stringify(meta));
+  } else {
+    IN_MEMORY_EXIST_FALLBACK = serialized;
+  }
+  EXIST_META_CACHE.value = meta;
+  EXIST_META_CACHE.at = Date.now();
+  return next;
+}
+
+function existSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i += 1) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+// Two publisher forms, both timestamp-bounded against replay:
+//   * X-Exist-Key  — plain shared key, for Luau/Roblox HttpService which has
+//                    no built-in HMAC. Server-only Script: not replicated.
+//   * X-Exist-Signature — HMAC-SHA256(timestamp + '.' + raw body), for bots.
+async function verifyExistPublish(request, env, rawBody) {
+  const secret = env.EXIST_PUBLISH_SECRET;
+  if (!secret) return false;
+  const ts = Number(request.headers.get('X-Exist-Timestamp'));
+  if (!Number.isFinite(ts) || Math.abs(Date.now() - ts) > EXIST_PUBLISH_SKEW_MS) return false;
+  const key = request.headers.get('X-Exist-Key') || '';
+  if (existSafeEqual(key, secret)) return true;
+  const sig = request.headers.get('X-Exist-Signature') || '';
+  const expected = await hmacHex(secret, `${ts}.${rawBody}`);
+  return existSafeEqual(sig, expected);
+}
+
+/** Called by the free Cloudflare cron. One small fetch, one conditional write. */
+export async function ingestExistFeed(env, fetchImpl = fetch) {
+  let text = null;
+  let source = 'cron';
+  try {
+    if (env.EXIST_FEED_URL) {
+      const res = await fetchImpl(env.EXIST_FEED_URL, { headers: { 'User-Agent': 'apex-exist-counts/1.0' } });
+      if (!res.ok) return { ok: false, reason: `feed_http_${res.status}` };
+      text = await res.text();
+      source = 'feed';
+    } else if (env.ROBLOX_API_KEY && env.ROBLOX_UNIVERSE_ID && env.EXIST_DATASTORE_NAME) {
+      const base = `https://apis.roblox.com/datastores/v1/universes/${encodeURIComponent(env.ROBLOX_UNIVERSE_ID)}/standard-datastores/datastore/entries/entry`;
+      const query = new URLSearchParams({
+        datastoreName: env.EXIST_DATASTORE_NAME,
+        scope: env.EXIST_DATASTORE_SCOPE || 'global',
+        key: env.EXIST_DATASTORE_KEY || 'ExistCounts',
+      });
+      const res = await fetchImpl(`${base}?${query}`, { headers: { 'x-api-key': env.ROBLOX_API_KEY } });
+      if (!res.ok) return { ok: false, reason: `opencloud_http_${res.status}` };
+      text = await res.text();
+      source = 'opencloud';
+    } else {
+      // Push-only installations do not need a cron at all.
+      return { ok: false, reason: 'no_source_configured' };
+    }
+  } catch { return { ok: false, reason: 'fetch_failed' }; }
+  const parsed = parseExistPayload(text);
+  if (parsed.error) return { ok: false, reason: parsed.error };
+  const check = validateExistCounts(parsed.counts, (await readExistState(env)).counts);
+  if (!check.ok) return { ok: false, reason: check.error };
+  const state = await writeExistState(env, check.counts, parsed.source || source);
+  return { ok: true, v: state.v, units: Object.keys(check.counts).length, unchanged: !!state.unchanged };
+}
+
+
 function invalidateDataCaches() {
   PUBLIC_BODY_CACHE.clear();
   META_CACHE.at = 0; META_CACHE.value = null;
+  EXIST_META_CACHE.at = 0; EXIST_META_CACHE.value = null;
 }
 function invalidateCredentialCache() {
   CREDENTIAL_CACHE.at = 0; CREDENTIAL_CACHE.value = null;
@@ -262,6 +525,7 @@ async function writeOverridesBundle(env, bundle) {
       rememberRawBundle(serialized);
     }
     invalidateDataCaches();
+    await writeLiveVersionMarker(bundle.__v);
   } catch (e) {
     return new Response(JSON.stringify({ error: `KV Write Failed: ${e.message}` }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
@@ -383,6 +647,15 @@ const HIGH_VALUE_RARITIES = ['Shiny Transcendents', 'Shiny Omegas'];
 const AUTO_APPROVE_LIMIT = 5_000_000;
 
 export default {
+  // Free plan: 5 cron triggers / account, minute granularity, 10ms CPU.
+  // One small fetch + one conditional KV write fits comfortably.
+  async scheduled(event, env, ctx) {
+    try {
+      if (ctx?.waitUntil) ctx.waitUntil(ingestExistFeed(env));
+      else await ingestExistFeed(env);
+    } catch { /* a failed cron must never page anyone */ }
+  },
+
   async fetch(request, env, ctx) {
     try {
       const response = await handleRequest(request, env, ctx);
@@ -398,6 +671,57 @@ export default {
     }
   }
 };
+
+
+// Canonical Cache API key for the public /overrides bundle. Every read, write
+// and purge MUST use the same key or editors publish changes that public
+// visitors never see (and a "refresh" can serve an older, smaller bundle).
+function overridesCacheKey(request) {
+  return new Request(new URL('/overrides', request.url).toString(), { method: 'GET' });
+}
+
+async function purgeOverridesCache(request, ctx) {
+  try {
+    const cache = globalThis.caches?.default;
+    if (!cache) return;
+    const job = cache.delete(overridesCacheKey(request)).catch(() => {});
+    if (ctx?.waitUntil) ctx.waitUntil(job);
+    await job;
+  } catch { /* cache API unavailable in some runtimes */ }
+}
+
+
+// ---- INSTANT LIVE UPDATES ---------------------------------------------------
+// A publish wakes every open tab without a page refresh. The version marker is
+// held in the edge-local Cache API (no KV read per poll) plus an in-isolate
+// value, so a write is visible to long-pollers in ~400ms on the same edge.
+// The client reconnects every 20s; each reconnect also reads bundleMeta once
+// so a write that landed on another edge is picked up on the next round.
+let MODULE_LIVE_VERSION = { v: 0, at: 0 };
+const LIVE_VERSION_URL = 'https://apex-db.apexballtd-admin.workers.dev/__apex_live_version__';
+
+async function writeLiveVersionMarker(v) {
+  MODULE_LIVE_VERSION = { v, at: Date.now() };
+  try {
+    const cache = globalThis.caches?.default;
+    if (!cache) return;
+    await cache.put(
+      new Request(LIVE_VERSION_URL, { method: 'GET' }),
+      new Response(JSON.stringify({ v, at: Date.now() }), {
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=31536000' },
+      })
+    );
+  } catch { /* in-isolate marker still works */ }
+}
+
+async function readLiveVersionMarker() {
+  try {
+    const cache = globalThis.caches?.default;
+    if (!cache) return null;
+    const hit = await cache.match(new Request(LIVE_VERSION_URL, { method: 'GET' }));
+    return hit ? await hit.json() : null;
+  } catch { return null; }
+}
 
 async function handleRequest(request, env, ctx) {
   const url = new URL(request.url);
@@ -446,6 +770,12 @@ async function handleRequest(request, env, ctx) {
       provisionedAccounts: provisioned,
       rosterSize: Object.keys(TEAM_ROLES).length,
       pendingInvites,
+      existCounts: {
+        // Which automatic publisher is wired up. Never returns secrets.
+        mode: env.EXIST_FEED_URL ? 'feed' : (env.ROBLOX_API_KEY ? 'opencloud' : (env.EXIST_PUBLISH_SECRET ? 'push' : 'none')),
+        v: (await readExistMeta(env)).v,
+        units: (await readExistMeta(env)).units,
+      },
     });
   }
 
@@ -471,6 +801,41 @@ async function handleRequest(request, env, ctx) {
     });
   }
 
+  // LIVE EXIST COUNTS — public read (small JSON, ETag/304). The site only
+  // calls this when /status reports a new existV, so the whole app still
+  // costs ONE consolidated request per minute.
+  if (path === '/exist-counts' && request.method === 'GET') {
+    const state = await readExistState(env);
+    const etag = `W/"e${state.v}"`;
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'ETag': etag, 'Vary': 'Origin' };
+    if (request.headers.get('If-None-Match') === etag) return new Response(null, { status: 304, headers });
+    return new Response(JSON.stringify(state), { status: 200, headers });
+  }
+
+  // LIVE EXIST COUNTS — machine publisher. Used by the game's HttpService,
+  // a community bot, or a feed adapter. HMAC over timestamp + RAW body; no
+  // browser credential, no admin session, no way to replay a stale payload.
+  if (path === '/exist-counts/publish' && request.method === 'POST') {
+    let raw = '';
+    try { raw = await request.text(); } catch { return jsonResponse({ error: 'Unreadable body' }, 400); }
+    if (!await verifyExistPublish(request, env, raw)) return jsonResponse({ error: 'Invalid publisher signature' }, 401);
+    const parsed = parseExistPayload(raw);
+    if (parsed.error) return jsonResponse({ error: parsed.error }, 422);
+    const previous = await readExistState(env);
+    const check = validateExistCounts(parsed.counts, previous.counts, {
+      allowReset: url.searchParams.get('allowReset') === '1',
+    });
+    if (!check.ok) return jsonResponse({ error: check.error }, 422);
+    const state = await writeExistState(env, check.counts, parsed.source || 'push');
+    return jsonResponse({
+      ok: true,
+      v: state.v,
+      at: state.at,
+      units: Object.keys(check.counts).length,
+      unchanged: !!state.unchanged,
+    });
+  }
+
   // ONE consolidated status request replaces three independent 30-60s polls
   // (bundle version, maintenance, announcements). A single tab is elected
   // leader via BroadcastChannel and shares the result with the others.
@@ -486,7 +851,10 @@ async function handleRequest(request, env, ctx) {
     } catch { /* default: open and confirmed */ }
     let announcements = [];
     try { announcements = publicData(await readAnnouncements(env)); } catch { /* empty list */ }
-    const etag = `W/"s${meta.v}:${maintenance.on ? 1 : 0}:${announcements.length}"`;
+    // existV rides in the SAME response: no second timer, no second
+    // request per minute, no extra bandwidth for unchanged counts.
+    const existMeta = await readExistMeta(env);
+    const etag = `W/"s${meta.v}:${maintenance.on ? 1 : 0}:${announcements.length}:${existMeta.v}"`;
     if (request.headers.get('If-None-Match') === etag) {
       return new Response(null, { status: 304, headers: { 'ETag': etag, 'Cache-Control': 'no-store', 'Vary': 'Origin' } });
     }
@@ -497,6 +865,10 @@ async function handleRequest(request, env, ctx) {
       workerVersion: WORKER_VERSION,
       maintenance,
       announcements,
+      existV: existMeta.v,
+      existAt: existMeta.at,
+      existSource: existMeta.source,
+      existUnits: existMeta.units,
     }), { status: 200, headers: { 'Content-Type': 'application/json', 'ETag': etag, 'Cache-Control': 'no-store', 'Vary': 'Origin' } });
   }
 
@@ -965,7 +1337,8 @@ async function handleRequest(request, env, ctx) {
 
     // Storage cap: keep at most 500 rows — oldest resolved ones go first.
     if (reports.length > 500) {
-      const resolvedOld = reports.filter((r) => r.resolved).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      const resolvedOld = reports.filter((r) => r.resolved)
+        .sort((a, b) => (Date.parse(a.created_at) || 0) - (Date.parse(b.created_at) || 0));
       let overflow = reports.length - 500;
       for (const r of resolvedOld) {
         if (overflow <= 0) break;
@@ -1141,6 +1514,46 @@ async function handleRequest(request, env, ctx) {
     });
   }
 
+  // UNDO A BAD PUBLISH — every write already stores backup:previous. This
+  // makes an accidental unit deletion recoverable instead of permanent.
+  if (path === '/overrides/restore-backup' && request.method === 'POST') {
+    if (!await authenticatedAdmin()) return jsonResponse({ error: 'Unauthorized' }, 401);
+    const backup = env.APEX_OVERRIDES ? await env.APEX_OVERRIDES.get('backup:previous').catch(() => null) : null;
+    if (!backup) return jsonResponse({ error: 'No previous publish is available yet.' }, 404);
+    let parsed;
+    try { parsed = JSON.parse(backup); } catch { return jsonResponse({ error: 'Backup is unreadable.' }, 500); }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return jsonResponse({ error: 'Backup is unreadable.' }, 500);
+    const writeError = await writeOverridesBundle(env, parsed);
+    if (writeError) return writeError;
+    await purgeOverridesCache(request, ctx);
+    return jsonResponse({ ok: true, v: (parsed.__v || 0) + 1, restoredAt: parsed.timestamp || null });
+  }
+
+  // INSTANT LIVE UPDATES: long-poll for the next published version. One
+  // request per ~20s per tab (4,320/day), instead of a 60s blind poll. The
+  // response is tiny and never cached. No auth needed (public version only).
+  if (path === '/overrides/wait' && request.method === 'GET') {
+    const since = Math.max(0, Number(new URL(request.url).searchParams.get('since')) || 0);
+    const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+    const reply = (v, changed, at) => new Response(JSON.stringify({ v, changed, at: at || null }), { status: 200, headers });
+    let seed = null;
+    try { seed = env.APEX_OVERRIDES ? JSON.parse((await env.APEX_OVERRIDES.get('bundleMeta')) || 'null') : null; }
+    catch { /* no metadata yet */ }
+    let best = Math.max(Number(seed?.v) || 0, Number(MODULE_LIVE_VERSION?.v) || 0);
+    if (!MODULE_LIVE_VERSION.v && best) MODULE_LIVE_VERSION = { v: best, at: Date.now() };
+    const marker = await readLiveVersionMarker();
+    best = Math.max(best, Number(marker?.v) || 0);
+    if (best > since) return reply(best, true, marker?.at || seed?.at);
+    const deadline = Date.now() + 20000;
+    while (Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      const current = await readLiveVersionMarker();
+      const version = Math.max(Number(current?.v) || 0, Number(MODULE_LIVE_VERSION?.v) || 0);
+      if (version > since) return reply(version, true, current?.at || MODULE_LIVE_VERSION.at);
+    }
+    return reply(since, false, null);
+  }
+
   // 5. GET /overrides - Read the live staticOverrides JSON database
   if (path === '/overrides' && request.method === 'GET') {
     // Edge cache: the 60s live-update poll from every visitor otherwise burns
@@ -1149,9 +1562,12 @@ async function handleRequest(request, env, ctx) {
     // admin requests skip the cache so editors always see fresh data.
     const isAdminFetch = Boolean(await authenticatedAdmin());
     const cache = globalThis.caches?.default;
+    // One canonical key for read, write AND purge. A mismatched purge was
+    // letting public visitors keep a stale bundle after an editor published.
+    const cacheKey = overridesCacheKey(request);
     let cached = null;
     if (!isAdminFetch) {
-      try { cached = await cache?.match(request.url); } catch { /* cache miss is fine */ }
+      try { cached = await cache?.match(cacheKey); } catch { /* cache miss is fine */ }
       if (cached) {
         // Responses written by this worker are already redacted (marker).
         // Legacy entries are sanitized once, then re-cached below.
@@ -1243,7 +1659,7 @@ async function handleRequest(request, env, ctx) {
     if (!isAdminFetch && request.headers.get('If-None-Match') === etag) {
       return new Response(null, {
         status: 304,
-        headers: { 'ETag': etag, 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300', 'Vary': 'Origin' },
+        headers: { 'ETag': etag, 'Cache-Control': 'public, max-age=30, stale-while-revalidate=30', 'Vary': 'Origin' },
       });
     }
 
@@ -1255,7 +1671,7 @@ async function handleRequest(request, env, ctx) {
         'Vary': 'Origin',
         ...(isAdminFetch
           ? { 'Cache-Control': 'no-store' }
-          : { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300', 'X-Apex-Sanitized': '1' }),
+          : { 'Cache-Control': 'public, max-age=30, stale-while-revalidate=30', 'X-Apex-Sanitized': '1' }),
       },
     });
     // Previously the worker only READ the edge cache and never filled it, so
@@ -1264,7 +1680,7 @@ async function handleRequest(request, env, ctx) {
     if (!isAdminFetch && !request.headers.get('If-None-Match') && ctx?.waitUntil) {
       try {
         const cache = globalThis.caches?.default;
-        if (cache) ctx.waitUntil(cache.put(new Request(request.url, { method: 'GET' }), response.clone()).catch(() => {}));
+        if (cache) ctx.waitUntil(cache.put(overridesCacheKey(request), response.clone()).catch(() => {}));
       } catch { /* cache API unavailable in some runtimes */ }
     }
     return response;
@@ -1755,6 +2171,7 @@ async function handleRequest(request, env, ctx) {
     }
     const writeError = await writeOverridesBundle(env, bundle);
     if (writeError) return writeError;
+    await purgeOverridesCache(request, ctx);
     await appendChangeLog(env, { id: crypto.randomUUID(), at: new Date().toISOString(), by: cleanEmail, section: 'wiki', slug, kind: request.method === 'POST' ? 'delete' : 'restore', detail: `${request.method === 'POST' ? 'Deleted' : 'Restored'} unit ${slug} site-wide` });
     return new Response(JSON.stringify({ success: true, version: bundle.__v, message }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
@@ -1803,8 +2220,7 @@ async function handleRequest(request, env, ctx) {
     }
     const writeError = await writeOverridesBundle(env, bundle);
     if (writeError) return writeError;
-    // Per-entry publishes get the same instant-visibility cache purge.
-    try { ctx.waitUntil(caches.default.delete(new URL('/overrides', request.url).toString())); } catch { /* best effort */ }
+    await purgeOverridesCache(request, ctx);
     const record = {
       id: crypto.randomUUID(),
       at: new Date().toISOString(),
@@ -1889,12 +2305,16 @@ async function handleRequest(request, env, ctx) {
         'POST /bug-reports/resolve': 'Mark reports resolved securely via KV',
         'POST /bug-reports/delete': 'Delete bug reports securely via KV',
         'GET /health': 'Deployment status: KV binding, session secret, version',
-        'GET /status': 'Consolidated version + maintenance + announcements (one poll)',
+        'GET /status': 'Consolidated version + maintenance + announcements + existV (one poll)',
+        'GET /exist-counts': 'Automatic per-unit exist counts (game feed / Open Cloud / publisher)',
+        'POST /exist-counts/publish': 'HMAC-signed machine publisher for automatic exist counts',
         'GET /time': 'Same-origin UTC clock (no third-party time services)',
         'POST /session': 'Exchange editor credentials for a short-lived signed session',
         'GET /overrides/version': 'Tiny bundle version for conditional sync',
         'GET /overrides': 'Read the live values and WIKI overrides database',
         'POST /overrides': 'Update and publish the live database',
+        'POST /overrides/restore-backup': 'Restore the previous publish (admin only, undo a bad save)',
+        'GET /overrides/wait?since=N': 'Long-poll for the next published version (instant live updates)',
         'POST /change-password': 'Change an individual editor password dynamically in KV',
         'POST /login': 'Authenticate an individual editor dynamically in KV',
         'GET /announcements': 'Get active announcements',

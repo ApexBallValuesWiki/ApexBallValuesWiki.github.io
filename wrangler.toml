@@ -43,3 +43,14 @@ compatibility_date = "2026-07-19"
 #   npx wrangler secret put APEX_SESSION_SECRET
 # The site works without it (legacy passcode fallback), but enabling it means
 # the browser never keeps a plaintext passcode. Check /health after deploying.
+
+# ============================================================================
+# AUTOMATIC EXIST COUNTS — free-plan cron (5 triggers/account, 1-minute min).
+# Every 15 minutes the worker fetches EXIST_FEED_URL (a public JSON/CSV feed)
+# or reads a Roblox Open Cloud DataStore, then writes only if a count changed.
+# Push-mode publishers (game-side HttpService) do NOT need this cron; without
+# a configured source scheduled() is a harmless no-op. 96 polls/day, far below
+# the free 1,000 KV writes/day limit.
+# ============================================================================
+[triggers]
+crons = ["*/15 * * * *"]

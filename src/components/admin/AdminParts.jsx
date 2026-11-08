@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { fetchChangeLog } from '../../utils/apexClient';
+import RestorePublishButton from './RestorePublishButton';
 import { compressImage } from '../../utils/adminSafety';
 import UnitIcon from '../UnitIcon';
 import ThemeCutout from '../ThemeCutout';
@@ -437,6 +438,7 @@ export function ValueEditor({ unit, form = {}, tradeValue = 0, selectedRow, upda
         </button>
         <button type="button" onClick={resetValue}>🔄 Reset Value</button>
         <button type="button" onClick={refresh}>⚡ Refresh</button>
+        <RestorePublishButton onDone={refresh} />
       </div>
       <AdminMessage message={message} action={messageAction} />
     </section>

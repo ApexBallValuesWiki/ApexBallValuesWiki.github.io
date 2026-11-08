@@ -51,6 +51,18 @@ export function clearAdminAuth() { clearAdminCredentials(); }
 
 /** Tiny (~80 byte) version probe. Lets the app skip a 7.5 MB download on
  *  every sync tick while still landing editor changes within ~60 seconds. */
+/** Small automatic exist-count snapshot. The site only calls this when the
+ *  consolidated /status poll reports a new existV; a 404 from an old worker
+ *  simply means "no data", never a made-up number. */
+export async function fetchExistCounts() {
+  const response = await fetch(`${APEX_KV_URL}/exist-counts`, { cache: 'no-store' }).catch(() => null);
+  if (!response || !response.ok) return null;
+  try {
+    const data = await response.json();
+    return data && typeof data === 'object' && data.counts && typeof data.counts === 'object' ? data : null;
+  } catch { return null; }
+}
+
 export async function fetchBundleMeta() {
   const response = await fetch(`${APEX_KV_URL}/overrides/version`, { cache: 'no-store' }).catch(() => null);
   if (!response || !response.ok) return null;
@@ -69,7 +81,13 @@ export async function fetchBundleMeta() {
  */
 export async function fetchKvBundle({ cacheBust = false } = {}) {
   const url = cacheBust ? `${APEX_KV_URL}/overrides?_=${Date.now()}` : `${APEX_KV_URL}/overrides`;
-  const response = await fetch(url).catch(() => null);
+  // Editors MUST send their credentials on the read too. Without them the
+  // worker treats the request as public and serves the shared edge cache, so
+  // pressing "Refresh" can replace a just-created unit with an older bundle.
+  const isAdmin = typeof window !== 'undefined' && window.location?.pathname?.startsWith('/admin');
+  const response = await fetch(url, {
+    ...(isAdmin ? { headers: getAdminHeaders(), cache: 'no-store' } : {}),
+  }).catch(() => null);
   if (!response) return null;
   if (response.status === 304) return { __unchanged: true };
   if (!response.ok) return null;
@@ -247,4 +265,14 @@ export async function restoreDeletedUnit(slug) {
   const response = await fetch(`${APEX_KV_URL}/deletedunits/${encodeURIComponent(slug)}`, { method: 'DELETE', headers: getAdminHeaders() }).catch(() => null);
   const data = response ? await response.json().catch(() => ({})) : {};
   return { ok: !!(response && response.ok), status: response ? response.status : 0, version: data.version, error: data.error };
+}
+
+/** Undo the last publish (restores worker `backup:previous`). Admin only. */
+export async function restoreOverridesBackup() {
+  const response = await fetch(`${APEX_KV_URL}/overrides/restore-backup`, {
+    method: 'POST',
+    headers: getAdminHeaders(),
+  }).catch(() => null);
+  if (!response || !response.ok) return null;
+  try { return await response.json(); } catch { return null; }
 }

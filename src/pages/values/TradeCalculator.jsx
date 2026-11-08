@@ -6,6 +6,7 @@ import { VALUES_NAV } from '../../config/navigation';
 import { getRarityGlow, isShinyRarity } from '../../data/taxonomy';
 import { useLiveValues } from '../../hooks/useLiveValues';
 import { evaluateTrade, valueFromGems, valueFromCoins, gemsFromValue, coinsFromValue } from '../../utils/calculator';
+import { averageDemandPercent, demandVerdict } from '../../utils/valueRules';
 import { encodeState, decodeState, loadFromLocalStorage, saveToLocalStorage } from '../../utils/tradePersistence';
 import UnitIcon from '../../components/UnitIcon';
 import ThemeCutout from '../../components/ThemeCutout';
@@ -72,12 +73,14 @@ function resolveEntry(entry, valueEntries) {
       amount,
       unitValue: amount ? (isGems ? valueFromGems(amount) : valueFromCoins(amount)) : 0,
       tradeValue: amount ? (isGems ? valueFromGems(amount) : valueFromCoins(amount)) : 0,
+      unitValueMax: amount ? (isGems ? valueFromGems(amount) : valueFromCoins(amount)) : 0,
+      tradeValueMax: amount ? (isGems ? valueFromGems(amount) : valueFromCoins(amount)) : 0,
     };
   }
   const source = valueEntries.find((valueEntry) => valueEntry.slug === entry.slug);
   if (!source) return { ...entry, missing: true, tradeValue: 0 };
   if (source.specialValue) {
-    return { ...entry, name: source.name, rarity: source.rarity, kind: source.kind, imageUrl: source.imageUrl ?? null, image_url: source.imageUrl ?? null, unitValue: 0, tradeValue: 0, specialValue: source.specialValue };
+    return { ...entry, name: source.name, rarity: source.rarity, kind: source.kind, imageUrl: source.imageUrl ?? null, image_url: source.imageUrl ?? null, unitValue: 0, tradeValue: 0, tradeValueMax: 0, specialValue: source.specialValue };
   }
   const unitValue = source.tradeValue ?? 0;
   return {
@@ -90,7 +93,9 @@ function resolveEntry(entry, valueEntries) {
     imageUrl: source.imageUrl ?? source.image_url ?? source.image ?? null,
     image_url: source.imageUrl ?? source.image_url ?? source.image ?? null,
     unitValue,
+    unitValueMax: Math.max(unitValue, Number(source.tradeValueMax) || 0),
     tradeValue: unitValue * entry.quantity,
+    tradeValueMax: Math.max(unitValue, Number(source.tradeValueMax) || 0) * entry.quantity,
   };
 }
 
@@ -163,6 +168,17 @@ export default function TradeCalculator() {
   const computedA = useMemo(() => sideA.map((entry) => resolveEntry(entry, allValueEntries)), [sideA, allValueEntries]);
   const computedB = useMemo(() => sideB.map((entry) => resolveEntry(entry, allValueEntries)), [sideB, allValueEntries]);
   const result = useMemo(() => evaluateTrade(computedA, computedB), [computedA, computedB]);
+  // Value ranges: each row keeps a min (current value) and max (top of the
+  // published range). Totals for both ends are shown under the value meter.
+  const rangeTotals = useMemo(() => {
+    const sum = (list, key) => list.reduce((total, entry) => total + (Number(entry[key]) || 0), 0);
+    return {
+      aMin: sum(computedA, 'tradeValue'), aMax: sum(computedA, 'tradeValueMax'),
+      bMin: sum(computedB, 'tradeValue'), bMax: sum(computedB, 'tradeValueMax'),
+    };
+  }, [computedA, computedB]);
+  const demandYou = useMemo(() => averageDemandPercent(computedA), [computedA]);
+  const demandThem = useMemo(() => averageDemandPercent(computedB), [computedB]);
   const recentEntries = useMemo(
     () => recentSlugs.map((slug) => allValueEntries.find((entry) => entry.slug === slug)).filter(Boolean),
     [recentSlugs, allValueEntries]
@@ -356,7 +372,7 @@ export default function TradeCalculator() {
           onPickCurrency={(currency) => setCurrencyModal({ side: 'A', currency })}
         />
 
-        <VerdictColumn result={result} balanceAmounts={balanceAmounts} onBalance={balanceWithCurrency} />
+        <VerdictColumn result={result} balanceAmounts={balanceAmounts} onBalance={balanceWithCurrency} ranges={rangeTotals} demandYou={demandYou} demandThem={demandThem} />
 
         <TradeSide
           side="B"
@@ -390,6 +406,37 @@ export default function TradeCalculator() {
   );
 }
 
+function rangeLabel(min, max) {
+  const lo = Number(min) || 0;
+  const hi = Number(max) || 0;
+  if (!lo && !hi) return '—';
+  return hi > lo ? `${formatCompactNumber(lo)}–${formatCompactNumber(hi)}` : formatCompactNumber(lo);
+}
+
+function formatDemand(value) {
+  return value === null || value === undefined ? 'N/A' : `${Math.round(value)}%`;
+}
+
+function MeterRow({ label, value, display, max, colorVar, rangeMax }) {
+  const safeMax = Math.max(1, Number(max) || 1);
+  const current = Number(value) || 0;
+  const percent = Math.max(3, Math.min(100, (current / safeMax) * 100));
+  const top = Number(rangeMax) || current;
+  const rangePercent = Math.max(percent, Math.min(100, (top / safeMax) * 100));
+  return (
+    <div className="calc-meter-row" style={{ '--meter-color': `var(${colorVar})` }}>
+      <div className="calc-meter-head">
+        <span className="calc-meter-label">{label}</span>
+        <span className="calc-meter-number">{display}</span>
+      </div>
+      <div className="calc-meter-track">
+        <div className="calc-meter-range" style={{ width: `${rangePercent}%` }} />
+        <div className="calc-meter-fill" style={{ width: `${percent}%` }} />
+      </div>
+    </div>
+  );
+}
+
 function overpayLabel(result) {
   if (result.diff > 0) {
     return `THEY overpay by ${formatCompactNumber(Math.abs(result.diff))} (${result.percentDiff.toFixed(1)}%)`;
@@ -400,7 +447,7 @@ function overpayLabel(result) {
   return 'No overpay — perfectly even';
 }
 
-function VerdictColumn({ result, balanceAmounts, onBalance }) {
+function VerdictColumn({ result, balanceAmounts, onBalance, ranges, demandYou, demandThem }) {
   const gemsMeta = CURRENCY_BY_SLUG['currency:gems'];
   const coinsMeta = CURRENCY_BY_SLUG['currency:coins'];
   // The top-up lands on the LIGHTER side (diff>0 means THEY give more).
@@ -422,9 +469,26 @@ function VerdictColumn({ result, balanceAmounts, onBalance }) {
           {overpayLabel(result)}
         </div>
       )}
-      <div className="calc-verdict-bars">
-        <TotalBar label="YOU" total={result.totalA} max={Math.max(result.totalA, result.totalB, 1)} colorVar="--you-color" />
-        <TotalBar label="THEY" total={result.totalB} max={Math.max(result.totalA, result.totalB, 1)} colorVar="--them-color" />
+      {/* Four directly comparable bars: YOU value, YOU demand, THEY value,
+          THEY demand. Value ranges are drawn on the value bar itself (a
+          lighter min->max segment) instead of a separate text block. */}
+      <div className="calc-verdict-bars" data-calc-range data-calc-demand>
+        <MeterRow label="VALUE" colorVar="--you-color"
+          value={result.totalA} rangeMax={ranges?.aMax ?? result.totalA}
+          max={Math.max(result.totalA, result.totalB, ranges?.aMax || 0, ranges?.bMax || 0, 1)}
+          display={rangeLabel(ranges?.aMin ?? result.totalA, ranges?.aMax ?? result.totalA)} />
+        <MeterRow label="DEMAND" colorVar="--you-color" value={demandYou || 0} max={100} display={formatDemand(demandYou)} />
+        <MeterRow label="VALUE" colorVar="--them-color"
+          value={result.totalB} rangeMax={ranges?.bMax ?? result.totalB}
+          max={Math.max(result.totalA, result.totalB, ranges?.aMax || 0, ranges?.bMax || 0, 1)}
+          display={rangeLabel(ranges?.bMin ?? result.totalB, ranges?.bMax ?? result.totalB)} />
+        <MeterRow label="DEMAND" colorVar="--them-color" value={demandThem || 0} max={100} display={formatDemand(demandThem)} />
+      </div>
+      <div className="calc-w-summary">
+        Avg offer demand: YOU {formatDemand(demandYou)} · THEY {formatDemand(demandThem)}
+        <br />
+        {result.favors === 'you' ? 'Value W for YOU' : result.favors === 'them' ? 'Value W for THEM' : 'Value even'}
+        {' · '}{demandVerdict(demandYou, demandThem)}
       </div>
       {result.diff !== 0 && balanceAmounts && (
         <div className="calc-balance-block">
@@ -457,27 +521,6 @@ function VerdictColumn({ result, balanceAmounts, onBalance }) {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function TotalBar({ label, total, max, colorVar }) {
-  const percent = Math.max(4, (total / max) * 100);
-  return (
-    <div className="calc-total-bar-block">
-      <div className="calc-total-bar-label">
-        <span>{label}</span>
-        <span title={`${formatFullNumber(total)} exact`}>{formatCompactNumber(total)}</span>
-      </div>
-      <div className="calc-total-bar-track">
-        <motion.div
-          className="calc-total-bar-fill"
-          style={{ background: `var(${colorVar})`, boxShadow: `0 0 12px var(${colorVar})` }}
-          initial={{ width: 0 }}
-          animate={{ width: `${percent}%` }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        />
-      </div>
     </div>
   );
 }
@@ -695,6 +738,9 @@ function TradeSide({ side, label, entries, setEntries, computed, valueEntries, r
 
                 <div className="calc-entry-value" title={`${formatFullNumber(resolved.tradeValue || 0)} exact`}>
                   {formatCompactNumber(resolved.tradeValue || 0)}
+                  {resolved.tradeValueMax > resolved.tradeValue && (
+                    <small className="calc-entry-range">–{formatCompactNumber(resolved.tradeValueMax)}</small>
+                  )}
                 </div>
 
                 <button

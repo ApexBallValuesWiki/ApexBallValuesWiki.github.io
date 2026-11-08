@@ -6,6 +6,7 @@ import { useScrollToHighlight } from '../utils/useScrollToHighlight';
 import { TermTip } from './StatMeta';
 import { originTag } from '../utils/originTag';
 import UnitIcon from './UnitIcon';
+import ExistCountBadge from './ExistCountBadge';
 import './EntityGrid.css';
 import { resolveImageUrl } from '../utils/localAssets';
 
@@ -67,6 +68,7 @@ export default function EntityGrid({ entities, linkBase, renderMeta, emptyLabel,
               </div>
 
               <div className="unit-card-body">
+                <ExistCountBadge slug={e.slug} compact />
                 {(stats || dpsInfo?.dps != null) && (
                   <div className="unit-card-stats">
                     {stats?.damage != null && (
@@ -123,6 +125,8 @@ export default function EntityGrid({ entities, linkBase, renderMeta, emptyLabel,
       {entities.map((e) => {
         const isMap = linkBase.includes('maps');
         const isCrate = linkBase.includes('crates') || linkBase.includes('Crates');
+        // Only UNIT grids get an exist count — never maps, crates or materials.
+        const showExist = !isMap && !isCrate && /unit/i.test(String(linkBase || ''));
         const imageUrl = e.image || e.imageUrl || e.image_url || null;
         const initials = String(e.name || '?').slice(0, 2).toUpperCase();
 
@@ -148,6 +152,8 @@ export default function EntityGrid({ entities, linkBase, renderMeta, emptyLabel,
                 <span className="entity-name">{e.name}</span>
                 {!e.documented && <span className="badge dim entity-pending">Pending</span>}
               </div>
+
+              {showExist && <ExistCountBadge slug={e.slug} compact />}
 
               <div className="entity-card-meta">
                 {isMap && e.difficulty && (

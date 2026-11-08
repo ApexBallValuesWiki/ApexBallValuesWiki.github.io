@@ -9,6 +9,7 @@ import {
   SCARCITY_PERCENT,
 } from '../data/taxonomy';
 import UnitIcon from './UnitIcon';
+import ExistCountBadge from './ExistCountBadge';
 import { fetchUnitHistory } from '../utils/apexClient';
 import { formatRelativeTime, formatCompactNumber, formatFullNumber } from '../utils/formatNumber';
 import './EntityGrid.css';
@@ -84,6 +85,7 @@ export default function UnitValueCard({ unit, linkBase, highlighted }) {
       </div>
 
       <div className="unit-card-body">
+        <ExistCountBadge slug={unit.slug} compact />
         {unit.hasValue ? (
           <div className="uv-inner-panel-card">
             <div className="uv-stat-rows">

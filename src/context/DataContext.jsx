@@ -18,6 +18,7 @@ function apexLiveChannel() {
 import { rowToWikiOverride, mergeWikiOverride } from '../utils/wikiOverrides';
 import { loadLocalValueOverrides, loadLocalWikiOverrides, loadLocalMapOverrides, loadLocalCrateOverrides, loadLocalMaterialOverrides, loadLocalDeletedOverrides, loadLocalDeletedUnits, markLocalUnitDeleted, unmarkLocalUnitDeleted } from '../utils/localOverrides';
 import { PUBLIC_LIVE_SYNC_ENABLED } from '../config/egressControl';
+import { defaultValuesFor } from '../utils/valueRules';
 import { resolveImageUrl } from '../utils/localAssets';
 import staticOverridesJson from '../data/overrides/staticOverrides.json';
 import { ALL_MAPS } from '../data/maps';
@@ -123,7 +124,11 @@ function bundleToValueRows(data = {}) {
 }
 
 function bundleToWikiRows(data = {}) {
+  // Spread FIRST: custom_unit / kind / any editor-added field must survive a
+  // round trip through KV. Dropping them is what made created units vanish on
+  // refresh and let material rows leak into the unit list.
   return Object.entries(data?.wikiOverrides || {}).map(([slug, wiki]) => ({
+    ...(wiki && typeof wiki === 'object' ? wiki : {}),
     slug,
     name: wiki.name,
     rarity: wiki.rarity,
@@ -634,6 +639,19 @@ export function DataProvider({ children }) {
     const list = [...STATIC_UNIT_VALUES.map(mergeWiki), ...createdValueEntries.map(mergeWiki)];
     return list
       .filter((u) => !localDeleted?.wiki?.includes(u.slug) && !localDeleted?.value?.includes(u.slug) && !isUnitDeleted(u.slug))
+      // Live KV rows can still be zero (e.g. a unit added after the snapshot
+      // was baked). Apply the same rarity floor everywhere, so the admin
+      // editor, the Values pages and the calculator never disagree.
+      .map((unit) => {
+        const floor = defaultValuesFor(unit, unit);
+        if (!floor) return unit;
+        return {
+          ...unit,
+          ...floor,
+          tradeValue: computeTradeValue(floor.baseValue, unit.demand, unit.scarcity),
+          hasValue: true,
+        };
+      })
       .map(withUnitDisplayName);
   }, [rowsBySlug, createdUnits, localValueOverrides, getWikiOverride, localDeleted, isUnitDeleted]);
 

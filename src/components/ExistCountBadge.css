@@ -1,0 +1,31 @@
+/* Automatic exist count. Purely additive: no image filters, no tint, no
+   isolation, no effect on UnitIcon or direct <img> unit artwork. */
+.exist-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  line-height: 1.3;
+  letter-spacing: .01em;
+  color: #cfd6e6;
+  background: rgba(255, 255, 255, .045);
+  border: 1px solid rgba(255, 255, 255, .13);
+  border-radius: 999px;
+  padding: 3px 9px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.exist-badge strong { color: #ffffff; font-weight: 800; }
+.exist-badge-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #7ee2a8; flex: none;
+  box-shadow: 0 0 6px rgba(126, 226, 168, .55);
+}
+.exist-badge.is-stale { opacity: .6; }
+.exist-badge.is-stale .exist-badge-dot { background: #ffc46b; box-shadow: none; }
+.exist-badge-asof { color: #8b93a5; font-size: 10px; }
+.exist-badge.is-compact { font-size: 10px; padding: 2px 8px; }
+.unit-card-body > .exist-badge,
+.uv-inner-panel-card > .exist-badge { margin-bottom: 8px; align-self: flex-start; }
+.unit-badges .exist-badge,
+.unit-title-copy .exist-badge { vertical-align: middle; }

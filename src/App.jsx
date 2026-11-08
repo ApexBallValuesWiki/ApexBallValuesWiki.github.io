@@ -30,6 +30,7 @@ import AccessGate, { MaintenancePage } from './components/SiteGate';
 import ErrorBoundary from './components/ErrorBoundary';
 import { fetchMaintenanceStatus } from './utils/apexClient';
 import { subscribeLiveStatus, ensureLiveStatus, refreshLiveStatus } from './utils/liveStatus';
+import { startExistCounts } from './utils/existCountStore';
 
 // The Test Realm (staging host) is team-only: visitors must sign in with an
 // admin account before anything loads. The production host is unaffected.
@@ -51,6 +52,10 @@ export default function App() {
   const [shortcutOpen, setShortcutOpen] = useState(false);
   const [maintenance, setMaintenance] = useState({ on: false, message: '', loading: true });
   const motionAllowed = useMotionPreference();
+
+  // Automatic exist counts ride on that SAME consolidated /status poll. One
+  // shared store, started once; no second timer and no per-minute request.
+  useEffect(() => { startExistCounts(); }, []);
 
   // Maintenance is delivered by the SAME consolidated /status poll that
   // drives the shared database — no second 60s timer. A legacy worker (or a

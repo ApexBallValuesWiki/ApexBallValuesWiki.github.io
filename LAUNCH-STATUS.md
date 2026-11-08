@@ -544,3 +544,88 @@ Evidence: `/home/user/_audit/browser/build-verify.json`,
 - Worker rate limiting is per-isolate (in-memory), not distributed.
 - No certified CMP or verified parental-consent flow is bundled. The zero-personal-data architecture is what makes ordinary browsing safe for children; that claim depends on keeping ads, analytics and third-party assets off.
 - No legal counsel was engaged. This document and the site copy are engineering work, not a compliance certification.
+
+
+---
+
+## 2026-11-05 · Automatic exist counts added locally (NOT deployed)
+
+`EXIST-COUNT-AUTOMATIC.md` is the full guide. Summary:
+
+- Worker `2026-11-02.5` now has `GET /exist-counts`,
+  `POST /exist-counts/publish` (HMAC/key + replay window), a `scheduled()`
+  handler, and `existV`/`existAt`/`existSource`/`existUnits` in `/status`.
+- `wrangler.toml` has a free 15-minute cron. Unchanged publishes write **zero**
+  KV records; a >50% one-shot drop is refused so a broken feed cannot wipe
+  data.
+- Frontend: `existCountStore.js`, `useExistCount.js`, `ExistCountBadge.jsx`,
+  four UI surfaces, started once from `App.jsx`. No second timer, no extra
+  per-minute request, no filter/tint on unit artwork.
+- QA: `existCountStore.test.js` 5 tests, `verify_exist_counts.mjs` 36/36 worker
+  checks (mock KV + mock feeds + `data:` URL cron). Older workers without
+  `existV` degrade to showing nothing.
+- **Not connected to a live source yet.** Roblox has no public API for in-game
+  exist counts, so one publisher must be wired (game-side HttpService, a public
+  feed URL, or an owner-granted Open Cloud key). No numbers were invented.
+- No push, no merge, no deploy, no live KV/site write. Ads OFF. `github.io`.
+
+
+---
+
+## 2026-11-08 · Database safety + value/UI batch (local, NOT deployed)
+
+- **Data loss on Refresh:** admin `/overrides` reads now authenticate, the
+  Cache API uses ONE canonical key for match/put/purge, every bundle write
+  purges it, and `stale-while-revalidate` dropped from 300s to 30s.
+  `bundleToWikiRows` spreads all WIKI fields so `custom_unit`/`kind` survive.
+  New `POST /overrides/restore-backup` + an **Undo last publish** button in the
+  WIKI editor restores `backup:previous`. Verified 55/55 worker checks.
+- **WIKI images only visible to the editor:** same cache-purge fix. Public
+  visitors now converge on the newest bundle within ~30s.
+- **Worker errors:** `Date.parse()` instead of `new Date() - new Date()`;
+  cache put/purge keys unified.
+- **Afford:** O/C → "O/C" + "N/A%", value ranges (min–max display and
+  conservative max affordability), `Sort by relevancy` with 7 pinned units,
+  19-entry Shiny O/C ranking, real Include Shiny toggle button.
+- **Trade Calculator:** range totals + per-entry ranges, demand meter with
+  quantity-weighted average offer demand and a combined value/demand W line.
+- **Values:** 64 zero rows filled by rarity tier in
+  `public/overrides/staticOverrides.json` (`__v` 308 → 309); 33 non-zero rows,
+  178 shiny rows and WormBall preserved. The same rule runs on live KV rows.
+  Spreadsheet `NumCell` focus bug fixed (36/36 bugfix checks).
+- QA: 46 test files / 262 tests, lint 0 errors on 279 files, 12 verifier
+  suites green, 764 prerendered pages, ZIP validator 136/136.
+- **Assumption to confirm:** the brief listed "Every Awesome" twice (50 then
+  500). The 500 tier was applied to **Legendaries**, the next rarity after
+  Awesome. Say the word if it should be Mythics instead.
+- No push, no merge, no deploy, no live KV/site write. Ads OFF. `github.io`.
+
+
+---
+
+## 2026-11-08 (later) · N/A specials, stacked meters, instant sync (local only)
+
+- **N/A Shiny Omegas:** `specialMarker()` now returns `O/C` or `N/A`; both are
+  "no fixed price" and render their marker plus `N/A% of your budget` instead
+  of 300M / a percentage. 30 rows in the baked DB carry `N/A` as their value.
+- **Meters:** the separate value-range and demand text blocks were replaced by
+  four stacked bars — YOU VALUE, YOU DEMAND, THEY VALUE, THEY DEMAND. The
+  min→max range is drawn as a lighter segment ON the value bar. Average offer
+  demand is the number on each demand bar; a combined Value W / Demand W line
+  sits underneath. Verified 4 meter rows in the browser.
+- **Instant updates:** new `GET /overrides/wait?since=N` long-polls an
+  edge-local Cache API version marker (plus an in-isolate value). Every
+  successful bundle write updates the marker, so open tabs wake in ~400ms and
+  re-read `/status` → `/overrides` with **no page reload**. Proven in a mocked
+  browser: `/status` went from v998 to v999 with `window.__noReload` intact.
+  One request per ~20s per tab (~4,320/day), so it stays inside the free tier.
+- **Honest limits:** "0 ms everywhere" is not achievable on this stack. The
+  long-poll starts 2.5s after load (so the page can settle), a publish that
+  lands on a different Cloudflare edge is picked up on the next 20s reconnect,
+  and a true global push would need Durable Objects / WebSockets. Most
+  importantly **the live site still runs the old worker** (60s poll) — nothing
+  was deployed. Operator must deploy worker 2026-11-02.5 before any of this is
+  visible publicly.
+- QA: 46 files / 262 tests, lint 0 errors, 12 verifier suites green
+  (worker 58/58, bugfixes 36/36, v4 59/59, link/trade 26/26), 764 pages,
+  0 page errors. ZIP validator 136/136.

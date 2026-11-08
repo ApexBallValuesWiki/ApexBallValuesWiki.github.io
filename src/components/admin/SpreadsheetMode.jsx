@@ -61,9 +61,14 @@ function NumCell({ rowIdx, col, value, disabled, onChange, onKey }) {
       inputMode={col.type === 'num' ? 'text' : undefined}
       value={display}
       disabled={disabled}
-      onFocus={(e) => { setFocused(true); e.target.select?.(); }}
+      // Do NOT switch the controlled value on focus. That re-render replaced
+      // the formatted text ("5K") with the raw number ("5000") AFTER the
+      // browser had selected all text, so typing appended to the old number
+      // ("5000O / C") instead of replacing it. Switch on the first keystroke.
+      onFocus={(e) => { e.target.select?.(); }}
       onBlur={() => setFocused(false)}
       onChange={(e) => {
+        setFocused(true);
         // Store exactly what was typed. makeSpreadsheetPatch() parses
         // K/M/B/T on save, so rewriting "1.3M" into "1300000" on the last
         // keystroke only made suffixes impossible to type.

@@ -3,6 +3,7 @@ import { ALL_UNITS } from './units';
 import { CONSUMABLES, ALL_ITEMS } from './items';
 import { GENERATED_VALUE_OVERRIDES } from './generated/units.generated';
 import { loadLocalValueOverrides } from '../utils/localOverrides';
+import { defaultValuesFor } from '../utils/valueRules';
 import staticOverridesJson from './overrides/staticOverrides.json';
 
 // VALUES DATABASE — market data for the Values pages and Trade Calculator.
@@ -21,7 +22,11 @@ const LOCAL_VALUE_OVERRIDES = loadLocalValueOverrides();
 
 function withComputedValue(entry) {
   const staticOver = staticOverridesJson?.valueOverrides?.[entry.slug];
-  const data = LOCAL_VALUE_OVERRIDES[entry.slug] || staticOver || VALUE_OVERRIDES[entry.slug] || GENERATED_VALUE_OVERRIDES[entry.slug];
+  let data = LOCAL_VALUE_OVERRIDES[entry.slug] || staticOver || VALUE_OVERRIDES[entry.slug] || GENERATED_VALUE_OVERRIDES[entry.slug];
+  // A zero-valued row gets its rarity floor (1/1/100, 5/5/500, ...). Rows
+  // with a real value, shiny variants and WormBall are never overwritten.
+  const floor = defaultValuesFor(entry, data);
+  if (floor) data = { ...(data || {}), ...floor, demand: data?.demand || null, scarcity: data?.scarcity || null, trend: data?.trend || 'stable' };
   if (!data) {
     return {
       ...entry,

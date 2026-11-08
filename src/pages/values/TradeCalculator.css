@@ -1151,3 +1151,65 @@
 
 /* Compact-suffix helper for the Gems / Coins amount prompt. */
 .cam-suffix-hint { display: block; margin: 7px 0 0; font-size: 10.5px; font-weight: 600; color: var(--text-faint, #7f7f8c); }
+
+/* Value ranges + demand meter under the value meter. */
+.calc-entry-range { display: block; font-size: 9px; color: var(--text-dim, #a5a5b2); font-weight: 700; }
+.calc-range-block, .calc-demand-block {
+  margin-top: 12px; padding: 10px 12px; border-radius: 11px;
+  border: 1px solid rgba(255,255,255,.1); background: rgba(0,0,0,.24);
+}
+.calc-range-label, .calc-demand-label {
+  display: block; font-size: 9.5px; font-weight: 900; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--text-dim, #a5a5b2); margin-bottom: 8px;
+}
+.calc-range-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.calc-range-grid > div { display: grid; gap: 2px; }
+.calc-range-grid span { font-size: 9px; color: var(--text-dim, #a5a5b2); font-weight: 800; }
+.calc-range-grid strong { font-size: 13px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.calc-demand-row { display: grid; grid-template-columns: 38px 1fr 42px; gap: 8px; align-items: center; margin-bottom: 6px; }
+.calc-demand-row > span { font-size: 9px; font-weight: 900; color: var(--text-dim, #a5a5b2); }
+.calc-demand-row > strong { font-size: 10px; font-weight: 900; text-align: right; font-variant-numeric: tabular-nums; }
+.calc-demand-track { height: 6px; border-radius: 999px; background: rgba(255,255,255,.09); overflow: hidden; }
+.calc-demand-fill { height: 100%; border-radius: 999px; transition: width 320ms ease; }
+.calc-demand-summary { display: grid; gap: 3px; margin-top: 8px; font-size: 10px; color: var(--text-dim, #a5a5b2); }
+.calc-demand-summary strong { font-size: 11px; color: var(--text, #fff); }
+.calc-w-summary {
+  margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.08);
+  font-size: 10.5px; font-weight: 900; color: var(--text, #fff); text-align: center;
+}
+html[data-motion="off"] .calc-demand-fill { transition: none; }
+
+/* Stacked, directly comparable meters: VALUE / DEMAND for each side. */
+.calc-verdict-bars { display: grid; gap: 10px; }
+.calc-meter-row { display: grid; gap: 4px; }
+.calc-meter-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.calc-meter-label {
+  font-size: 11px; font-weight: 900; letter-spacing: .14em;
+  color: var(--meter-color, #fff);
+}
+.calc-meter-number {
+  font-size: 13px; font-weight: 900; font-variant-numeric: tabular-nums;
+  color: var(--text, #fff);
+}
+.calc-meter-track {
+  position: relative; height: 7px; border-radius: 999px;
+  background: rgba(255,255,255,.09); overflow: hidden;
+}
+.calc-meter-range {
+  position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px;
+  background: color-mix(in srgb, var(--meter-color, #fff) 28%, transparent);
+  transition: width 320ms ease;
+}
+.calc-meter-fill {
+  position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px;
+  background: var(--meter-color, #fff);
+  box-shadow: 0 0 12px var(--meter-color, #fff);
+  transition: width 320ms ease;
+}
+.calc-w-summary {
+  margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.08);
+  font-size: 10.5px; font-weight: 800; line-height: 1.6; color: var(--text-dim, #a5a5b2);
+  text-align: center;
+}
+html[data-motion="off"] .calc-meter-range,
+html[data-motion="off"] .calc-meter-fill { transition: none; }

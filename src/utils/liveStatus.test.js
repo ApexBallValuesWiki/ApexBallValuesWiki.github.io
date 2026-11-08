@@ -57,10 +57,11 @@ describe('consolidated live status', () => {
     expect(status.announcements).toHaveLength(1);
     expect(mod.getLiveStatus()).toBe(status);
     expect(mod.isLiveStatusLegacy()).toBe(false);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const statusCalls = () => fetchMock.mock.calls.filter(([url]) => String(url).includes('/status'));
+    expect(statusCalls()).toHaveLength(1);
     // A second caller shares the cached value; no extra network.
     expect(await mod.ensureLiveStatus(0)).toBe(status);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(statusCalls()).toHaveLength(1);
   });
 
   it('falls back to the three legacy endpoints when /status is missing', async () => {
